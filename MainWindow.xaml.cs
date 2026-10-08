@@ -3,6 +3,7 @@ using System.IO;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -25,7 +26,10 @@ public partial class MainWindow : Window
 
     static readonly HttpClient Http = new() { Timeout = TimeSpan.FromSeconds(60) };
     readonly DispatcherTimer hold = new() { Interval = TimeSpan.FromMilliseconds(500) };
-    readonly List<object> history = new();
+    readonly JsonArray local = new();
+    const string LocalSystem = "sei MyLittleFriend, un piccolo assistente nel notch del pc di Andrea. rispondi sempre in italiano, brevissimo. "
+        + "usa gli strumenti solo se l'utente chiede un'azione sul pc, poi conferma in una frase. non inventare risultati. "
+        + "se non esiste uno strumento adatto dillo.";
     GlobalSystemMediaTransportControlsSessionManager? mgr;
     string? lastTitle, file;
     BitmapSource? cover;
@@ -247,11 +251,56 @@ public partial class MainWindow : Window
         var q = ChatIn.Text.Trim();
         if (q == "") return;
         ChatIn.Clear();
-        history.Add(new { role = "user", content = q });
         ChatOut.Text = "…";
-        var a = await Safe(() => CallApi(history.TakeLast(10).ToList()));
-        history.Add(new { role = "assistant", content = a });
-        ChatOut.Text = a;
+        ChatOut.Text = await Safe(() => LocalChat(q));
+    }
+
+    // chat con llm locale (ollama) + azioni sul pc. le azioni sensibili passano dal popup di conferma.
+    async Task<string> LocalChat(string q)
+    {
+        if (local.Count == 0) local.Add(new JsonObject { ["role"] = "system", ["content"] = LocalSystem });
+        local.Add(new JsonObject { ["role"] = "user", ["content"] = q });
+        var tools = JsonNode.Parse(Actions.ToolsJson)!;
+        for (int i = 0; i < 4; i++)
+        {
+            var msg = await Llm.Chat(local, tools);
+            local.Add(msg.DeepClone());
+            if (msg["tool_calls"] is not JsonArray calls || calls.Count == 0)
+            {
+                while (local.Count > 15) local.RemoveAt(1);
+                while (local.Count > 1 && local[1]!["role"]!.ToString() != "user") local.RemoveAt(1);
+                return Llm.Clean(msg["content"]?.ToString());
+            }
+            foreach (var c in calls)
+            {
+                var fn = c!["function"]!;
+                var name = fn["name"]!.ToString();
+                var plan = Actions.Make(name, fn["arguments"]);
+                string res;
+                if (plan == null) res = "strumento sconosciuto";
+                else if (plan.Sensitive && !Confirm.Ask(plan)) res = "l'utente ha rifiutato l'azione";
+                else
+                {
+                    try { res = await plan.Run(); } catch (Exception ex) { res = "errore: " + ex.Message; }
+                }
+                local.Add(new JsonObject { ["role"] = "tool", ["tool_name"] = name, ["content"] = res });
+            }
+        }
+        return "non sono riuscito a finire, riprova";
+    }
+
+    // file di testo: llm locale, senza strumenti (cosi' un file non puo' far partire azioni)
+    static async Task<string> LocalFile(string path, string q)
+    {
+        string t;
+        try { t = File.ReadAllText(path); if (t.Length > 8000) t = t[..8000]; } catch { t = ""; }
+        var msgs = new JsonArray
+        {
+            new JsonObject { ["role"] = "system", ["content"] = LocalSystem },
+            new JsonObject { ["role"] = "user", ["content"] = $"file {Path.GetFileName(path)}:\n{t}\n\n{q}" }
+        };
+        var m = await Llm.Chat(msgs, null);
+        return Llm.Clean(m["content"]?.ToString());
     }
 
     async void FileKey(object s, KeyEventArgs e)
@@ -262,7 +311,10 @@ public partial class MainWindow : Window
         FileIn.Clear();
         Bubble.Text = "…";
         var path = file;
-        Bubble.Text = await Safe(() => CallApi(new List<object> { new { role = "user", content = FileBlocks(path, q) } }));
+        bool isImg = Path.GetExtension(path).ToLowerInvariant() is ".png" or ".jpg" or ".jpeg" or ".webp" or ".gif";
+        Bubble.Text = await Safe(() => isImg
+            ? CallApi(new List<object> { new { role = "user", content = FileBlocks(path, q) } })
+            : LocalFile(path, q));
     }
 
     // ---- drag & drop ----
