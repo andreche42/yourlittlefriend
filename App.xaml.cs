@@ -1,11 +1,16 @@
 using System.Diagnostics;
 using System.IO;
+using System.Reflection;
 using System.Windows;
 
 namespace YourLittleFriend;
 
 public partial class App : Application
 {
+    // versione dell'app (es. 1.1.2-beta): viene dal tag della release, o dal csproj se compili da sorgente
+    public static string Version =>
+        typeof(App).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion.Split('+')[0] ?? "?";
+
     static Mutex? single;   // una sola copia alla volta (anche l'installer lo usa per sapere se l'app è aperta)
 
     protected override void OnStartup(StartupEventArgs e)
