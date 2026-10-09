@@ -20,6 +20,7 @@ public partial class Mascot : UserControl
     readonly TranslateTransform walk = new();
     MascotMode mode;
     bool cheering, walking;
+    DateTime walkUntil;   // rete di sicurezza: se la camminata viene interrotta, "walking" non resta bloccato
 
     public MascotMode Mode
     {
@@ -116,6 +117,7 @@ public partial class Mascot : UserControl
     // ---- vita da mascotte: ogni tanto fa qualcosa da sola ----
     void IdleTick()
     {
+        if (walking && DateTime.UtcNow > walkUntil) walking = false;
         if (mode != MascotMode.Idle || cheering || walking) return;
         switch (rnd.Next(3))
         {
@@ -137,6 +139,7 @@ public partial class Mascot : UserControl
         double from = walk.X, target = (rnd.NextDouble() * 2 - 1) * WanderRange, dx = target - from;
         if (Math.Abs(dx) < 20) return;
         walking = true;
+        walkUntil = DateTime.UtcNow.AddMilliseconds(Math.Abs(dx) / 45 * 1000 + 1500);
         flip.ScaleX = dx > 0 ? 1 : -1;
         double ms = Math.Abs(dx) / 45 * 1000;   // 45 px al secondo
         walk.X = target;

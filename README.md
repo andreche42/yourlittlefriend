@@ -22,11 +22,13 @@ scarica `yourlittlefriend-setup-x.y.z.exe` dalle [release](../../releases) e avv
 2. scegli la cartella (di base `AppData\Roaming\yourlittlefriend`)
 3. scegli se farlo partire all'avvio del pc
 
+**aggiornare**: scarica il nuovo installer e avvialo, senza disinstallare niente. chiude da solo l'app aperta, si installa sopra la versione vecchia (stessa cartella), ricorda se avevi l'avvio automatico e non tocca le tue impostazioni né il portafile. se per sbaglio provi a installare una versione più vecchia di quella che hai, ti avvisa.
+
 al primo avvio l'app ti chiede:
 
 1. il tuo **nome**
 2. la tua **città** per il meteo (puoi saltare)
-3. l'**ia**: l'installazione guidata scarica da sola ollama e il modello. puoi usare il modello consigliato oppure scriverne uno tuo: l'app controlla se il tuo pc (ram e spazio su disco) ce la fa. puoi anche saltare e farlo dopo
+3. l'**ia**: l'installazione guidata scarica da sola ollama (senza lasciare finestre aperte) e il modello. puoi usare il modello consigliato oppure scriverne uno tuo: l'app controlla se il tuo pc (ram e spazio su disco) ce la fa. puoi anche saltare e farlo dopo
 
 tutto si cambia dalle **impostazioni** (⚙ → impostazioni): nome, città, lingua, modello, avvio automatico e il pulsante per **disinstallare**. i dati stanno in `%APPDATA%\yourlittlefriend\settings.json`.
 

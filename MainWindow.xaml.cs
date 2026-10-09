@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Net.Http;
@@ -9,6 +10,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
+using System.Windows.Media.Effects;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using Windows.Media.Control;
@@ -67,38 +69,85 @@ public partial class MainWindow : Window
     }
 
     // ---- apri / chiudi ----
-    // il contenuto ha dimensione fissa e compare con una dissolvenza: la finestra si allarga con un piccolo rimbalzo
+    // niente animazioni a tempo: la finestra segue una molla fisica (pos va da 0 = chiuso a 1 = aperto).
+    // se il mouse entra e esce di continuo la molla cambia direzione senza scatti, portandosi dietro la velocità.
+    // la velocità pilota anche il "motion blur" (sfocatura) e lo stiramento del contenuto, che spariscono quando si ferma
+    double pos, pos2, vel, target, lastTime;   // pos2 = altezza, che segue pos con un po' di ritardo (prima si allarga, poi si abbassa)
+    bool springOn;
+    readonly Stopwatch clock = Stopwatch.StartNew();
+    readonly BlurEffect fullBlur = new() { RenderingBias = RenderingBias.Performance };
+    readonly BlurEffect miniBlur = new() { RenderingBias = RenderingBias.Performance };
+
     void SetOpen(bool o)
     {
-        if (isOpen == o) return;   // evita di riavviare le animazioni a ogni evento del mouse
+        if (isOpen == o) return;   // evita di ripartire a ogni evento del mouse
         isOpen = o;
-        double w = o ? WOpen : WClosed, h = o ? HOpen : HClosed;
-        IEasingFunction ease = o ? new BackEase { Amplitude = .3, EasingMode = EasingMode.EaseOut } : new CubicEase { EasingMode = EasingMode.EaseInOut };
-        var d = TimeSpan.FromMilliseconds(o ? 420 : 240);
-        DoubleAnimation Anim(double to) => new(to, d) { EasingFunction = ease };
-        BeginAnimation(WidthProperty, Anim(w));
-        BeginAnimation(HeightProperty, Anim(h));
-        BeginAnimation(LeftProperty, Anim((SystemParameters.PrimaryScreenWidth - w) / 2));   // stessa curva: resta sempre centrata
+        target = o ? 1 : 0;
+        if (o && pos < .3) BigMascot.Cheer();
+        if (springOn) return;
+        springOn = true;
+        lastTime = clock.Elapsed.TotalSeconds;
+        CompositionTarget.Rendering += SpringTick;
+    }
 
-        var soft = new CubicEase { EasingMode = EasingMode.EaseOut };
-        if (o)
+    void SpringTick(object? s, EventArgs e)
+    {
+        double now = clock.Elapsed.TotalSeconds, dt = Math.Min(now - lastTime, 1 / 30.0);
+        if (dt < 0.0005) return;   // più eventi nello stesso fotogramma
+        lastTime = now;
+
+        // apertura: un po' di rimbalzo. chiusura: smorzamento critico, niente rimbalzo
+        double zeta = target == 1 ? .58 : 1, omega = target == 1 ? 24 : 28;
+        int steps = (int)Math.Ceiling(dt * 240);
+        double h = dt / steps;
+        for (int i = 0; i < steps; i++)
         {
-            if (Full.Visibility != Visibility.Visible) BigMascot.Cheer();
-            Full.Visibility = Visibility.Visible;
-            Full.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(260)) { BeginTime = TimeSpan.FromMilliseconds(110) });
-            FullShift.BeginAnimation(TranslateTransform.YProperty, new DoubleAnimation(-12, 0, TimeSpan.FromMilliseconds(380)) { BeginTime = TimeSpan.FromMilliseconds(80), EasingFunction = soft });
-            var hide = new DoubleAnimation(0, TimeSpan.FromMilliseconds(120));
-            hide.Completed += (_, _) => { if (isOpen) MiniMascot.Visibility = Visibility.Collapsed; };
-            MiniMascot.BeginAnimation(OpacityProperty, hide);
+            vel += (-2 * zeta * omega * vel - omega * omega * (pos - target)) * h;
+            pos += vel * h;
         }
-        else
+        pos2 += (pos - pos2) * (1 - Math.Exp(-dt * 16));
+
+        if (Math.Abs(pos - target) < .0008 && Math.Abs(vel) < .01 && Math.Abs(pos2 - target) < .0008)
         {
-            var fade = new DoubleAnimation(0, TimeSpan.FromMilliseconds(130));
-            fade.Completed += (_, _) => { if (!isOpen) Full.Visibility = Visibility.Collapsed; };
-            Full.BeginAnimation(OpacityProperty, fade);
-            MiniMascot.Visibility = Visibility.Visible;
-            MiniMascot.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(220)) { BeginTime = TimeSpan.FromMilliseconds(100) });
+            pos = pos2 = target;
+            vel = 0;
+            springOn = false;
+            CompositionTarget.Rendering -= SpringTick;
         }
+        RenderSpring();
+    }
+
+    static double Smooth(double x) { x = Math.Clamp(x, 0, 1); return x * x * (3 - 2 * x); }
+
+    static void SetBlur(UIElement el, BlurEffect b, double radius)
+    {
+        radius = Math.Min(radius, 10);
+        if (radius < .5) { if (el.Effect != null) el.Effect = null; return; }   // fermo: nessun effetto, testo nitido
+        b.Radius = radius;
+        if (el.Effect != b) el.Effect = b;
+    }
+
+    void RenderSpring()
+    {
+        double w = Math.Max(WClosed + (WOpen - WClosed) * pos, WClosed * .9);
+        double hh = Math.Max(HClosed + (HOpen - HClosed) * pos2, HClosed * .9);
+        Width = w;
+        Height = hh;
+        Left = (SystemParameters.PrimaryScreenWidth - w) / 2;
+
+        double p = Math.Clamp(pos2, 0, 1), speed = Math.Abs(vel);
+        double fade = Smooth((p - .3) / .5);        // il contenuto compare quando la finestra è quasi grande
+        Full.Opacity = fade;
+        Full.Visibility = fade > .01 ? Visibility.Visible : Visibility.Collapsed;
+        FullShift.Y = (1 - p) * -14;
+        FullScale.ScaleY = 1 + Math.Min(speed * .02, .06);    // stiramento: si allunga mentre corre
+        FullScale.ScaleX = 1 - Math.Min(speed * .01, .03);
+        SetBlur(Full, fullBlur, speed * 1.4);
+
+        double mini = 1 - Smooth(p / .3);           // la mascotte piccola sfuma via mentre si apre
+        MiniMascot.Opacity = mini;
+        MiniMascot.Visibility = mini > .01 ? Visibility.Visible : Visibility.Collapsed;
+        SetBlur(MiniMascot, miniBlur, speed * 2.2);
     }
 
     bool DragActive => Environment.TickCount64 - dragSeen < 600;

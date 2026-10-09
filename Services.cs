@@ -104,7 +104,19 @@ public static class Ollama
                                $"✗ Too heavy: you have {ram:0} GB of RAM and would need at least {need:0.#}. Pick a smaller model."));
     }
 
-    // scarica e installa ollama se manca, poi si assicura che il server sia acceso
+    // l'installer di ollama apre la sua app (finestra + icona nella barra): chiudiamo la finestra per non confondere l'utente.
+    // il server resta attivo, oppure lo riavviamo noi in nascosto con "ollama serve"
+    static void CloseOllamaWindows()
+    {
+        foreach (var name in new[] { "ollama app", "Ollama" })
+            foreach (var pr in Process.GetProcessesByName(name))
+            {
+                try { if (pr.MainWindowHandle != IntPtr.Zero) pr.CloseMainWindow(); } catch { }
+                finally { pr.Dispose(); }
+            }
+    }
+
+    // scarica e installa ollama se manca, poi si assicura che il server sia acceso (senza finestre)
     public static async Task EnsureInstalled(Action<string, double> report, CancellationToken ct)
     {
         if (await IsUp()) return;
@@ -130,19 +142,39 @@ public static class Ollama
                 }
             }
             report(Loc.L("Installo Ollama…", "Installing Ollama…"), -1);
-            using var p = Process.Start(new ProcessStartInfo(tmp, "/SILENT /NORESTART") { UseShellExecute = true })
+            using var p = Process.Start(new ProcessStartInfo(tmp, "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP-") { UseShellExecute = true })
                 ?? throw new Exception(Loc.L("non riesco ad avviare l'installer di Ollama", "can't start the Ollama installer"));
-            await p.WaitForExitAsync(ct);
+            // non si aspetta che l'installer esca: dopo l'installazione resta aperto finché c'è l'app di ollama che ha lanciato.
+            // basta che i file ci siano e che il programma sia partito (o che sia passato un po' di tempo)
+            var started = DateTime.UtcNow;
+            DateTime? seen = null;
+            while (!p.HasExited)
+            {
+                ct.ThrowIfCancellationRequested();
+                if (FindExe() != null)
+                {
+                    seen ??= DateTime.UtcNow;
+                    if (DateTime.UtcNow - seen > TimeSpan.FromSeconds(10) || await IsUp()) break;
+                }
+                if (DateTime.UtcNow - started > TimeSpan.FromMinutes(5)) break;
+                await Task.Delay(1000, ct);
+            }
             exe = FindExe() ?? throw new Exception(Loc.L("l'installazione di Ollama non è andata a buon fine", "the Ollama installation failed"));
         }
 
         report(Loc.L("Avvio Ollama…", "Starting Ollama…"), -1);
-        for (int i = 0; i < 10 && !await IsUp(); i++) await Task.Delay(1000, ct);   // l'installer di solito lo avvia da solo
+        for (int i = 0; i < 15; i++)   // l'installer di solito lo avvia da solo: intanto si chiudono le sue finestre
+        {
+            CloseOllamaWindows();
+            if (await IsUp()) break;
+            await Task.Delay(1000, ct);
+        }
         if (!await IsUp())
         {
-            Process.Start(new ProcessStartInfo(exe, "serve") { UseShellExecute = false, CreateNoWindow = true });
+            Process.Start(new ProcessStartInfo(exe, "serve") { UseShellExecute = false, CreateNoWindow = true });   // server in nascosto
             for (int i = 0; i < 30 && !await IsUp(); i++) await Task.Delay(1000, ct);
         }
+        CloseOllamaWindows();
         if (!await IsUp()) throw new Exception(Loc.L("Ollama non si avvia", "Ollama won't start"));
     }
 

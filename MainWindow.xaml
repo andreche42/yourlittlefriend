@@ -20,8 +20,13 @@
       <local:Mascot x:Name="MiniMascot" WanderRange="80" Width="28" Height="28" VerticalAlignment="Top" Margin="0,3,0,0"/>
 
       <Grid x:Name="Full" Visibility="Collapsed" Opacity="0" Width="612" Height="154" Margin="0,6,0,0"
-            HorizontalAlignment="Center" VerticalAlignment="Top">
-        <Grid.RenderTransform><TranslateTransform x:Name="FullShift"/></Grid.RenderTransform>
+            HorizontalAlignment="Center" VerticalAlignment="Top" RenderTransformOrigin="0.5,0">
+        <Grid.RenderTransform>
+          <TransformGroup>
+            <ScaleTransform x:Name="FullScale"/>
+            <TranslateTransform x:Name="FullShift"/>
+          </TransformGroup>
+        </Grid.RenderTransform>
         <Grid.RowDefinitions><RowDefinition Height="30"/><RowDefinition Height="*"/></Grid.RowDefinitions>
 
         <DockPanel>
