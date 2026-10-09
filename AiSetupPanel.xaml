@@ -1,0 +1,19 @@
+<UserControl x:Class="YourLittleFriend.AiSetupPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <!-- installer guidato di ollama + modello. usato da onboarding e impostazioni -->
+  <StackPanel>
+    <TextBlock x:Name="Intro" TextWrapping="Wrap" Margin="0,0,0,10"/>
+    <RadioButton x:Name="RDef" Foreground="White" GroupName="model" IsChecked="True" Margin="0,3"/>
+    <RadioButton x:Name="RCus" Foreground="White" GroupName="model" Margin="0,3"/>
+    <TextBox x:Name="CusIn" Style="{StaticResource Field}" Margin="22,4,0,0" IsEnabled="False"/>
+    <TextBlock x:Name="Hint" Foreground="#999999" FontSize="12" TextWrapping="Wrap" Margin="22,3,0,0"/>
+    <TextBlock x:Name="Verdict" TextWrapping="Wrap" Margin="0,10,0,0"/>
+    <ProgressBar x:Name="Bar" Height="8" Margin="0,12,0,0" Maximum="1" Visibility="Collapsed"/>
+    <TextBlock x:Name="Status" TextWrapping="Wrap" Margin="0,6,0,0" Foreground="#CCCCCC"/>
+    <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+      <Button x:Name="Go" Style="{StaticResource Pill}" Click="Go_Click"/>
+      <Button x:Name="Cancel" Style="{StaticResource Pill}" Visibility="Collapsed" Click="Cancel_Click"/>
+    </StackPanel>
+  </StackPanel>
+</UserControl>

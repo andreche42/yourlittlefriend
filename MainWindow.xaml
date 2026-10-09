@@ -8,7 +8,8 @@
         AllowDrop="True" DragEnter="OnDragEnter" DragOver="OnDragOver" DragLeave="OnDragLeave" Drop="OnDrop">
   <Window.Resources>
     <ContextMenu x:Key="Menu">
-      <MenuItem Header="esci" Click="Quit_Click"/>
+      <MenuItem Header="{local:L It=Impostazioni, En=Settings}" Click="Settings_Click"/>
+      <MenuItem Header="{local:L It=Esci, En=Quit}" Click="Quit_Click"/>
     </ContextMenu>
   </Window.Resources>
 
@@ -18,7 +19,9 @@
     <Grid>
       <local:Mascot x:Name="MiniMascot" WanderRange="80" Width="28" Height="28" VerticalAlignment="Top" Margin="0,3,0,0"/>
 
-      <Grid x:Name="Full" Visibility="Collapsed" Margin="14,6,14,10">
+      <Grid x:Name="Full" Visibility="Collapsed" Opacity="0" Width="612" Height="154" Margin="0,6,0,0"
+            HorizontalAlignment="Center" VerticalAlignment="Top">
+        <Grid.RenderTransform><TranslateTransform x:Name="FullShift"/></Grid.RenderTransform>
         <Grid.RowDefinitions><RowDefinition Height="30"/><RowDefinition Height="*"/></Grid.RowDefinitions>
 
         <DockPanel>
@@ -39,8 +42,8 @@
             <Grid x:Name="PageHome">
               <Grid x:Name="Greet" Margin="10,0,0,0">
                 <StackPanel VerticalAlignment="Center" HorizontalAlignment="Left">
-                  <TextBlock Text="Ciao Andrea!" FontSize="26" FontWeight="Bold"/>
-                  <TextBlock Text="Come va?"/>
+                  <TextBlock x:Name="GreetTitle" FontSize="26" FontWeight="Bold"/>
+                  <TextBlock Text="{local:L It='Come va?', En='How are you?'}"/>
                 </StackPanel>
                 <TextBlock x:Name="WeatherText" Text="…" FontSize="16" HorizontalAlignment="Right"
                            VerticalAlignment="Center" TextAlignment="Right"/>
@@ -52,7 +55,7 @@
                   </Grid.ColumnDefinitions>
                   <Image x:Name="CoverImg" Width="64" Height="64" Stretch="UniformToFill"/>
                   <StackPanel Grid.Column="1" Margin="12,0" VerticalAlignment="Center">
-                    <TextBlock Text="Ascoltando ora:" FontSize="18" FontWeight="Bold"/>
+                    <TextBlock Text="{local:L It='Ascoltando ora:', En='Now playing:'}" FontSize="18" FontWeight="Bold"/>
                     <TextBlock x:Name="SongText" FontSize="16" TextWrapping="Wrap"/>
                   </StackPanel>
                   <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
@@ -74,7 +77,7 @@
                 <Rectangle Fill="#555555" Stroke="White" StrokeThickness="2" StrokeDashArray="3 2" RadiusX="12" RadiusY="12"/>
                 <TextBox x:Name="ChatIn" Background="Transparent" BorderThickness="0" Foreground="White" CaretBrush="White"
                          FontSize="16" VerticalContentAlignment="Center" Margin="12,0" AllowDrop="False" KeyDown="ChatKey"/>
-                <TextBlock Text="scrivi qua" Foreground="#BBBBBB" FontSize="16" Margin="14,0" VerticalAlignment="Center" IsHitTestVisible="False">
+                <TextBlock Text="{local:L It='scrivi qua', En='type here'}" Foreground="#BBBBBB" FontSize="16" Margin="14,0" VerticalAlignment="Center" IsHitTestVisible="False">
                   <TextBlock.Style>
                     <Style TargetType="TextBlock">
                       <Setter Property="Visibility" Value="Collapsed"/>
@@ -93,7 +96,7 @@
             <Grid x:Name="PageFile" Visibility="Collapsed">
               <Grid x:Name="DropZone">
                 <Rectangle Stroke="White" StrokeThickness="2" StrokeDashArray="4 3" RadiusX="16" RadiusY="16"/>
-                <TextBlock Text="Trascina o rilascia un file" FontSize="22" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                <TextBlock Text="{local:L It='Trascina o rilascia un file', En='Drag or drop a file'}" FontSize="22" HorizontalAlignment="Center" VerticalAlignment="Center"/>
               </Grid>
               <Grid x:Name="FileView" Visibility="Collapsed">
                 <Grid.ColumnDefinitions><ColumnDefinition Width="90"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
@@ -112,7 +115,7 @@
                     <Rectangle Fill="#555555" Stroke="White" StrokeThickness="2" StrokeDashArray="3 2" RadiusX="12" RadiusY="12"/>
                     <TextBox x:Name="FileIn" Background="Transparent" BorderThickness="0" Foreground="White" CaretBrush="White"
                              FontSize="16" VerticalContentAlignment="Center" Margin="12,0" AllowDrop="False" KeyDown="FileKey"/>
-                    <TextBlock Text="scrivi qua" Foreground="#BBBBBB" FontSize="16" Margin="14,0" VerticalAlignment="Center" IsHitTestVisible="False">
+                    <TextBlock Text="{local:L It='scrivi qua', En='type here'}" Foreground="#BBBBBB" FontSize="16" Margin="14,0" VerticalAlignment="Center" IsHitTestVisible="False">
                       <TextBlock.Style>
                         <Style TargetType="TextBlock">
                           <Setter Property="Visibility" Value="Collapsed"/>
