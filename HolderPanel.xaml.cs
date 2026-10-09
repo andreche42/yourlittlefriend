@@ -119,7 +119,7 @@ public partial class HolderPanel : UserControl
         var tile = new Border
         {
             Width = file ? 80 : 140, Height = 92, Margin = new Thickness(4, 0, 4, 0), Padding = new Thickness(8, 8, 8, 4),
-            CornerRadius = new CornerRadius(12), Cursor = Cursors.Hand
+            CornerRadius = new CornerRadius(12), Cursor = Cursors.Hand, Tag = "nodrag"   // ha il suo clic e il suo trascinamento: non sposta la finestra
         };
         tile.SetResourceReference(Border.BackgroundProperty, "PanelBrush");
         var grid = new Grid();

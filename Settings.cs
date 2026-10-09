@@ -43,6 +43,8 @@ public class Settings
 
     // aspetto: "notch" (attaccato in alto) oppure "bubble" (bolla volante che si sposta e ricorda dove l'hai lasciata)
     public string Style { get; set; } = "notch";
+    public double? NotchX { get; set; }             // centro del notch sullo schermo (vuoto = al centro)
+    public double? NotchY { get; set; }             // bordo alto del notch (vuoto = attaccato in alto)
     public double? BubbleX { get; set; }            // centro della bolla sullo schermo
     public double? BubbleY { get; set; }
     public double BubbleSize { get; set; } = 84;

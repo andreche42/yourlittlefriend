@@ -50,7 +50,9 @@ public partial class SettingsWindow : Window
         RBubble.IsChecked = st.Style == "bubble";
         LBubbleSize.Text = Loc.L("Dimensione della bolla (puoi anche usare Ctrl + rotella sulla bolla)", "Bubble size (you can also use Ctrl + wheel on the bubble)");
         BubbleSl.Value = Math.Clamp(st.BubbleSize, 48, 150);
-        BBubbleHome.Content = Loc.L("Riporta la bolla in alto a destra", "Bring the bubble back to the top right");
+        LMoveNote.Text = Loc.L("Per spostare YourLittleFriend tieni premuto in uno spazio vuoto e trascina: la posizione si ricorda. Il notch si attacca da solo al centro e al bordo alto.",
+                               "To move YourLittleFriend, press and hold on an empty spot and drag: the position is remembered. The notch snaps to the center and to the top edge by itself.");
+        BResetPos.Content = Loc.L("Riporta notch e bolla nella posizione iniziale", "Move the notch and the bubble back to their default position");
         void ShowBubbleOpts() => BubbleOpts.Visibility = RBubble.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
         RNotch.Checked += (_, _) => ShowBubbleOpts();
         RBubble.Checked += (_, _) => ShowBubbleOpts();
@@ -203,12 +205,12 @@ public partial class SettingsWindow : Window
         Theme.Apply();
     }
 
-    bool bubbleHome;   // "riporta la bolla in alto a destra": si applica quando salvi
+    bool resetPos;   // "riporta nella posizione iniziale": si applica quando salvi
 
-    void BubbleHome_Click(object s, RoutedEventArgs e)
+    void ResetPos_Click(object s, RoutedEventArgs e)
     {
-        bubbleHome = true;
-        BBubbleHome.Content = Loc.L("Ok: lo faccio quando salvi ✓", "Ok: will do when you save ✓");
+        resetPos = true;
+        BResetPos.Content = Loc.L("Ok: lo faccio quando salvi ✓", "Ok: will do when you save ✓");
     }
 
     void Change_Click(object s, RoutedEventArgs e) => AiBox.Visibility = AiBox.Visibility == Visibility.Visible ? Visibility.Collapsed : Visibility.Visible;
@@ -237,7 +239,7 @@ public partial class SettingsWindow : Window
         st.WebSearch = WebCb.IsChecked == true;
         st.Style = RBubble.IsChecked == true ? "bubble" : "notch";
         st.BubbleSize = BubbleSl.Value;
-        if (bubbleHome) st.BubbleX = st.BubbleY = null;
+        if (resetPos) st.NotchX = st.NotchY = st.BubbleX = st.BubbleY = null;
         st.ChatOn = FChat.IsChecked == true; st.HolderOn = FHolder.IsChecked == true; st.AskFileOn = FAsk.IsChecked == true;
         st.CalcOn = FCalc.IsChecked == true; st.TranslateOn = FTr.IsChecked == true; st.WikiOn = FWiki.IsChecked == true; st.WeatherOn = FWeather.IsChecked == true;
         st.LensOn = LensCb.IsChecked == true;
