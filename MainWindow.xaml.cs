@@ -10,7 +10,6 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
-using System.Windows.Media.Effects;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using Windows.Media.Control;
@@ -69,21 +68,35 @@ public partial class MainWindow : Window
     }
 
     // ---- apri / chiudi ----
-    // niente animazioni a tempo: la finestra segue una molla fisica (pos va da 0 = chiuso a 1 = aperto).
-    // se il mouse entra e esce di continuo la molla cambia direzione senza scatti, portandosi dietro la velocità.
-    // la velocità pilota anche il "motion blur" (sfocatura) e lo stiramento del contenuto, che spariscono quando si ferma
-    double pos, pos2, vel, target, lastTime;   // pos2 = altezza, che segue pos con un po' di ritardo (prima si allarga, poi si abbassa)
-    bool springOn;
+    // la finestra (trasparente) cambia dimensione solo due volte: grande appena inizia ad aprirsi, piccola quando ha finito di chiudersi.
+    // nel mezzo si muove soltanto il notch (Root) dentro la finestra, che è molto più leggero e senza scatti.
+    // il movimento è una molla fisica: pos va da 0 = chiuso a 1 = aperto (con un po' di rimbalzo), e se il mouse entra e esce
+    // di continuo la molla cambia direzione senza strappi. la velocità pilota la scia di "motion blur" (alloni dietro al notch)
+    const double WinW = 720, WinH = 192;   // finestra aperta: un po' più grande del notch aperto, per lasciare spazio al rimbalzo
+    double pos, vel, target, lastTime;
+    bool springOn, windowBig;
     readonly Stopwatch clock = Stopwatch.StartNew();
-    readonly BlurEffect fullBlur = new() { RenderingBias = RenderingBias.Performance };
-    readonly BlurEffect miniBlur = new() { RenderingBias = RenderingBias.Performance };
+
+    void SetWindowBig(bool big)
+    {
+        if (windowBig == big) return;
+        windowBig = big;
+        double w = big ? WinW : WClosed, h = big ? WinH : HClosed;
+        Width = w;
+        Height = h;
+        Left = (SystemParameters.PrimaryScreenWidth - w) / 2;
+    }
 
     void SetOpen(bool o)
     {
         if (isOpen == o) return;   // evita di ripartire a ogni evento del mouse
         isOpen = o;
         target = o ? 1 : 0;
-        if (o && pos < .3) BigMascot.Cheer();
+        if (o)
+        {
+            if (pos < .3) BigMascot.Cheer();
+            SetWindowBig(true);
+        }
         if (springOn) return;
         springOn = true;
         lastTime = clock.Elapsed.TotalSeconds;
@@ -97,7 +110,7 @@ public partial class MainWindow : Window
         lastTime = now;
 
         // apertura: un po' di rimbalzo. chiusura: smorzamento critico, niente rimbalzo
-        double zeta = target == 1 ? .58 : 1, omega = target == 1 ? 24 : 28;
+        double zeta = target == 1 ? .6 : 1, omega = target == 1 ? 22 : 26;
         int steps = (int)Math.Ceiling(dt * 240);
         double h = dt / steps;
         for (int i = 0; i < steps; i++)
@@ -105,49 +118,49 @@ public partial class MainWindow : Window
             vel += (-2 * zeta * omega * vel - omega * omega * (pos - target)) * h;
             pos += vel * h;
         }
-        pos2 += (pos - pos2) * (1 - Math.Exp(-dt * 16));
 
-        if (Math.Abs(pos - target) < .0008 && Math.Abs(vel) < .01 && Math.Abs(pos2 - target) < .0008)
-        {
-            pos = pos2 = target;
-            vel = 0;
-            springOn = false;
-            CompositionTarget.Rendering -= SpringTick;
-        }
+        bool done = Math.Abs(pos - target) < .001 && Math.Abs(vel) < .02;
+        if (done) { pos = target; vel = 0; }
         RenderSpring();
+        if (!done) return;
+        springOn = false;
+        CompositionTarget.Rendering -= SpringTick;
+        if (target == 0) SetWindowBig(false);   // chiuso: la finestra torna piccola e non copre niente
     }
 
     static double Smooth(double x) { x = Math.Clamp(x, 0, 1); return x * x * (3 - 2 * x); }
 
-    static void SetBlur(UIElement el, BlurEffect b, double radius)
+    // scia: una copia più grande e trasparente del notch. più va veloce, più si vede
+    static void Ghost(Border g, double p, double speed, int i, double alpha)
     {
-        radius = Math.Min(radius, 10);
-        if (radius < .5) { if (el.Effect != null) el.Effect = null; return; }   // fermo: nessun effetto, testo nitido
-        b.Radius = radius;
-        if (el.Effect != b) el.Effect = b;
+        if (alpha < .01) { g.Visibility = Visibility.Collapsed; return; }
+        double gp = Math.Clamp(p + i * speed * .008, 0, 1.12);
+        g.Width = WClosed + (WOpen - WClosed) * gp;
+        g.Height = HClosed + (HOpen - HClosed) * gp;
+        g.Opacity = alpha;
+        g.Visibility = Visibility.Visible;
     }
 
     void RenderSpring()
     {
-        double w = Math.Max(WClosed + (WOpen - WClosed) * pos, WClosed * .9);
-        double hh = Math.Max(HClosed + (HOpen - HClosed) * pos2, HClosed * .9);
-        Width = w;
-        Height = hh;
-        Left = (SystemParameters.PrimaryScreenWidth - w) / 2;
+        double p = Math.Clamp(pos, 0, 1.12);   // oltre 1 = rimbalzo
+        Root.Width = WClosed + (WOpen - WClosed) * p;
+        Root.Height = HClosed + (HOpen - HClosed) * p;
 
-        double p = Math.Clamp(pos2, 0, 1), speed = Math.Abs(vel);
-        double fade = Smooth((p - .3) / .5);        // il contenuto compare quando la finestra è quasi grande
+        double pc = Math.Clamp(pos, 0, 1);
+        double fade = Smooth((pc - .3) / .5);        // il contenuto compare quando il notch è quasi grande
         Full.Opacity = fade;
         Full.Visibility = fade > .01 ? Visibility.Visible : Visibility.Collapsed;
-        FullShift.Y = (1 - p) * -14;
-        FullScale.ScaleY = 1 + Math.Min(speed * .02, .06);    // stiramento: si allunga mentre corre
-        FullScale.ScaleX = 1 - Math.Min(speed * .01, .03);
-        SetBlur(Full, fullBlur, speed * 1.4);
+        FullShift.Y = (1 - pc) * -14;
 
-        double mini = 1 - Smooth(p / .3);           // la mascotte piccola sfuma via mentre si apre
+        double mini = 1 - Smooth(pc / .3);           // la mascotte piccola sfuma via mentre si apre
         MiniMascot.Opacity = mini;
         MiniMascot.Visibility = mini > .01 ? Visibility.Visible : Visibility.Collapsed;
-        SetBlur(MiniMascot, miniBlur, speed * 2.2);
+
+        double speed = Math.Abs(vel), k = Math.Min(speed / 4, 1);
+        Ghost(G1, p, speed, 1, .22 * k);
+        Ghost(G2, p, speed, 2, .12 * k);
+        Ghost(G3, p, speed, 3, .06 * k);
     }
 
     bool DragActive => Environment.TickCount64 - dragSeen < 600;

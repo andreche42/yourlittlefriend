@@ -53,6 +53,8 @@
 
         <CheckBox x:Name="WebCb" Foreground="{DynamicResource FgBrush}" Margin="0,12,0,0"/>
 
+        <TextBlock x:Name="VersionText" Margin="0,18,0,0" Foreground="{DynamicResource FgDimBrush}" FontSize="12"/>
+
         <Button x:Name="BUninstall" Style="{StaticResource Pill}" HorizontalAlignment="Left" Margin="0,26,0,0" Background="#4A1F1F" Foreground="#FFB4B4" Click="Uninstall_Click"/>
       </StackPanel>
     </ScrollViewer>

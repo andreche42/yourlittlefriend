@@ -26,6 +26,7 @@ public partial class SettingsWindow : Window
         LModel.Text = Loc.L("Intelligenza artificiale", "Artificial intelligence");
         BChange.Content = Loc.L("Cambia modello / installa Ollama", "Change model / install Ollama");
         AutoStart.Content = Loc.L("Avvia yourlittlefriend all'avvio del PC", "Start yourlittlefriend when the PC starts");
+        VersionText.Text = $"yourlittlefriend {App.Version}";
         BUninstall.Content = Loc.L("Disinstalla yourlittlefriend", "Uninstall yourlittlefriend");
         BCancel.Content = Loc.L("Annulla", "Cancel");
         BSave.Content = Loc.L("Salva", "Save");

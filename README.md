@@ -43,10 +43,14 @@ serve il [.net 8 sdk](https://dotnet.microsoft.com/download) su windows 10/11.
 l'installer si costruisce con github actions (`.github/workflows/build.yml`, usa [inno setup](https://jrsoftware.org/isinfo.php) con `installer/yourlittlefriend.iss`).
 ogni pull request produce l'installer come artifact per provarlo. per pubblicare una release basta un tag:
 
-    git tag v1.0.0
-    git push origin v1.0.0
+    git tag v1.1.2-beta
+    git push origin v1.1.2-beta
+
+un tag con il trattino (`-beta`) viene pubblicato come **pre-release**. la versione compare in fondo alle impostazioni.
 
 ## avviso ⚠️
+**versione 1.1.2 semi-beta**: funziona, ma è ancora giovane e può avere qualche spigolo. segnalaci cosa non va con un issue!
+
 l'app è ancora in sviluppo e non è ancora in uno stato utilizzabile, ovvero può fare poche cose utili che puoi tranquillamente fare come faresti. nei prossimi aggiornamenti l'app (dovrebbe) migliorare!
 hai suggerimenti o consigli? sbizzarrisciti! apri un issue su questa repo e dicci tutto. faremmo il possibile per portare le tue idee in vita. se sai programmare (anche usando agenti AI) apri una pull request (PR)
 

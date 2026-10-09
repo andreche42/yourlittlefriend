@@ -1,7 +1,7 @@
 name: build
 
 # ad ogni push su main e ad ogni pull request compila l'app e l'installer (scaricabile dagli artifact).
-# con un tag tipo v1.0.0 pubblica anche la release con l'installer.
+# con un tag tipo v1.1.2-beta pubblica anche la release con l'installer.
 on:
   push:
     branches: [main]
@@ -53,3 +53,5 @@ jobs:
         with:
           files: dist/*.exe
           generate_release_notes: true
+          # un tag con il trattino (v1.1.2-beta) esce come pre-release
+          prerelease: ${{ contains(github.ref_name, '-') }}

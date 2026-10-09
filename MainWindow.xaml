@@ -13,7 +13,13 @@
     </ContextMenu>
   </Window.Resources>
 
-  <Border x:Name="Root" Background="{DynamicResource BgBrush}" BorderBrush="{DynamicResource OutlineBrush}" BorderThickness="1.5" CornerRadius="0,0,22,22" ContextMenu="{StaticResource Menu}"
+  <!-- la finestra è trasparente: si ingrandisce solo all'apertura e si rimpicciolisce a chiusura finita.
+       durante l'animazione si muovono solo Root (il notch) e le tre scie G1..G3 -->
+  <Grid>
+    <Border x:Name="G3" Opacity="0" Visibility="Collapsed" IsHitTestVisible="False" Background="{DynamicResource BgSolidBrush}" CornerRadius="0,0,22,22" HorizontalAlignment="Center" VerticalAlignment="Top"/>
+    <Border x:Name="G2" Opacity="0" Visibility="Collapsed" IsHitTestVisible="False" Background="{DynamicResource BgSolidBrush}" CornerRadius="0,0,22,22" HorizontalAlignment="Center" VerticalAlignment="Top"/>
+    <Border x:Name="G1" Opacity="0" Visibility="Collapsed" IsHitTestVisible="False" Background="{DynamicResource BgSolidBrush}" CornerRadius="0,0,22,22" HorizontalAlignment="Center" VerticalAlignment="Top"/>
+  <Border x:Name="Root" Width="230" Height="34" HorizontalAlignment="Center" VerticalAlignment="Top" ClipToBounds="True" Background="{DynamicResource BgBrush}" BorderBrush="{DynamicResource OutlineBrush}" BorderThickness="1.5" CornerRadius="0,0,22,22" ContextMenu="{StaticResource Menu}"
           TextElement.Foreground="{DynamicResource FgBrush}" TextElement.FontFamily="Segoe UI" TextElement.FontSize="14" ToolTipService.InitialShowDelay="250"
           MouseEnter="OnEnter" MouseLeave="OnLeave">
     <Grid>
@@ -154,4 +160,5 @@
       </Grid>
     </Grid>
   </Border>
+  </Grid>
 </Window>
