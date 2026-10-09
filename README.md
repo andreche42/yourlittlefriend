@@ -19,24 +19,24 @@ serve il [.net 8 sdk](https://dotnet.microsoft.com/download) su windows 10/11.
 in alternativa, puoi prendere le build stabili dalle release. le build stabili hanno installer e partono al avvio del pc. sono fatte in modo set-and-forget. ricordati: puoi disinstallare l'app quando vuoi o disabilitare l'avvio automatico da task manager!
 
 ## avviso ⚠️
-l'app e ancora in sviluppo e non e ancora in uno stato utilizzabile, ovvero puo fare poche cose utili che puoi tranquillamente fare come faresti. nei prossimi aggiornamenti l'app (dovrebbe) migliorare!
+l'app è ancora in sviluppo e non è ancora in uno stato utilizzabile, ovvero può fare poche cose utili che puoi tranquillamente fare come faresti. nei prossimi aggiornamenti l'app (dovrebbe) migliorare!
 hai suggerimenti o consigli? sbizzarrisciti! apri un issue su questa repo e dicci tutto. faremmo il possibile per portare le tue idee in vita. se sai programmare (anche usando agenti AI) apri una pull request (PR)
 
 
 ## roadmap
 ### holder
-holder ti permettera' di trascinare dei file sulla notch in alto. i file rimangono li e puoi ri-trascinarli dove vuoi. si integra con le api di sistema per garantire che funzioni su tutte le app.
+holder ti permetterà di trascinare dei file sulla notch in alto. i file rimangono li e puoi ri-trascinarli dove vuoi. si integra con le api di sistema per garantire che funzioni su tutte le app.
 
 ### menu impostazioni migliorato
-gestisci citta' per il meteo, cambia nome, cambia lingua, e personalizza l'app a tuo piacere, anche i colori!
+gestisci città per il meteo, cambia nome, cambia lingua, e personalizza l'app a tuo piacere, anche i colori!
 
 ### byollm
 porta la tua LLM su yourlittlefriend: dal menu impostazioni trovi l'autoinstaller di ollama per scaricare LLM da usare per yourlittlefriend. in alternativa, collegati alle API di qualche AI (vercel, openai, anthropic) e usa modelli premium a pagamento.
 
 ### animazioni del omino
-yourlittlefriend ancora piu' carino :)
+yourlittlefriend ancora più carino :)
 
----
+---------
 guide:
 
 ## llm locale (ollama)
