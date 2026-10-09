@@ -8,9 +8,11 @@ un piccolo amico nel notch del pc (windows). si apre quando ci passi sopra col m
 - **home**: saluto + meteo; se parte una canzone mostra copertina, titolo, controlli e i colori seguono la copertina
 - **chat**: parli con un llm locale (ollama) che può anche controllare il pc
 - **+**: trascina un file, scrivi cosa farne e ti risponde
-- **📥 holder** (il "portabicchieri"): trascina sul notch file o testo e restano lì, ordinati in caselle (icona o miniatura per i file, un pezzo di testo per il testo). li puoi ritrascinare dove vuoi, anche dopo aver riavviato il pc. doppio click apre il file o copia il testo, ✕ toglie un elemento, 🗑 svuota tutto. i file non vengono copiati: il holder ricorda solo dove stanno
+- **portafile** (il "portabicchieri", la scheda con la vaschetta): trascina sul notch file o testo e restano lì, ordinati in caselle (icona o miniatura per i file, un pezzo di testo per il testo). li puoi ritrascinare dove vuoi, anche dopo aver riavviato il pc. doppio click apre il file o copia il testo, ✕ toglie un elemento, 🗑 svuota tutto. i file non vengono copiati: il portafile ricorda solo dove stanno
 - le risposte arrivano in tempo reale, parola per parola, con un effetto "fumo" che si dirada (stile imessage)
 - l'omino è animato: sbatte gli occhi, va a spasso nel notch, lavora (puntini e occhi che leggono) mentre l'ia risponde, sorride quando ha finito (o quando apri il notch) e balla se c'è musica
+- **ricerca sul web**: se chiedi una notizia o qualcosa che non sa, l'ia cerca da sola su internet (duckduckgo, con wikipedia come riserva) e risponde in base ai risultati, senza chiederti conferma. google non permette di leggere i suoi risultati in modo affidabile, per questo non si usa. si può spegnere dalle impostazioni
+- **aspetto**: dalle impostazioni scegli un tema (notte, giorno, oceano, tramonto, foresta, caramella), il colore principale, il colore dell'omino (anche in esadecimale), la trasparenza e un contorno colorato per il notch. cambia tutto al volo e se annulli torna com'era
 - tasto destro (o ⚙) per uscire
 
 ## installazione (consigliata)
@@ -20,11 +22,15 @@ scarica `yourlittlefriend-setup-x.y.z.exe` dalle [release](../../releases) e avv
 2. scegli la cartella (di base `AppData\Roaming\yourlittlefriend`)
 3. scegli se farlo partire all'avvio del pc
 
+**aggiornare**: scarica il nuovo installer e avvialo, senza disinstallare niente. chiude da solo l'app aperta, si installa sopra la versione vecchia (stessa cartella), ricorda se avevi l'avvio automatico e non tocca le tue impostazioni né il portafile. se per sbaglio provi a installare una versione più vecchia di quella che hai, ti avvisa.
+
 al primo avvio l'app ti chiede:
 
 1. il tuo **nome**
 2. la tua **città** per il meteo (puoi saltare)
-3. l'**ia**: l'installazione guidata scarica da sola ollama e il modello. puoi usare il modello consigliato oppure scriverne uno tuo: l'app controlla se il tuo pc (ram e spazio su disco) ce la fa. puoi anche saltare e farlo dopo
+3. l'**ia**: l'installazione guidata controlla subito se ollama è già installato e quali modelli hai già: se ne trovi uno che ti va bene lo usi al volo, senza scaricare niente. altrimenti scarica da sola ollama (senza lasciare finestre aperte) e il modello. puoi usare il modello consigliato oppure scriverne uno tuo: l'app controlla se il tuo pc (ram e spazio su disco) ce la fa. puoi anche saltare e farlo dopo
+
+nelle impostazioni c'è anche la sezione **Ollama**: vedi se è acceso, lo avvii o lo fermi (con barra di progresso mentre parte), vedi lo stato del modello in uso (installato / in memoria), carichi il modello in memoria per avere subito la prima risposta e scarichi dalla memoria i modelli attivi. si aggiorna da sola ogni due secondi.
 
 tutto si cambia dalle **impostazioni** (⚙ → impostazioni): nome, città, lingua, modello, avvio automatico e il pulsante per **disinstallare**. i dati stanno in `%APPDATA%\yourlittlefriend\settings.json`.
 

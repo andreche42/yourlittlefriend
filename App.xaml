@@ -4,7 +4,7 @@
   <Application.Resources>
     <Style TargetType="Button">
       <Setter Property="Background" Value="Transparent"/>
-      <Setter Property="Foreground" Value="#DDDDDD"/>
+      <Setter Property="Foreground" Value="{DynamicResource FgBrush}"/>
       <Setter Property="FontSize" Value="16"/>
       <Setter Property="Padding" Value="9,2"/>
       <Setter Property="Cursor" Value="Hand"/>
@@ -16,7 +16,10 @@
             </Border>
             <ControlTemplate.Triggers>
               <Trigger Property="IsMouseOver" Value="True">
-                <Setter TargetName="B" Property="Background" Value="#2A2A2A"/>
+                <Setter TargetName="B" Property="Background" Value="{DynamicResource PanelHoverBrush}"/>
+              </Trigger>
+              <Trigger Property="IsEnabled" Value="False">
+                <Setter TargetName="B" Property="Opacity" Value="0.45"/>
               </Trigger>
             </ControlTemplate.Triggers>
           </ControlTemplate>
@@ -25,17 +28,34 @@
     </Style>
     <!-- bottone pieno per le finestre normali (onboarding, impostazioni) -->
     <Style x:Key="Pill" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
-      <Setter Property="Background" Value="#2B2B2B"/>
-      <Setter Property="Foreground" Value="White"/>
+      <Setter Property="Background" Value="{DynamicResource PanelBrush}"/>
       <Setter Property="FontSize" Value="14"/>
       <Setter Property="Padding" Value="16,7"/>
       <Setter Property="Margin" Value="0,0,8,0"/>
     </Style>
+    <!-- bottone principale con il colore d'accento -->
+    <Style x:Key="Primary" TargetType="Button" BasedOn="{StaticResource Pill}">
+      <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
+      <Setter Property="Foreground" Value="{DynamicResource AccentFgBrush}"/>
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="Button">
+            <Border x:Name="B" Background="{TemplateBinding Background}" CornerRadius="12" Padding="{TemplateBinding Padding}">
+              <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Border>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="B" Property="Opacity" Value="0.85"/></Trigger>
+              <Trigger Property="IsEnabled" Value="False"><Setter TargetName="B" Property="Opacity" Value="0.45"/></Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
     <Style x:Key="Field" TargetType="TextBox">
-      <Setter Property="Background" Value="#2B2B2B"/>
-      <Setter Property="Foreground" Value="White"/>
-      <Setter Property="CaretBrush" Value="White"/>
-      <Setter Property="BorderBrush" Value="#555555"/>
+      <Setter Property="Background" Value="{DynamicResource PanelBrush}"/>
+      <Setter Property="Foreground" Value="{DynamicResource FgBrush}"/>
+      <Setter Property="CaretBrush" Value="{DynamicResource FgBrush}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource FgDimBrush}"/>
       <Setter Property="Padding" Value="8,6"/>
       <Setter Property="FontSize" Value="15"/>
     </Style>

@@ -20,7 +20,8 @@ public static class Actions
      {"type":"function","function":{"name":"media_control","description":"play/pausa, brano successivo o precedente","parameters":{"type":"object","properties":{"action":{"type":"string","enum":["play_pause","next","previous"]}},"required":["action"]}}},
      {"type":"function","function":{"name":"play_on_spotify","description":"cerca una canzone su spotify e la mette in riproduzione","parameters":{"type":"object","properties":{"query":{"type":"string","description":"titolo e artista"}},"required":["query"]}}},
      {"type":"function","function":{"name":"open_app","description":"apre un'app: calcolatrice, blocco note, esplora file, impostazioni, spotify","parameters":{"type":"object","properties":{"name":{"type":"string"}},"required":["name"]}}},
-     {"type":"function","function":{"name":"search_web","description":"cerca qualcosa su google nel browser","parameters":{"type":"object","properties":{"query":{"type":"string"}},"required":["query"]}}},
+     {"type":"function","function":{"name":"search_web","description":"apre il browser con una ricerca google. usalo SOLO se l'utente chiede esplicitamente di aprire il browser","parameters":{"type":"object","properties":{"query":{"type":"string"}},"required":["query"]}}},
+     {"type":"function","function":{"name":"web_search","description":"cerca su internet e restituisce i primi risultati. usalo per notizie, fatti recenti o cose che non sai","parameters":{"type":"object","properties":{"query":{"type":"string"}},"required":["query"]}}},
      {"type":"function","function":{"name":"pc_power","description":"blocca, sospende, spegne o riavvia il pc","parameters":{"type":"object","properties":{"action":{"type":"string","enum":["lock","sleep","shutdown","restart"]}},"required":["action"]}}}
     ]
     """;
@@ -105,6 +106,14 @@ public static class Actions
                         () => Task.FromResult(Loc.L("app non in lista, posso aprire: ", "app not in the list, I can open: ") + string.Join(", ", Apps.Keys)));
                 return new(Loc.L($"aprire «{n}»", $"open «{n}»"), new[] { Loc.L($"avvio «{target}»", $"I launch «{target}»") }, true,
                     Sync(() => { Open(target); return Loc.L($"aperto {n}", $"opened {n}"); }));
+            }
+            case "web_search":
+            {
+                var q = S("query");
+                return new(Loc.L($"cerco «{q}» sul web", $"searching «{q}» on the web"), Array.Empty<string>(), false,
+                    () => Settings.Current.WebSearch
+                        ? Web.Search(q)
+                        : Task.FromResult(Loc.L("la ricerca sul web è disattivata nelle impostazioni", "web search is turned off in the settings")));
             }
             case "search_web":
             {

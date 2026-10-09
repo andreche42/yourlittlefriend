@@ -1,0 +1,32 @@
+<UserControl x:Class="YourLittleFriend.OllamaStatusPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <!-- stato di ollama: acceso/spento, modello scelto, modelli attivi in memoria. si aggiorna da solo ogni 2 secondi -->
+  <Border Background="{DynamicResource CardBrush}" CornerRadius="12" Padding="16">
+    <StackPanel>
+      <DockPanel>
+        <TextBlock x:Name="Title" FontWeight="SemiBold" FontSize="15" DockPanel.Dock="Left"/>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+          <TextBlock x:Name="Dot" Text="●" FontSize="14" VerticalAlignment="Center" Margin="0,0,6,0"/>
+          <TextBlock x:Name="StateText" VerticalAlignment="Center"/>
+        </StackPanel>
+      </DockPanel>
+      <ProgressBar x:Name="Bar" Height="6" IsIndeterminate="True" Margin="0,10,0,0" Visibility="Collapsed"/>
+      <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+        <Button x:Name="BStart" Style="{StaticResource Pill}" Click="Start_Click"/>
+        <Button x:Name="BStop" Style="{StaticResource Pill}" Click="Stop_Click"/>
+      </StackPanel>
+
+      <TextBlock x:Name="ModelLine" Margin="0,12,0,0" TextWrapping="Wrap"/>
+      <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+        <TextBlock x:Name="MDot" Text="●" FontSize="14" VerticalAlignment="Center" Margin="0,0,6,0"/>
+        <TextBlock x:Name="MState" VerticalAlignment="Center" TextWrapping="Wrap"/>
+      </StackPanel>
+      <Button x:Name="BLoad" Style="{StaticResource Pill}" HorizontalAlignment="Left" Margin="0,8,0,0" Click="Load_Click"/>
+
+      <TextBlock x:Name="ActiveTitle" FontWeight="SemiBold" Margin="0,14,0,4"/>
+      <StackPanel x:Name="ActiveList"/>
+      <TextBlock x:Name="Msg" Foreground="#FF9B9B" TextWrapping="Wrap" Margin="0,8,0,0"/>
+    </StackPanel>
+  </Border>
+</UserControl>

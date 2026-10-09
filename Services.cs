@@ -104,7 +104,86 @@ public static class Ollama
                                $"✗ Too heavy: you have {ram:0} GB of RAM and would need at least {need:0.#}. Pick a smaller model."));
     }
 
-    // scarica e installa ollama se manca, poi si assicura che il server sia acceso
+    public static bool IsInstalled => FindExe() != null;
+
+    // se ollama è installato ma spento, avvia il server in nascosto (senza finestre). true se alla fine risponde
+    public static async Task<bool> StartIfInstalled(CancellationToken ct = default)
+    {
+        if (await IsUp()) return true;
+        var exe = FindExe();
+        if (exe == null) return false;
+        try { Process.Start(new ProcessStartInfo(exe, "serve") { UseShellExecute = false, CreateNoWindow = true }); } catch { return false; }
+        for (int i = 0; i < 20 && !await IsUp(); i++) await Task.Delay(1000, ct);
+        return await IsUp();
+    }
+
+    // modelli già scaricati (nome e dimensione in byte)
+    public static async Task<List<(string Name, long Size)>> ListModels()
+    {
+        var list = new List<(string, long)>();
+        using var cts = new CancellationTokenSource(5000);
+        using var d = JsonDocument.Parse(await Http.GetStringAsync(Api + "/api/tags", cts.Token));
+        if (d.RootElement.TryGetProperty("models", out var ms))
+            foreach (var m in ms.EnumerateArray())
+                list.Add((m.GetProperty("name").GetString() ?? "", m.TryGetProperty("size", out var sz) ? sz.GetInt64() : 0));
+        list.RemoveAll(m => m.Item1 == "");
+        return list;
+    }
+
+    // modelli caricati in memoria in questo momento (nome, dimensione, quanta sta nella scheda video)
+    public static async Task<List<(string Name, long Size, long Vram)>> Running()
+    {
+        var list = new List<(string, long, long)>();
+        using var cts = new CancellationTokenSource(4000);
+        using var d = JsonDocument.Parse(await Http.GetStringAsync(Api + "/api/ps", cts.Token));
+        if (d.RootElement.TryGetProperty("models", out var ms))
+            foreach (var m in ms.EnumerateArray())
+                list.Add((m.GetProperty("name").GetString() ?? "",
+                          m.TryGetProperty("size", out var sz) ? sz.GetInt64() : 0,
+                          m.TryGetProperty("size_vram", out var vr) ? vr.GetInt64() : 0));
+        list.RemoveAll(m => m.Item1 == "");
+        return list;
+    }
+
+    static async Task Generate(string model, JsonNode keepAlive, CancellationToken ct)
+    {
+        var body = new JsonObject { ["model"] = model, ["keep_alive"] = keepAlive };
+        using var res = await Http.PostAsync(Api + "/api/generate", new StringContent(body.ToJsonString(), Encoding.UTF8, "application/json"), ct);
+        if (!res.IsSuccessStatusCode) throw new Exception(await res.Content.ReadAsStringAsync(ct));
+    }
+
+    // carica il modello in memoria (senza fare domande), così la prima risposta non aspetta. resta caricato 30 minuti
+    public static Task Load(string model, CancellationToken ct = default) => Generate(model, JsonValue.Create("30m")!, ct);
+
+    // toglie il modello dalla memoria
+    public static Task Unload(string model, CancellationToken ct = default) => Generate(model, JsonValue.Create(0), ct);
+
+    // ferma ollama: scarica i modelli e chiude il server (e la sua icona nella barra, se c'è)
+    public static async Task Stop()
+    {
+        try { foreach (var m in await Running()) await Unload(m.Name); } catch { }
+        foreach (var name in new[] { "ollama app", "ollama", "ollama_llama_server" })
+            foreach (var pr in Process.GetProcessesByName(name))
+            {
+                try { pr.Kill(true); } catch { }
+                finally { pr.Dispose(); }
+            }
+        for (int i = 0; i < 10 && await IsUp(); i++) await Task.Delay(500);
+    }
+
+    // l'installer di ollama apre la sua app (finestra + icona nella barra): chiudiamo la finestra per non confondere l'utente.
+    // il server resta attivo, oppure lo riavviamo noi in nascosto con "ollama serve"
+    static void CloseOllamaWindows()
+    {
+        foreach (var name in new[] { "ollama app", "Ollama" })
+            foreach (var pr in Process.GetProcessesByName(name))
+            {
+                try { if (pr.MainWindowHandle != IntPtr.Zero) pr.CloseMainWindow(); } catch { }
+                finally { pr.Dispose(); }
+            }
+    }
+
+    // scarica e installa ollama se manca, poi si assicura che il server sia acceso (senza finestre)
     public static async Task EnsureInstalled(Action<string, double> report, CancellationToken ct)
     {
         if (await IsUp()) return;
@@ -130,19 +209,39 @@ public static class Ollama
                 }
             }
             report(Loc.L("Installo Ollama…", "Installing Ollama…"), -1);
-            using var p = Process.Start(new ProcessStartInfo(tmp, "/SILENT /NORESTART") { UseShellExecute = true })
+            using var p = Process.Start(new ProcessStartInfo(tmp, "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP-") { UseShellExecute = true })
                 ?? throw new Exception(Loc.L("non riesco ad avviare l'installer di Ollama", "can't start the Ollama installer"));
-            await p.WaitForExitAsync(ct);
+            // non si aspetta che l'installer esca: dopo l'installazione resta aperto finché c'è l'app di ollama che ha lanciato.
+            // basta che i file ci siano e che il programma sia partito (o che sia passato un po' di tempo)
+            var started = DateTime.UtcNow;
+            DateTime? seen = null;
+            while (!p.HasExited)
+            {
+                ct.ThrowIfCancellationRequested();
+                if (FindExe() != null)
+                {
+                    seen ??= DateTime.UtcNow;
+                    if (DateTime.UtcNow - seen > TimeSpan.FromSeconds(10) || await IsUp()) break;
+                }
+                if (DateTime.UtcNow - started > TimeSpan.FromMinutes(5)) break;
+                await Task.Delay(1000, ct);
+            }
             exe = FindExe() ?? throw new Exception(Loc.L("l'installazione di Ollama non è andata a buon fine", "the Ollama installation failed"));
         }
 
         report(Loc.L("Avvio Ollama…", "Starting Ollama…"), -1);
-        for (int i = 0; i < 10 && !await IsUp(); i++) await Task.Delay(1000, ct);   // l'installer di solito lo avvia da solo
+        for (int i = 0; i < 15; i++)   // l'installer di solito lo avvia da solo: intanto si chiudono le sue finestre
+        {
+            CloseOllamaWindows();
+            if (await IsUp()) break;
+            await Task.Delay(1000, ct);
+        }
         if (!await IsUp())
         {
-            Process.Start(new ProcessStartInfo(exe, "serve") { UseShellExecute = false, CreateNoWindow = true });
+            Process.Start(new ProcessStartInfo(exe, "serve") { UseShellExecute = false, CreateNoWindow = true });   // server in nascosto
             for (int i = 0; i < 30 && !await IsUp(); i++) await Task.Delay(1000, ct);
         }
+        CloseOllamaWindows();
         if (!await IsUp()) throw new Exception(Loc.L("Ollama non si avvia", "Ollama won't start"));
     }
 
