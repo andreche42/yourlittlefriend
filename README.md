@@ -5,7 +5,7 @@
 
 YourLittleFriend è un piccolo amico nel notch del pc o in una bolla (windows). si apre quando ci passi sopra col mouse.
 
-English translation: (README-english.md)[https://github.com/andreche42/yourlittlefriend/blob/main/README-english.md]
+English translation: [README-english.md](https://github.com/andreche42/yourlittlefriend/blob/main/README-english.md)
 
 - **home**: saluto + meteo; se parte una canzone mostra copertina, titolo, controlli e i colori seguono la copertina
 - **chat**: parli con un llm locale (ollama) che può anche controllare il pc
