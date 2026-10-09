@@ -60,10 +60,7 @@ ogni pull request produce l'installer come artifact per provarlo. per pubblicare
 
 il tag può avere o no la "v" davanti. se crei la release a mano da github, la build allega da sola l'installer (con la versione giusta) senza toccare titolo e note. un tag con il trattino (`-beta`) creato dalla build esce come **pre-release**. la versione compare in fondo alle impostazioni.
 
-## avviso ⚠️
-**versione 1.1.3 semi-beta**: funziona, ma è ancora giovane e può avere qualche spigolo. segnalaci cosa non va con un issue!
-
-l'app è ancora in sviluppo e non è ancora in uno stato utilizzabile, ovvero può fare poche cose utili che puoi tranquillamente fare come faresti. nei prossimi aggiornamenti l'app (dovrebbe) migliorare!
+## ❤️‍🩹 Aiutaci
 hai suggerimenti o consigli? sbizzarrisciti! apri un issue su questa repo e dicci tutto. faremmo il possibile per portare le tue idee in vita. se sai programmare (anche usando agenti AI) apri una pull request (PR)
 
 
