@@ -36,9 +36,7 @@ porta la tua LLM su yourlittlefriend: dal menu impostazioni trovi l'autoinstalle
 ### animazioni del omino
 yourlittlefriend ancora più carino :)
 
-----------
-
-### guide:
+### guide
 ## llm locale (ollama)
 
 1. installa ollama da https://ollama.com/download
