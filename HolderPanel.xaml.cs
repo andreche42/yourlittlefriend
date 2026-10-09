@@ -161,6 +161,7 @@ public partial class HolderPanel : UserControl
             Content = "✕", FontSize = 10, Padding = new Thickness(5, 1, 5, 1), Background = Brushes.Black, Visibility = Visibility.Collapsed,
             HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Top, Margin = new Thickness(0, -6, -6, 0)
         };
+        x.ToolTip = Loc.L("Togli", "Remove");
         x.Click += (_, _) => Remove(it);
         grid.Children.Add(x);
         tile.Child = grid;

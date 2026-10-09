@@ -14,7 +14,7 @@
   </Window.Resources>
 
   <Border x:Name="Root" Background="Black" CornerRadius="0,0,22,22" ContextMenu="{StaticResource Menu}"
-          TextElement.Foreground="White" TextElement.FontFamily="Segoe UI" TextElement.FontSize="14"
+          TextElement.Foreground="White" TextElement.FontFamily="Segoe UI" TextElement.FontSize="14" ToolTipService.InitialShowDelay="250"
           MouseEnter="OnEnter" MouseLeave="OnLeave">
     <Grid>
       <local:Mascot x:Name="MiniMascot" WanderRange="80" Width="28" Height="28" VerticalAlignment="Top" Margin="0,3,0,0"/>
@@ -25,12 +25,19 @@
         <Grid.RowDefinitions><RowDefinition Height="30"/><RowDefinition Height="*"/></Grid.RowDefinitions>
 
         <DockPanel>
-          <Button DockPanel.Dock="Right" Content="⚙" Click="Gear_Click"/>
+          <Button DockPanel.Dock="Right" Content="⚙" Click="Gear_Click" ToolTip="{local:L It=Impostazioni, En=Settings}"/>
           <StackPanel Orientation="Horizontal">
             <Button x:Name="T0" Content="⌂" Tag="0" Click="Tab_Click" ToolTip="{local:L It=Home, En=Home}"/>
             <Button x:Name="T1" Content="💬" Tag="1" Click="Tab_Click" ToolTip="{local:L It=Chat, En=Chat}"/>
+            <Button x:Name="T3" Tag="3" Click="Tab_Click" ToolTip="{local:L It=Portafile, En='File holder'}">
+              <Viewbox Width="17" Height="17" Margin="0,2">
+                <Canvas Width="16" Height="16">
+                  <Path Stroke="#DDDDDD" StrokeThickness="1.5" StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                        Data="M2,9.5 L2,13 L14,13 L14,9.5 M8,2 L8,9.5 M4.8,6.6 L8,9.8 L11.2,6.6"/>
+                </Canvas>
+              </Viewbox>
+            </Button>
             <Button x:Name="T2" Content="+" Tag="2" Click="Tab_Click" ToolTip="{local:L It='Chiedi su un file', En='Ask about a file'}"/>
-            <Button x:Name="T3" Content="📥" Tag="3" Click="Tab_Click" ToolTip="{local:L It='Holder: file e testo', En='Holder: files and text'}"/>
           </StackPanel>
         </DockPanel>
 
@@ -60,9 +67,9 @@
                     <TextBlock x:Name="SongText" FontSize="16" TextWrapping="Wrap"/>
                   </StackPanel>
                   <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Button x:Name="BPrev" Content="⏮" Tag="prev" Click="Ctl"/>
-                    <Button x:Name="BPlay" Content="⏯" Tag="play" Click="Ctl"/>
-                    <Button x:Name="BNext" Content="⏭" Tag="next" Click="Ctl"/>
+                    <Button x:Name="BPrev" Content="⏮" Tag="prev" Click="Ctl" ToolTip="{local:L It=Precedente, En=Previous}"/>
+                    <Button x:Name="BPlay" Content="⏯" Tag="play" Click="Ctl" ToolTip="{local:L It='Play / Pausa', En='Play / Pause'}"/>
+                    <Button x:Name="BNext" Content="⏭" Tag="next" Click="Ctl" ToolTip="{local:L It=Successivo, En=Next}"/>
                   </StackPanel>
                 </Grid>
               </Border>

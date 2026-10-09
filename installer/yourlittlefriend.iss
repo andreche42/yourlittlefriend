@@ -26,6 +26,7 @@ UsePreviousLanguage=no
 ; se l'app è aperta l'installer (e il disinstallatore) chiedono di chiuderla
 AppMutex=yourlittlefriend-single
 CloseApplications=yes
+SetupIconFile=..\icon.ico
 UninstallDisplayIcon={app}\yourlittlefriend.exe
 
 [Languages]
