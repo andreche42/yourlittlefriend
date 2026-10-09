@@ -56,6 +56,21 @@ public partial class SettingsWindow : Window
         RBubble.Checked += (_, _) => ShowBubbleOpts();
         ShowBubbleOpts();
 
+        // lente di ingrandimento
+        LLens.Text = Loc.L("Lente di ingrandimento", "Magnifying glass");
+        LensCb.Content = Loc.L("Attiva la lente (doppio clic sull'omino)", "Turn the magnifier on (double-click the mascot)");
+        LLensNote.Text = Loc.L("Doppio clic sull'omino: diventa una lente che segue il cursore e ingrandisce lo schermo. Tieni premuto per sottolineare, rotella per cambiare l'ingrandimento, doppio clic (o clic destro) per toglierla.",
+                               "Double-click the mascot: it becomes a lens that follows the cursor and magnifies the screen. Hold the button to underline, use the wheel to change the zoom, double-click (or right-click) to remove it.");
+        LLensColor.Text = Loc.L("Colore della sottolineatura", "Underline color");
+        LLensSize.Text = Loc.L("Dimensione della lente", "Lens size");
+        LLensZoom.Text = Loc.L("Ingrandimento", "Zoom");
+        LensCb.IsChecked = st.LensOn;
+        LensHex.Text = st.LensColor;
+        LensSizeSl.Value = Math.Clamp(st.LensSize, 200, 700);
+        LensZoomSl.Value = Math.Clamp(st.LensZoom, 1.5, 6);
+        foreach (var hex in new[] { "#FFE600", "#FFB020", "#9BE564", "#FF7AC6", "#4DD2FF", "#FF5C5C" })
+            LensSw.Children.Add(Swatch(hex, () => LensHex.Text = hex));
+
         // funzioni
         LFeat.Text = Loc.L("Funzioni (la home c'è sempre)", "Features (home is always on)");
         FChat.Content = Loc.L("💬 Chat con l'IA", "💬 AI chat");
@@ -225,6 +240,10 @@ public partial class SettingsWindow : Window
         if (bubbleHome) st.BubbleX = st.BubbleY = null;
         st.ChatOn = FChat.IsChecked == true; st.HolderOn = FHolder.IsChecked == true; st.AskFileOn = FAsk.IsChecked == true;
         st.CalcOn = FCalc.IsChecked == true; st.TranslateOn = FTr.IsChecked == true; st.WikiOn = FWiki.IsChecked == true; st.WeatherOn = FWeather.IsChecked == true;
+        st.LensOn = LensCb.IsChecked == true;
+        if (Theme.TryParse(LensHex.Text) != null) st.LensColor = LensHex.Text.Trim();
+        st.LensSize = LensSizeSl.Value;
+        st.LensZoom = LensZoomSl.Value;
         st.DeepLKey = DeepLIn.Text.Trim();
         st.LibreUrl = LibreUrlIn.Text.Trim();
         st.LibreKey = LibreKeyIn.Text.Trim();

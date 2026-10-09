@@ -42,18 +42,23 @@ italian.StartupTask=Avvia yourlittlefriend all'avvio del PC
 english.StartupTask=Start yourlittlefriend when the PC starts
 italian.DowngradeWarn=Hai già installato una versione più recente (%1) di quella di questo installer (%2).%nVuoi installare comunque la versione più vecchia?
 english.DowngradeWarn=A newer version (%1) than this installer's (%2) is already installed.%nDo you want to install the older version anyway?
+italian.DesktopTask=Crea un'icona sul desktop
 italian.LaunchApp=Avvia yourlittlefriend
+english.DesktopTask=Create a desktop icon
 english.LaunchApp=Launch yourlittlefriend
 
 [Tasks]
 ; la domanda "vuoi farlo avviare all'avvio del pc?" (si può cambiare anche dalle impostazioni dell'app)
 Name: "startup"; Description: "{cm:StartupTask}"
+; icona sul desktop (attiva di base; si può togliere la spunta)
+Name: "desktopicon"; Description: "{cm:DesktopTask}"
 
 [Files]
 Source: "..\publish\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
 Name: "{userprograms}\yourlittlefriend"; Filename: "{app}\yourlittlefriend.exe"
+Name: "{autodesktop}\yourlittlefriend"; Filename: "{app}\yourlittlefriend.exe"; Tasks: desktopicon
 
 [Registry]
 Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "yourlittlefriend"; ValueData: """{app}\yourlittlefriend.exe"""; Flags: uninsdeletevalue; Tasks: startup
@@ -124,6 +129,10 @@ begin
         WizardSelectTasks('startup')
       else
         WizardSelectTasks('!startup');
+      if FileExists(ExpandConstant('{autodesktop}\yourlittlefriend.lnk')) then
+        WizardSelectTasks('desktopicon')
+      else
+        WizardSelectTasks('!desktopicon');
     end;
   end;
 end;

@@ -1,11 +1,14 @@
 using System.IO;
 using System.Net.Http;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Windows.Media.Imaging;
 
 namespace YourLittleFriend;
 
-public record WikiPage(string Title, string Description, string Summary, string Rest, BitmapSource? Photo, string Url);
+public record WikiImage(BitmapSource Image, string Caption, string Url);
+
+public record WikiPage(string Title, string Description, string Summary, string Rest, BitmapSource? Photo, List<WikiImage> Gallery, string Url);
 
 // cerca su wikipedia (nella lingua dell'app) e restituisce titolo, descrizione, riassunto, resto dell'articolo e foto
 public static class Wiki
@@ -47,14 +50,57 @@ public static class Wiki
         string rest = cut < 0 ? "" : full[cut..].Trim();
         if (summary.Length > 700) { rest = (summary[700..] + "\n" + rest).Trim(); summary = summary[..700] + "…"; }
 
-        BitmapSource? photo = null;
-        if (page.TryGetProperty("thumbnail", out var th) && th.TryGetProperty("source", out var src) && src.GetString() is { } url)
-            photo = await LoadImage(url);
+        // foto principale e galleria (le altre immagini dell'articolo) si scaricano insieme
+        string? mainName = page.TryGetProperty("pageimage", out var pi) ? pi.GetString()?.Replace('_', ' ') : null;
+        var photoTask = page.TryGetProperty("thumbnail", out var th) && th.TryGetProperty("source", out var src) && src.GetString() is { } url
+            ? LoadImage(url, 220) : Task.FromResult<BitmapSource?>(null);
+        var galleryTask = Gallery(api, title, mainName);
+        await Task.WhenAll(photoTask, galleryTask);
 
-        return new WikiPage(title, desc, summary, rest, photo, $"https://{host}.wikipedia.org/wiki/{Uri.EscapeDataString(title.Replace(' ', '_'))}");
+        return new WikiPage(title, desc, summary, rest, photoTask.Result, galleryTask.Result, $"https://{host}.wikipedia.org/wiki/{Uri.EscapeDataString(title.Replace(' ', '_'))}");
     }
 
-    static async Task<BitmapSource?> LoadImage(string url)
+    // loghi, icone e simili non sono foto: si scartano
+    static readonly Regex Junk = new(@"\b(flags?|icons?|logos?|symbols?|ambox|commons|wikimedia|wikipedia|wikiquote|wikidata|edit|padlock|question|stub|portal|increase|decrease|steady|locator|blank|disambig|pencil|crystal|nuvola|folder|speaker|audio|oojs|bandiera|stemma|pushpin|map pin)\b", RegexOptions.IgnoreCase);
+
+    // le altre immagini dell'articolo (fino a 8, solo foto abbastanza grandi)
+    static async Task<List<WikiImage>> Gallery(string api, string title, string? mainName)
+    {
+        var result = new List<WikiImage>();
+        try
+        {
+            using var d = JsonDocument.Parse(await Http.GetStringAsync(
+                $"{api}?action=query&generator=images&titles={Uri.EscapeDataString(title)}&gimlimit=40&prop=imageinfo&iiprop=url|mime|size&iiurlwidth=360&format=json&formatversion=2"));
+            if (!d.RootElement.TryGetProperty("query", out var q) || !q.TryGetProperty("pages", out var pages)) return result;
+            var picks = new List<(string Name, string Thumb, string Page)>();
+            foreach (var pg in pages.EnumerateArray())
+            {
+                var name = pg.TryGetProperty("title", out var tt) ? tt.GetString() ?? "" : "";
+                if (name == "" || Junk.IsMatch(name)) continue;
+                if (mainName != null && name.EndsWith(mainName, StringComparison.OrdinalIgnoreCase)) continue;   // è già la foto principale
+                if (!pg.TryGetProperty("imageinfo", out var ii) || ii.GetArrayLength() == 0) continue;
+                var info = ii[0];
+                var mime = info.TryGetProperty("mime", out var m) ? m.GetString() ?? "" : "";
+                if (mime is not ("image/jpeg" or "image/png" or "image/webp")) continue;
+                int w = info.TryGetProperty("width", out var wi) ? wi.GetInt32() : 0, h = info.TryGetProperty("height", out var hi) ? hi.GetInt32() : 0;
+                if (w < 220 || h < 140) continue;
+                if (info.TryGetProperty("thumburl", out var tu) && tu.GetString() is { } thumb)
+                    picks.Add((name, thumb, info.TryGetProperty("descriptionurl", out var du) ? du.GetString() ?? "" : ""));
+            }
+            var take = picks.Take(8).ToList();
+            var imgs = await Task.WhenAll(take.Select(t => LoadImage(t.Thumb, 360)));
+            for (int i = 0; i < take.Count; i++)
+                if (imgs[i] != null)
+                {
+                    var cap = Regex.Replace(take[i].Name, @"^[^:]+:|\.\w{3,4}$", "").Replace('_', ' ').Trim();   // "File:Foo bar.jpg" -> "Foo bar"
+                    result.Add(new WikiImage(imgs[i]!, cap, take[i].Page));
+                }
+        }
+        catch { }
+        return result;
+    }
+
+    static async Task<BitmapSource?> LoadImage(string url, int width)
     {
         try
         {
@@ -62,7 +108,7 @@ public static class Wiki
             var b = new BitmapImage();
             b.BeginInit();
             b.CacheOption = BitmapCacheOption.OnLoad;
-            b.DecodePixelWidth = 220;
+            b.DecodePixelWidth = width;
             b.StreamSource = new MemoryStream(bytes);
             b.EndInit();
             b.Freeze();

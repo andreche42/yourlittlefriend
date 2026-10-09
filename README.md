@@ -15,6 +15,10 @@ un piccolo amico nel notch del pc (windows). si apre quando ci passi sopra col m
 - **traduttore** con DeepL e/o LibreTranslate: metti la chiave (o l'indirizzo del server) dalle impostazioni, scegli le lingue e premi Invio
 - **wikipedia**: scrivi una cosa e ti esce titolo, descrizione, riassunto e foto; scorri in basso per leggere tutto l'articolo
 - **forma a bolla**: dalle impostazioni puoi sostituire il notch con una bolla volante che galleggia, si gonfia quando ci passi sopra e fa un'onda mentre l'ia lavora. un clic la apre, la trascini dove vuoi (ricorda dove l'hai lasciata anche dopo aver riacceso il pc) e con Ctrl + rotella la ridimensioni
+- **pannello espandibile**: col pulsante ⤢ in alto il pannello diventa molto più grande (con la stessa animazione del notch) e lo regoli trascinando l'angolo in basso a destra: si ricorda la misura. la calcolatrice e Wikipedia si espandono da sole; la chat la espandi tu
+- **lente di ingrandimento**: doppio clic sull'omino e diventa una lente che segue il cursore e ingrandisce lo schermo (rotella = ingrandimento). tenendo premuto il pulsante sottolinei in giallo, doppio clic o clic destro per toglierla. colore, dimensione e zoom si cambiano dalle impostazioni. su schermate protette (richieste di permessi di windows) la lente non può vedere
+- **wikipedia** con galleria: oltre alla foto principale vedi le altre immagini dell'articolo
+- **calcolatrice** con tastiera vera (cifre, operazioni, funzioni scientifiche, DEG/RAD) quando il pannello è espanso
 - **ogni funzione si accende e si spegne** dalle impostazioni, tranne la home
 - **meteo**: nella home trovi un widget con icona animata (sole che gira, pioggia, neve, lampi...), temperatura, descrizione, minima e massima. l'omino reagisce al tempo: con il sole mette gli occhiali da sole, con la pioggia apre l'ombrello (e con vento forte vola via appeso all'ombrello), col temporale trema dalla paura, quando è nuvoloso fa spallucce ("boh"), con neve o freddo mette la sciarpa, di notte dorme
 - **ricerca sul web**: se chiedi una notizia o qualcosa che non sa, l'ia cerca da sola su internet (duckduckgo, con wikipedia come riserva) e risponde in base ai risultati, senza chiederti conferma. google non permette di leggere i suoi risultati in modo affidabile, per questo non si usa. si può spegnere dalle impostazioni
@@ -27,6 +31,7 @@ scarica `yourlittlefriend-setup-x.y.z.exe` dalle [release](../../releases) e avv
 1. scegli la lingua (italiano / english)
 2. scegli la cartella (di base `AppData\Roaming\yourlittlefriend`)
 3. scegli se farlo partire all'avvio del pc
+4. scegli se creare l'icona sul desktop (c'è anche nel menu start)
 
 **aggiornare**: scarica il nuovo installer e avvialo, senza disinstallare niente. chiude da solo l'app aperta, si installa sopra la versione vecchia (stessa cartella), ricorda se avevi l'avvio automatico e non tocca le tue impostazioni né il portafile. se per sbaglio provi a installare una versione più vecchia di quella che hai, ti avvisa.
 

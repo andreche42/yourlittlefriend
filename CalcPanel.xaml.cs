@@ -19,7 +19,7 @@ public partial class CalcPanel : UserControl
     List<CalcEntry> items = new();
     double ans;
     bool quiet;   // evita che la scritta del risultato venga cancellata quando si svuota la casella dopo Invio
-    Button? degBtn;
+    readonly List<Button> degBtns = new();   // i pulsanti DEG/RAD (compatto e tastiera) mostrano lo stesso stato
 
     public CalcPanel()
     {
@@ -30,10 +30,13 @@ public partial class CalcPanel : UserControl
 
         foreach (var (label, text) in new[] { ("π", "π"), ("√", "√("), ("^", "^"), ("(", "("), (")", ")"), ("%", "%"), ("!", "!"), ("ans", "ans") })
             Chips.Children.Add(Chip(label, () => Insert(text)));
-        degBtn = Chip("", () => { Settings.Current.CalcDeg = !Settings.Current.CalcDeg; Settings.Current.Save(); ShowDeg(); Preview(); });
-        degBtn.ToolTip = Loc.L("Gradi o radianti per seno, coseno e tangente", "Degrees or radians for sin, cos and tan");
-        Chips.Children.Add(degBtn);
+        var degChip = Chip("", ToggleDeg);
+        degChip.ToolTip = Loc.L("Gradi o radianti per seno, coseno e tangente", "Degrees or radians for sin, cos and tan");
+        degBtns.Add(degChip);
+        Chips.Children.Add(degChip);
+        BuildKeypad();
         ShowDeg();
+        SizeChanged += (_, _) => AdaptLayout();
 
         Input.TextChanged += (_, _) => Preview();
         Input.PreviewKeyDown += (_, e) =>
@@ -53,7 +56,75 @@ public partial class CalcPanel : UserControl
         return b;
     }
 
-    void ShowDeg() { if (degBtn != null) degBtn.Content = Settings.Current.CalcDeg ? "DEG" : "RAD"; }
+    void ToggleDeg()
+    {
+        Settings.Current.CalcDeg = !Settings.Current.CalcDeg;
+        Settings.Current.Save();
+        ShowDeg();
+        Preview();
+    }
+
+    void ShowDeg() { foreach (var b in degBtns) b.Content = Settings.Current.CalcDeg ? "DEG" : "RAD"; }
+
+    // pannello grande = tastiera completa e risultato più grande; piccolo = pulsantini compatti
+    void AdaptLayout()
+    {
+        bool big = ActualHeight >= 230 && ActualWidth >= 520;
+        Keypad.Visibility = big ? Visibility.Visible : Visibility.Collapsed;
+        Chips.Visibility = big ? Visibility.Collapsed : Visibility.Visible;
+        LeftCol.Width = new GridLength(big ? Math.Min(430, ActualWidth * .6) : 285);
+        Result.FontSize = big ? 34 : 25;
+        Result.Height = big ? 50 : 34;
+    }
+
+    // tastiera: 3 colonne scientifiche, 3 di cifre, 1 di operazioni
+    void BuildKeypad()
+    {
+        string[][] rows =
+        {
+            new[] { "(", ")", "^", "C", "⌫", "%", "÷" },
+            new[] { "√", "π", "!", "7", "8", "9", "×" },
+            new[] { "sin", "cos", "tan", "4", "5", "6", "−" },
+            new[] { "ln", "log", "ans", "1", "2", "3", "+" },
+            new[] { "DEG", "e", "x²", "±", "0", ".", "=" },
+        };
+        foreach (var row in rows)
+            foreach (var k in row)
+            {
+                var key = k;
+                var b = new Button { Content = key, Style = (Style)FindResource(key == "=" ? "Primary" : "Key") };
+                if (key == "=") b.Margin = new Thickness(2);
+                if (key is "÷" or "×" or "−" or "+") b.SetResourceReference(Control.BackgroundProperty, "PanelHoverBrush");
+                b.Click += (_, _) => Press(key);
+                if (key == "DEG") degBtns.Add(b);
+                Keypad.Children.Add(b);
+            }
+    }
+
+    // cosa fa ogni tasto
+    void Press(string key)
+    {
+        switch (key)
+        {
+            case "=": Commit(); break;
+            case "C": Input.Clear(); Result.Text = ""; Input.Focus(); break;
+            case "⌫":
+                if (Input.SelectionLength > 0) Input.SelectedText = "";
+                else if (Input.CaretIndex > 0) { int i = Input.CaretIndex; Input.Text = Input.Text.Remove(i - 1, 1); Input.CaretIndex = i - 1; }
+                Input.Focus();
+                break;
+            case "±":
+                Input.Text = Input.Text.StartsWith('-') ? Input.Text[1..] : "-" + Input.Text;
+                Input.CaretIndex = Input.Text.Length;
+                Input.Focus();
+                break;
+            case "DEG": ToggleDeg(); break;
+            case "x²": Insert("^2"); break;
+            case "√": Insert("√("); break;
+            case "sin" or "cos" or "tan" or "ln" or "log": Insert(key + "("); break;
+            default: Insert(key); break;
+        }
+    }
 
     void Insert(string text)
     {

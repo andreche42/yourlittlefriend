@@ -51,6 +51,14 @@
         </Setter.Value>
       </Setter>
     </Style>
+    <!-- tasto della calcolatrice -->
+    <Style x:Key="Key" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+      <Setter Property="Background" Value="{DynamicResource PanelBrush}"/>
+      <Setter Property="FontSize" Value="15"/>
+      <Setter Property="Padding" Value="0,5"/>
+      <Setter Property="Margin" Value="2"/>
+      <Setter Property="Focusable" Value="False"/>
+    </Style>
     <Style x:Key="Field" TargetType="TextBox">
       <Setter Property="Background" Value="{DynamicResource PanelBrush}"/>
       <Setter Property="Foreground" Value="{DynamicResource FgBrush}"/>

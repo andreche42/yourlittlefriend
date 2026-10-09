@@ -61,6 +61,20 @@
           <Button x:Name="BBubbleHome" Style="{StaticResource Pill}" HorizontalAlignment="Left" Margin="0,10,0,0" Click="BubbleHome_Click"/>
         </StackPanel>
 
+        <!-- lente di ingrandimento: doppio clic sull'omino -->
+        <TextBlock x:Name="LLens" FontSize="18" FontWeight="Bold" Margin="0,28,0,4"/>
+        <CheckBox x:Name="LensCb" Foreground="{DynamicResource FgBrush}" Margin="0,3"/>
+        <TextBlock x:Name="LLensNote" TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource FgDimBrush}" Margin="0,2,0,0"/>
+        <TextBlock x:Name="LLensColor" Margin="0,12,0,4"/>
+        <StackPanel Orientation="Horizontal">
+          <WrapPanel x:Name="LensSw" MaxWidth="290"/>
+          <TextBox x:Name="LensHex" Style="{StaticResource Field}" Width="86" Height="32" Margin="8,0,0,0" MaxLength="9" VerticalAlignment="Top"/>
+        </StackPanel>
+        <TextBlock x:Name="LLensSize" Margin="0,8,0,2"/>
+        <Slider x:Name="LensSizeSl" Minimum="200" Maximum="700" TickFrequency="20" IsSnapToTickEnabled="True" Width="260" HorizontalAlignment="Left"/>
+        <TextBlock x:Name="LLensZoom" Margin="0,8,0,2"/>
+        <Slider x:Name="LensZoomSl" Minimum="1.5" Maximum="6" TickFrequency="0.5" IsSnapToTickEnabled="True" Width="260" HorizontalAlignment="Left"/>
+
         <!-- funzioni: tutte si possono spegnere, tranne la home -->
         <TextBlock x:Name="LFeat" FontSize="18" FontWeight="Bold" Margin="0,28,0,6"/>
         <CheckBox x:Name="FChat" Foreground="{DynamicResource FgBrush}" Margin="0,3"/>

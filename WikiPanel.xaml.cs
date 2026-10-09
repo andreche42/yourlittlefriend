@@ -6,6 +6,8 @@ namespace YourLittleFriend;
 
 public partial class WikiPanel : UserControl
 {
+    public event Action? SearchStarted;   // il pannello si espande quando cerchi
+
     string url = "";
     bool busy;
 
@@ -29,6 +31,7 @@ public partial class WikiPanel : UserControl
         var q = Input.Text.Trim();
         if (q == "" || busy) return;
         busy = true;
+        SearchStarted?.Invoke();
         Article.Visibility = Visibility.Collapsed;
         Status.Text = Loc.L("Cerco…", "Searching…");
         try
@@ -43,6 +46,15 @@ public partial class WikiPanel : UserControl
             Rest.Text = page.Rest;
             Rest.Visibility = page.Rest == "" ? Visibility.Collapsed : Visibility.Visible;
             Photo.Source = page.Photo;
+            Gallery.Children.Clear();
+            foreach (var g in page.Gallery)
+            {
+                var img = new Image { Source = g.Image, Stretch = Stretch.UniformToFill };
+                var tile = new Border { Width = 172, Height = 118, Margin = new Thickness(0, 0, 8, 8), CornerRadius = new CornerRadius(10), ClipToBounds = true, Cursor = Cursors.Hand, ToolTip = g.Caption, Child = img };
+                var link = g.Url;
+                tile.MouseLeftButtonUp += (_, _) => { try { if (link != "") Actions.Open(link); } catch { } };
+                Gallery.Children.Add(tile);
+            }
             PhotoBox.Visibility = page.Photo == null ? Visibility.Collapsed : Visibility.Visible;
             url = page.Url;
             Article.Visibility = Visibility.Visible;

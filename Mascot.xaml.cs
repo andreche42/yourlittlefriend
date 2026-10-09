@@ -15,7 +15,21 @@ public enum WeatherMood { None, Sun, Rain, Storm, Cloud, Snow, Night }
 // la mascotte: sbatte gli occhi, ogni tanto va in giro, lavora mentre l'ia pensa, balla con la musica e sorride quando glielo chiedi
 public partial class Mascot : UserControl
 {
-    public double WanderRange { get; set; }   // quanto può camminare (px). 0 = sta ferma e fa solo saltelli
+    double wander;
+    public double WanderRange   // quanto può camminare (px). 0 = sta ferma e fa solo saltelli
+    {
+        get => wander;
+        set { wander = value; if (value <= 0) GoHome(); }   // se non può più passeggiare torna al centro (altrimenti resta dov'era, magari fuori dalla bolla)
+    }
+
+    // riporta l'omino al centro, subito
+    public void Home()
+    {
+        walking = false;
+        flip.ScaleX = 1;
+        walk.BeginAnimation(TranslateTransform.XProperty, null);
+        walk.X = 0;
+    }
 
     readonly DispatcherTimer idle = new() { Interval = TimeSpan.FromSeconds(3) };
     readonly DispatcherTimer cheerEnd = new() { Interval = TimeSpan.FromMilliseconds(1700) };
