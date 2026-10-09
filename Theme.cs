@@ -37,6 +37,24 @@ public static class Theme
 
     public static Brush Res(string key) => (Brush)Application.Current.Resources[key];
 
+    static Color AccentOf(Settings s)
+    {
+        var p = Array.Find(Presets, x => x.Id == s.Theme) ?? Presets[0];
+        return TryParse(s.Accent) ?? TryParse(p.Accent)!.Value;
+    }
+
+    // il contorno dipende dalla forma: la bolla e il notch staccato dal bordo (spostato in giro) hanno sempre il loro, il notch attaccato solo se lo accendi
+    public static void ApplyOutline()
+    {
+        var s = Settings.Current;
+        bool bubble = s.Style == "bubble", floating = bubble || s.NotchY is > 0.5;
+        bool line = s.Outline || floating;
+        Set("OutlineBrush", line ? AccentOf(s) : Colors.Transparent);
+        // lo spessore è 0 quando il contorno è spento: un bordo trasparente lascerebbe uno spazio visibile attorno al notch. in alto non c'è mai (il notch attaccato è unito allo schermo)
+        double t = line ? 1.5 : 0;
+        Application.Current.Resources["OutlineThickness"] = floating ? new Thickness(t) : new Thickness(t, 0, t, t);
+    }
+
     public static void Apply()
     {
         var s = Settings.Current;
@@ -44,7 +62,7 @@ public static class Theme
         var bg = TryParse(p.Bg)!.Value;
         var fg = TryParse(p.Fg)!.Value;
         var panel = TryParse(p.Panel)!.Value;
-        var accent = TryParse(s.Accent) ?? TryParse(p.Accent)!.Value;
+        var accent = AccentOf(s);
         var mascot = TryParse(s.MascotColor) ?? TryParse(p.Mascot)!.Value;
         byte alpha = (byte)(Math.Clamp(s.Opacity, 0.5, 1) * 255);
 
@@ -60,11 +78,6 @@ public static class Theme
         Set("AccentFgBrush", On(accent));
         Set("MascotBrush", mascot);
         Set("MascotEyeBrush", On(mascot));
-        // la bolla ha sempre il suo contorno; il notch solo se lo accendi
-        bool bubble = s.Style == "bubble", line = s.Outline || bubble;
-        Set("OutlineBrush", line ? accent : Colors.Transparent);
-        // lo spessore è 0 quando il contorno è spento: un bordo trasparente lascerebbe uno spazio visibile attorno al notch. in alto non c'è mai (il notch è attaccato allo schermo)
-        double t = line ? 1.5 : 0;
-        Application.Current.Resources["OutlineThickness"] = bubble ? new Thickness(t) : new Thickness(t, 0, t, t);
+        ApplyOutline();
     }
 }

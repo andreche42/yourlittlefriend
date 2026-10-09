@@ -51,7 +51,7 @@ public partial class MainWindow : Window
         InitializeComponent();
         SystemParameters.StaticPropertyChanged += (_, e) =>   // cambio schermo o risoluzione
         {
-            if (e.PropertyName is nameof(SystemParameters.PrimaryScreenWidth) or nameof(SystemParameters.WorkArea)) { LayoutRects(); RenderSpring(); }
+            if (e.PropertyName is nameof(SystemParameters.PrimaryScreenWidth) or nameof(SystemParameters.WorkArea) or nameof(SystemParameters.VirtualScreenWidth) or nameof(SystemParameters.VirtualScreenHeight)) { LayoutRects(); RenderSpring(); }
         };
         CalcBox.Easter += () => { MiniMascot.Cool(); BigMascot.Cool(); };
         WikiBox.SearchStarted += () => { wikiSearched = true; expandOverride = null; UpdateExpand(); };   // la ricerca allarga il pannello
@@ -98,7 +98,7 @@ public partial class MainWindow : Window
     const double MinExpW = 700, MinExpH = 300, MaxExpW = 880, MaxExpH = 540;
     double pos, vel, target, lastTime;
     double ex, exVel, exTarget;   // 0 = pannello normale, 1 = espanso
-    bool springOn, bobbing, bubbleDown, bubbleDragging, fullBig, gripDown, wikiSearched;
+    bool springOn, bobbing, pressed, dragging, pressOpens, floating, fullBig, gripDown, wikiSearched;
     bool? expandOverride;         // null = automatico (calcolatrice e wikipedia si espandono da sole); true/false = scelta col pulsante
     Rect closedRect, openRect, expandRect;   // notch/bolla chiusi, pannello normale e pannello espanso, in coordinate della finestra
     NativePoint gripC0;
@@ -106,7 +106,7 @@ public partial class MainWindow : Window
     LensWindow? lens;
     readonly DispatcherTimer pendingOpen = new() { Interval = TimeSpan.FromMilliseconds(300) };   // aspetta un attimo prima di aprire la bolla: potrebbe essere un doppio clic
     NativePoint cursor0;
-    double bx0, by0;
+    double ax0, ay0;   // dove stava il punto di riferimento (vedi Anchor) quando hai premuto
     readonly Stopwatch clock = Stopwatch.StartNew();
 
     [DllImport("user32.dll")] static extern bool GetCursorPos(out NativePoint p);
@@ -114,6 +114,7 @@ public partial class MainWindow : Window
 
     bool IsBubble => Settings.Current.Style == "bubble";
     bool IsClosedNow => !isOpen && pos < .02;
+    bool IsFloating => IsBubble || Settings.Current.NotchY is > 0.5;   // false = il notch è attaccato al bordo alto dello schermo
 
     static double Clamp(double v, double lo, double hi) => hi < lo ? lo : Math.Min(Math.Max(v, lo), hi);
     static double Lerp(double a, double b, double t) => a + (b - a) * t;
@@ -123,7 +124,14 @@ public partial class MainWindow : Window
     static Rect Inside(Rect r) => new(Clamp(r.X, 0, WinW - r.Width), Clamp(r.Y, 0, WinH - r.Height), r.Width, r.Height);
     static void Place(FrameworkElement el, Rect r) { el.Margin = new Thickness(r.X, r.Y, 0, 0); el.Width = r.Width; el.Height = r.Height; }
 
-    // calcola dove stanno notch/bolla e pannello, e mette la finestra al posto giusto
+    // lo schermo (tutti i monitor) e la zona dove può stare la bolla: con un solo monitor l'area di lavoro (la bolla non copre la barra delle applicazioni)
+    static Rect ScreenRect() => new(SystemParameters.VirtualScreenLeft, SystemParameters.VirtualScreenTop, SystemParameters.VirtualScreenWidth, SystemParameters.VirtualScreenHeight);
+    static Rect BubbleArea() =>
+        SystemParameters.VirtualScreenWidth > SystemParameters.PrimaryScreenWidth + 1 || SystemParameters.VirtualScreenHeight > SystemParameters.PrimaryScreenHeight + 1
+            ? ScreenRect() : SystemParameters.WorkArea;
+
+    // calcola dove stanno notch/bolla e pannello, e mette la finestra al posto giusto.
+    // il punto di riferimento (Anchor) è il centro della bolla, oppure il centro del bordo alto del notch: la finestra e il pannello gli stanno attorno
     void LayoutRects()
     {
         var st = Settings.Current;
@@ -131,11 +139,15 @@ public partial class MainWindow : Window
         double ew = Clamp(st.ExpW, MinExpW, MaxExpW), eh = Clamp(st.ExpH, MinExpH, MaxExpH);
         if (!IsBubble)
         {
-            winLeft = (SystemParameters.PrimaryScreenWidth - WinW) / 2;
-            winTop = 0;
-            closedRect = new Rect((WinW - WClosed) / 2, 0, WClosed, HClosed);
-            openRect = new Rect((WinW - WOpen) / 2, 0, WOpen, HOpen);
-            expandRect = new Rect((WinW - ew) / 2, 0, ew, eh);
+            var sc = ScreenRect();
+            double cx = Clamp(st.NotchX ?? SystemParameters.PrimaryScreenWidth / 2, sc.Left + WClosed / 2, sc.Right - WClosed / 2);   // senza posizione: al centro dello schermo
+            double top = Clamp(st.NotchY ?? 0, sc.Top, sc.Bottom - HClosed);                                                            // senza posizione: attaccato in alto
+            winLeft = Clamp(cx - WinW / 2, sc.Left, sc.Right - WinW);
+            winTop = Clamp(top, sc.Top, sc.Bottom - WinH);
+            double rx = cx - winLeft, ry = top - winTop;
+            closedRect = new Rect(rx - WClosed / 2, ry, WClosed, HClosed);
+            openRect = new Rect(Clamp(rx - WOpen / 2, 0, WinW - WOpen), Clamp(ry, 0, WinH - HOpen), WOpen, HOpen);
+            expandRect = new Rect(Clamp(rx - ew / 2, 0, WinW - ew), Clamp(ry, 0, WinH - eh), ew, eh);
             MiniMascot.WanderRange = 80;
             MiniMascot.Width = MiniMascot.Height = 28;
             MiniMascot.HorizontalAlignment = HorizontalAlignment.Center;
@@ -146,7 +158,7 @@ public partial class MainWindow : Window
         else
         {
             double s = Clamp(st.BubbleSize, 48, 150);
-            var wa = SystemParameters.WorkArea;
+            var wa = BubbleArea();
             double cx = Clamp(st.BubbleX ?? wa.Right - 90, wa.Left + s / 2, wa.Right - s / 2);
             double cy = Clamp(st.BubbleY ?? wa.Top + 140, wa.Top + s / 2, wa.Bottom - s / 2);
             winLeft = Clamp(cx - WinW / 2, wa.Left, wa.Right - WinW);
@@ -170,6 +182,8 @@ public partial class MainWindow : Window
         if (double.IsNaN(Top) || Math.Abs(Top - winTop) > .01) Top = winTop;
         PlaceRipple();
         ApplyFullSize();
+        // il notch staccato dal bordo alto diventa una pillola con il suo contorno
+        if (IsFloating != floating) { floating = IsFloating; Theme.ApplyOutline(); }
     }
 
     // il contenuto ha la dimensione del pannello finale (normale o espanso): mentre il pannello si allarga si "scopre" invece di rimpaginarsi a ogni fotogramma
@@ -272,7 +286,7 @@ public partial class MainWindow : Window
     static double Smooth(double x) { x = Math.Clamp(x, 0, 1); return x * x * (3 - 2 * x); }
 
     CornerRadius CornerAt(double p) =>
-        IsBubble ? new CornerRadius(Lerp(closedRect.Width / 2, 22, Smooth(p))) : new CornerRadius(0, 0, 22, 22);
+        IsBubble ? new CornerRadius(Lerp(closedRect.Width / 2, 22, Smooth(p))) : IsFloating ? new CornerRadius(22) : new CornerRadius(0, 0, 22, 22);
 
     // scia: una copia più grande e trasparente del notch. più va veloce, più si vede
     void Ghost(Border g, Rect open, double p, double speed, int i, double alpha)
@@ -328,7 +342,7 @@ public partial class MainWindow : Window
     // galleggia piano su e giù quando è chiusa e ferma
     void UpdateBob()
     {
-        if (IsBubble && IsClosedNow && !bubbleDown)
+        if (IsBubble && IsClosedNow && !pressed)
         {
             if (bobbing) return;
             bobbing = true;
@@ -367,59 +381,122 @@ public partial class MainWindow : Window
         Ripple.CornerRadius = new CornerRadius(closedRect.Width / 2);
     }
 
-    // ---- bolla: trascinare, cliccare, ridimensionare ----
-    (double X, double Y) BubbleCenter() => (Left + closedRect.X + closedRect.Width / 2, Top + closedRect.Y + closedRect.Height / 2);
+    // ---- trascinare la finestra (notch, pannello o bolla), cliccare la bolla, ridimensionare ----
+    // tieni premuto in uno spazio vuoto e trascini: tutto si sposta dove vuoi e si ricorda la posizione.
+    // il punto di riferimento (Anchor) è il centro della bolla, oppure il centro del bordo alto del notch
+    (double X, double Y) Anchor() =>
+        IsBubble ? (Left + closedRect.X + closedRect.Width / 2, Top + closedRect.Y + closedRect.Height / 2)
+                 : (Left + closedRect.X + closedRect.Width / 2, Top + closedRect.Y);
+
+    // memorizza la posizione. il notch ha una calamita: vicino al centro e al bordo alto ci si attacca (posizione vuota = predefinita)
+    void SetAnchor(double x, double y)
+    {
+        var st = Settings.Current;
+        if (IsBubble) { st.BubbleX = x; st.BubbleY = y; return; }
+        const double Magnet = 18;
+        double mid = SystemParameters.PrimaryScreenWidth / 2;
+        st.NotchX = Math.Abs(x - mid) < Magnet ? null : x;
+        st.NotchY = Math.Abs(y) < Magnet ? null : y;   // y = 0 è il bordo alto dello schermo principale
+    }
+
+    static DependencyObject? ParentOf(DependencyObject d)
+    {
+        if (d is ContentElement ce) return ContentOperations.GetParent(ce) ?? (ce as FrameworkContentElement)?.Parent;
+        return d is Visual ? VisualTreeHelper.GetParent(d) : LogicalTreeHelper.GetParent(d);
+    }
+
+    // true se da qui si può trascinare la finestra: spazio vuoto, testo, immagini. non da pulsanti, caselle di testo, barre, cursori
+    // o elementi che hanno già un loro clic o trascinamento (Tag = "nodrag")
+    bool CanDragFrom(DependencyObject? src)
+    {
+        for (var d = src; d != null && !ReferenceEquals(d, Root); d = ParentOf(d))
+        {
+            if (d is System.Windows.Controls.Primitives.ButtonBase or System.Windows.Controls.Primitives.TextBoxBase or System.Windows.Controls.Primitives.ScrollBar
+                or System.Windows.Controls.Primitives.Thumb or System.Windows.Controls.Primitives.Selector or Slider or PasswordBox) return false;
+            if (d is FrameworkElement { Tag: "nodrag" }) return false;
+        }
+        return true;
+    }
 
     void Root_Down(object s, MouseButtonEventArgs e)
     {
-        if (e.ClickCount == 2 && IsBubble && IsClosedNow) { e.Handled = true; bubbleDown = false; ToggleLens(); return; }   // doppio clic sulla bolla = lente
-        if (!IsBubble || !IsClosedNow) return;
-        bubbleDown = true;
-        bubbleDragging = false;
+        if (e.ClickCount == 2 && IsBubble && IsClosedNow) { e.Handled = true; pressed = false; ToggleLens(); return; }   // doppio clic sulla bolla = lente
+        if (lens != null || e.ClickCount > 1 || !CanDragFrom(e.OriginalSource as DependencyObject)) return;
+        pressed = true;
+        dragging = false;
+        pressOpens = IsBubble && IsClosedNow;   // un clic (senza trascinare) sulla bolla chiusa la apre
         GetCursorPos(out cursor0);
-        (bx0, by0) = BubbleCenter();
+        (ax0, ay0) = Anchor();
+        pendingOpen.Stop();
         Root.CaptureMouse();
-        Jelly(.93, 120, false);
+        if (pressOpens) Jelly(.93, 120, false);
         UpdateBob();
     }
 
     void Root_Move(object s, MouseEventArgs e)
     {
-        if (!bubbleDown) return;
+        if (!pressed) return;
+        if (e.LeftButton != MouseButtonState.Pressed) { EndPress(false); return; }   // il pulsante è stato rilasciato fuori dalla finestra
         GetCursorPos(out var c);
         var dpi = VisualTreeHelper.GetDpi(this);   // il cursore è in pixel, la finestra in unità WPF
         double dx = (c.X - cursor0.X) / dpi.DpiScaleX, dy = (c.Y - cursor0.Y) / dpi.DpiScaleY;
-        if (!bubbleDragging)
+        if (!dragging)
         {
             if (Math.Abs(dx) + Math.Abs(dy) < 4) return;   // sotto qualche pixel è un clic, non un trascinamento
-            bubbleDragging = true;
-            Jelly(1.06, 150, false);
+            dragging = true;
+            hold.Stop();
+            Root.Cursor = Cursors.SizeAll;
+            if (pressOpens) Jelly(1.06, 150, false);
         }
-        var st = Settings.Current;
-        st.BubbleX = bx0 + dx;
-        st.BubbleY = by0 + dy;
+        SetAnchor(ax0 + dx, ay0 + dy);
         LayoutRects();
         RenderSpring();
     }
 
-    void Root_Up(object s, MouseButtonEventArgs e)
+    void Root_Up(object s, MouseButtonEventArgs e) => EndPress(true);
+
+    void Root_Lost(object s, MouseEventArgs e) { if (pressed) EndPress(false); }
+
+    // fine della pressione: se hai trascinato salva la posizione, altrimenti era un clic
+    void EndPress(bool click)
     {
-        if (!bubbleDown) return;
-        bubbleDown = false;
+        if (!pressed) return;
+        pressed = false;
         Root.ReleaseMouseCapture();
-        if (bubbleDragging)
+        Root.ClearValue(CursorProperty);
+        bool opens = pressOpens;
+        pressOpens = false;
+        if (dragging)
         {
-            bubbleDragging = false;
-            var (cx, cy) = BubbleCenter();   // la posizione ritrovata dentro lo schermo
-            Settings.Current.BubbleX = cx;
-            Settings.Current.BubbleY = cy;
-            Settings.Current.Save();            // così la ritrovi dove l'hai lasciata
-            Jelly(Root.IsMouseOver ? 1.1 : 1);
+            dragging = false;
+            var (ax, ay) = Anchor();   // la posizione ritrovata dentro lo schermo
+            SetAnchor(ax, ay);
+            LayoutRects();
+            RenderSpring();
+            Settings.Current.Save();   // così la ritrovi dove l'hai lasciata
+            if (opens) Jelly(Root.IsMouseOver ? 1.1 : 1);
+            hold.Stop();
+            hold.Start();
         }
-        else if (Settings.Current.LensOn) { pendingOpen.Stop(); pendingOpen.Start(); }   // un clic la apre, ma aspetta un attimo: potrebbe essere l'inizio di un doppio clic
-        else SetOpen(true);   // un clic la apre
+        else if (click && opens)
+        {
+            if (Settings.Current.LensOn) { pendingOpen.Stop(); pendingOpen.Start(); }   // un clic la apre, ma aspetta un attimo: potrebbe essere l'inizio di un doppio clic
+            else SetOpen(true);
+        }
         UpdateBob();
     }
+
+    // riporta notch e bolla dove stanno di default (notch al centro in alto, bolla in alto a destra)
+    void ResetPosition()
+    {
+        var st = Settings.Current;
+        st.NotchX = st.NotchY = st.BubbleX = st.BubbleY = null;
+        st.Save();
+        LayoutRects();
+        RenderSpring();
+    }
+
+    void ResetPos_Click(object s, RoutedEventArgs e) => ResetPosition();
 
     void Root_Wheel(object s, MouseWheelEventArgs e)
     {
@@ -468,16 +545,15 @@ public partial class MainWindow : Window
     }
 
     // ---- lente di ingrandimento (doppio clic sull'omino) ----
+    // l'app resta dov'è, aperta e visibile: la lente la ingrandisce insieme a quello che c'è dietro
     void ToggleLens()
     {
         pendingOpen.Stop();
         if (lens != null) { lens.Close(); return; }
         if (!Settings.Current.LensOn) return;
-        SetOpen(false);
         hold.Stop();
-        Opacity = 0;   // l'omino "diventa" la lente: la finestra sparisce finché non la richiudi
-        var l = new LensWindow();
-        l.Closed += (_, _) => { lens = null; Opacity = 1; };
+        var l = new LensWindow(this);
+        l.Closed += (_, _) => { lens = null; hold.Stop(); hold.Start(); };   // finita la lente, se il mouse non è sul notch si richiude come al solito
         lens = l;
         l.Show();
     }
@@ -487,7 +563,7 @@ public partial class MainWindow : Window
     void MaybeClose()
     {
         var menu = (ContextMenu)Resources["Menu"];
-        if (Root.IsMouseOver || DragActive || internalDrag || gripDown || menu.IsOpen || Root.IsKeyboardFocusWithin) hold.Start();
+        if (Root.IsMouseOver || DragActive || internalDrag || gripDown || pressed || lens != null || menu.IsOpen || Root.IsKeyboardFocusWithin) hold.Start();
         else SetOpen(false);
     }
 
@@ -495,14 +571,14 @@ public partial class MainWindow : Window
     {
         hold.Stop();
         if (!IsBubble) SetOpen(true);                  // il notch si apre passandoci sopra
-        else if (IsClosedNow && !bubbleDown) Jelly(1.1);   // la bolla si gonfia e aspetta un clic
+        else if (IsClosedNow && !pressed) Jelly(1.1);   // la bolla si gonfia e aspetta un clic
     }
 
     void OnLeave(object s, MouseEventArgs e)
     {
         hold.Stop();
         hold.Start();
-        if (IsBubble && IsClosedNow && !bubbleDown) Jelly(1);
+        if (IsBubble && IsClosedNow && !pressed) Jelly(1);
     }
 
     // ---- umore della mascotte ----

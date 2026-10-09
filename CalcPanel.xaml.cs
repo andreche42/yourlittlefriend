@@ -178,7 +178,7 @@ public partial class CalcPanel : UserControl
             History.Children.Add(new TextBlock { Text = Loc.L("La cronologia è vuota.\nProva: 2(3+4)^2, sqrt(81), 5!", "History is empty.\nTry: 2(3+4)^2, sqrt(81), 5!"), Foreground = Theme.Res("FgDimBrush"), FontSize = 12, TextWrapping = TextWrapping.Wrap });
         foreach (var it in items)
         {
-            var row = new Border { Padding = new Thickness(6, 2, 6, 2), CornerRadius = new CornerRadius(8), Cursor = Cursors.Hand, Background = Brushes.Transparent, Margin = new Thickness(0, 1, 0, 1) };
+            var row = new Border { Padding = new Thickness(6, 2, 6, 2), CornerRadius = new CornerRadius(8), Cursor = Cursors.Hand, Background = Brushes.Transparent, Margin = new Thickness(0, 1, 0, 1), Tag = "nodrag" };
             var sp = new StackPanel();
             sp.Children.Add(new TextBlock { Text = it.Expr, FontSize = 11, Foreground = Theme.Res("FgDimBrush"), TextTrimming = TextTrimming.CharacterEllipsis });
             sp.Children.Add(new TextBlock { Text = "= " + it.Result, FontSize = 15, FontWeight = FontWeights.SemiBold, TextTrimming = TextTrimming.CharacterEllipsis });

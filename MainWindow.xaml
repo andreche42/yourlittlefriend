@@ -9,6 +9,7 @@
   <Window.Resources>
     <ContextMenu x:Key="Menu">
       <MenuItem Header="{local:L It=Impostazioni, En=Settings}" Click="Settings_Click"/>
+      <MenuItem Header="{local:L It='Riporta in posizione', En='Reset position'}" Click="ResetPos_Click"/>
       <MenuItem Header="{local:L It=Esci, En=Quit}" Click="Quit_Click"/>
     </ContextMenu>
   </Window.Resources>
@@ -25,7 +26,7 @@
     <Border x:Name="G1" Opacity="0" Visibility="Collapsed" IsHitTestVisible="False" Background="{DynamicResource BgSolidBrush}" CornerRadius="0,0,22,22" HorizontalAlignment="Left" VerticalAlignment="Top"/>
   <Border x:Name="Root" HorizontalAlignment="Left" VerticalAlignment="Top" ClipToBounds="True" RenderTransformOrigin="0.5,0.5" Background="{DynamicResource BgBrush}" BorderBrush="{DynamicResource OutlineBrush}" BorderThickness="{DynamicResource OutlineThickness}" CornerRadius="0,0,22,22" ContextMenu="{StaticResource Menu}"
           TextElement.Foreground="{DynamicResource FgBrush}" TextElement.FontFamily="Segoe UI" TextElement.FontSize="14" ToolTipService.InitialShowDelay="250"
-          MouseEnter="OnEnter" MouseLeave="OnLeave" MouseLeftButtonDown="Root_Down" MouseMove="Root_Move" MouseLeftButtonUp="Root_Up" MouseWheel="Root_Wheel">
+          MouseEnter="OnEnter" MouseLeave="OnLeave" MouseLeftButtonDown="Root_Down" MouseMove="Root_Move" MouseLeftButtonUp="Root_Up" LostMouseCapture="Root_Lost" MouseWheel="Root_Wheel">
     <Border.RenderTransform>
       <TransformGroup>
         <ScaleTransform x:Name="JellySc"/>

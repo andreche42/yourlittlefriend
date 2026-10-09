@@ -51,7 +51,7 @@ public partial class WikiPanel : UserControl
             foreach (var g in page.Gallery)
             {
                 var img = new Image { Source = g.Image, Stretch = Stretch.UniformToFill };
-                var tile = new Border { Width = 172, Height = 118, Margin = new Thickness(0, 0, 8, 8), CornerRadius = new CornerRadius(10), ClipToBounds = true, Cursor = Cursors.Hand, ToolTip = g.Caption, Child = img };
+                var tile = new Border { Width = 172, Height = 118, Margin = new Thickness(0, 0, 8, 8), CornerRadius = new CornerRadius(10), ClipToBounds = true, Cursor = Cursors.Hand, ToolTip = g.Caption, Child = img, Tag = "nodrag" };
                 var link = g.Url;
                 tile.MouseLeftButtonUp += (_, _) => { try { if (link != "") Actions.Open(link); } catch { } };
                 Gallery.Children.Add(tile);
