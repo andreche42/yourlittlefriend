@@ -49,6 +49,38 @@
         <CheckBox x:Name="OutlineCb" Foreground="{DynamicResource FgBrush}" Margin="0,12,0,0"/>
         <Button x:Name="BResetLook" Style="{StaticResource Pill}" HorizontalAlignment="Left" Margin="0,12,0,0" Click="ResetLook_Click"/>
 
+        <!-- forma: notch attaccato in alto oppure bolla volante -->
+        <TextBlock x:Name="LStyle" Margin="0,22,0,6"/>
+        <StackPanel Orientation="Horizontal">
+          <RadioButton x:Name="RNotch" Foreground="{DynamicResource FgBrush}" GroupName="style" Margin="0,0,20,0"/>
+          <RadioButton x:Name="RBubble" Foreground="{DynamicResource FgBrush}" GroupName="style"/>
+        </StackPanel>
+        <StackPanel x:Name="BubbleOpts" Margin="0,8,0,0">
+          <TextBlock x:Name="LBubbleSize" Margin="0,0,0,2"/>
+          <Slider x:Name="BubbleSl" Minimum="48" Maximum="150" TickFrequency="6" IsSnapToTickEnabled="True" Width="260" HorizontalAlignment="Left"/>
+          <Button x:Name="BBubbleHome" Style="{StaticResource Pill}" HorizontalAlignment="Left" Margin="0,10,0,0" Click="BubbleHome_Click"/>
+        </StackPanel>
+
+        <!-- funzioni: tutte si possono spegnere, tranne la home -->
+        <TextBlock x:Name="LFeat" FontSize="18" FontWeight="Bold" Margin="0,28,0,6"/>
+        <CheckBox x:Name="FChat" Foreground="{DynamicResource FgBrush}" Margin="0,3"/>
+        <CheckBox x:Name="FHolder" Foreground="{DynamicResource FgBrush}" Margin="0,3"/>
+        <CheckBox x:Name="FAsk" Foreground="{DynamicResource FgBrush}" Margin="0,3"/>
+        <CheckBox x:Name="FCalc" Foreground="{DynamicResource FgBrush}" Margin="0,3"/>
+        <CheckBox x:Name="FTr" Foreground="{DynamicResource FgBrush}" Margin="0,3"/>
+        <CheckBox x:Name="FWiki" Foreground="{DynamicResource FgBrush}" Margin="0,3"/>
+        <CheckBox x:Name="FWeather" Foreground="{DynamicResource FgBrush}" Margin="0,3"/>
+
+        <!-- traduttore -->
+        <TextBlock x:Name="LTr" FontSize="18" FontWeight="Bold" Margin="0,28,0,4"/>
+        <TextBlock x:Name="TrNote" TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource FgDimBrush}" Margin="0,0,0,8"/>
+        <TextBlock x:Name="LDeepL" Margin="0,4,0,4"/>
+        <TextBox x:Name="DeepLIn" Style="{StaticResource Field}"/>
+        <TextBlock x:Name="LLibre" Margin="0,10,0,4"/>
+        <TextBox x:Name="LibreUrlIn" Style="{StaticResource Field}"/>
+        <TextBlock x:Name="LLibreKey" Margin="0,10,0,4"/>
+        <TextBox x:Name="LibreKeyIn" Style="{StaticResource Field}"/>
+
         <CheckBox x:Name="AutoStart" Foreground="{DynamicResource FgBrush}" Margin="0,22,0,0"/>
 
         <CheckBox x:Name="WebCb" Foreground="{DynamicResource FgBrush}" Margin="0,12,0,0"/>

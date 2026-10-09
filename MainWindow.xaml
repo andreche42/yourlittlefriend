@@ -2,7 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:YourLittleFriend"
-        Title="yourlittlefriend" Width="230" Height="34" Top="0"
+        Title="yourlittlefriend" Width="720" Height="192" Top="0"
         WindowStyle="None" AllowsTransparency="True" Background="Transparent"
         Topmost="True" ShowInTaskbar="False" ShowActivated="False" ResizeMode="NoResize"
         AllowDrop="True" DragEnter="OnDragEnter" DragOver="OnDragOver" DragLeave="OnDragLeave" Drop="OnDrop">
@@ -13,16 +13,30 @@
     </ContextMenu>
   </Window.Resources>
 
-  <!-- la finestra è trasparente: si ingrandisce solo all'apertura e si rimpicciolisce a chiusura finita.
-       durante l'animazione si muovono solo Root (il notch) e le tre scie G1..G3 -->
+  <!-- la finestra è trasparente e fissa (non si ridimensiona mai): si muovono solo Root (il notch o la bolla), le tre scie G1..G3
+       e l'onda Ripple. le posizioni le calcola il codice (margini), perché la bolla si può spostare -->
   <Grid>
-    <Border x:Name="G3" Opacity="0" Visibility="Collapsed" IsHitTestVisible="False" Background="{DynamicResource BgSolidBrush}" CornerRadius="0,0,22,22" HorizontalAlignment="Center" VerticalAlignment="Top"/>
-    <Border x:Name="G2" Opacity="0" Visibility="Collapsed" IsHitTestVisible="False" Background="{DynamicResource BgSolidBrush}" CornerRadius="0,0,22,22" HorizontalAlignment="Center" VerticalAlignment="Top"/>
-    <Border x:Name="G1" Opacity="0" Visibility="Collapsed" IsHitTestVisible="False" Background="{DynamicResource BgSolidBrush}" CornerRadius="0,0,22,22" HorizontalAlignment="Center" VerticalAlignment="Top"/>
-  <Border x:Name="Root" Width="230" Height="34" HorizontalAlignment="Center" VerticalAlignment="Top" ClipToBounds="True" Background="{DynamicResource BgBrush}" BorderBrush="{DynamicResource OutlineBrush}" BorderThickness="1.5" CornerRadius="0,0,22,22" ContextMenu="{StaticResource Menu}"
+    <Border x:Name="Ripple" Visibility="Collapsed" Opacity="0" IsHitTestVisible="False" BorderThickness="2.5" BorderBrush="{DynamicResource AccentBrush}"
+            HorizontalAlignment="Left" VerticalAlignment="Top" RenderTransformOrigin="0.5,0.5">
+      <Border.RenderTransform><ScaleTransform x:Name="RippleSc"/></Border.RenderTransform>
+    </Border>
+    <Border x:Name="G3" Opacity="0" Visibility="Collapsed" IsHitTestVisible="False" Background="{DynamicResource BgSolidBrush}" CornerRadius="0,0,22,22" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+    <Border x:Name="G2" Opacity="0" Visibility="Collapsed" IsHitTestVisible="False" Background="{DynamicResource BgSolidBrush}" CornerRadius="0,0,22,22" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+    <Border x:Name="G1" Opacity="0" Visibility="Collapsed" IsHitTestVisible="False" Background="{DynamicResource BgSolidBrush}" CornerRadius="0,0,22,22" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+  <Border x:Name="Root" HorizontalAlignment="Left" VerticalAlignment="Top" ClipToBounds="True" RenderTransformOrigin="0.5,0.5" Background="{DynamicResource BgBrush}" BorderBrush="{DynamicResource OutlineBrush}" BorderThickness="{DynamicResource OutlineThickness}" CornerRadius="0,0,22,22" ContextMenu="{StaticResource Menu}"
           TextElement.Foreground="{DynamicResource FgBrush}" TextElement.FontFamily="Segoe UI" TextElement.FontSize="14" ToolTipService.InitialShowDelay="250"
-          MouseEnter="OnEnter" MouseLeave="OnLeave">
+          MouseEnter="OnEnter" MouseLeave="OnLeave" MouseLeftButtonDown="Root_Down" MouseMove="Root_Move" MouseLeftButtonUp="Root_Up" MouseWheel="Root_Wheel">
+    <Border.RenderTransform>
+      <TransformGroup>
+        <ScaleTransform x:Name="JellySc"/>
+        <TranslateTransform x:Name="BobTr"/>
+      </TransformGroup>
+    </Border.RenderTransform>
     <Grid>
+      <!-- riflesso della bolla -->
+      <Border x:Name="Shine" HorizontalAlignment="Left" VerticalAlignment="Top" Background="White" Opacity="0" IsHitTestVisible="False" RenderTransformOrigin="0.5,0.5">
+        <Border.RenderTransform><RotateTransform Angle="-28"/></Border.RenderTransform>
+      </Border>
       <local:Mascot x:Name="MiniMascot" WanderRange="80" Width="28" Height="28" VerticalAlignment="Top" Margin="0,3,0,0"/>
 
       <Grid x:Name="Full" Visibility="Collapsed" Opacity="0" Width="612" Height="154" Margin="0,6,0,0"
@@ -40,6 +54,16 @@
           <StackPanel Orientation="Horizontal">
             <Button x:Name="T0" Content="⌂" Tag="0" Click="Tab_Click" ToolTip="{local:L It=Home, En=Home}"/>
             <Button x:Name="T1" Content="💬" Tag="1" Click="Tab_Click" ToolTip="{local:L It=Chat, En=Chat}"/>
+            <Button x:Name="T4" Tag="4" Click="Tab_Click" ToolTip="{local:L It=Calcolatrice, En=Calculator}">
+              <Viewbox Width="17" Height="17" Margin="0,2">
+                <Canvas Width="16" Height="16">
+                  <Path Stroke="{DynamicResource FgBrush}" StrokeThickness="1.4" StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                        Data="M4,1.5 H12 A1.5,1.5 0 0 1 13.5,3 V13 A1.5,1.5 0 0 1 12,14.5 H4 A1.5,1.5 0 0 1 2.5,13 V3 A1.5,1.5 0 0 1 4,1.5 Z M5,5 H11 M5.2,8.5 H5.3 M8,8.5 H8.1 M10.8,8.5 H10.9 M5.2,11.5 H5.3 M8,11.5 H8.1 M10.8,11.5 H10.9"/>
+                </Canvas>
+              </Viewbox>
+            </Button>
+            <Button x:Name="T5" Content="文A" FontSize="13" Padding="8,4" Tag="5" Click="Tab_Click" ToolTip="{local:L It=Traduttore, En=Translator}"/>
+            <Button x:Name="T6" Content="W" FontFamily="Georgia" FontWeight="Bold" FontSize="15" Padding="9,2" Tag="6" Click="Tab_Click" ToolTip="Wikipedia"/>
             <Button x:Name="T3" Tag="3" Click="Tab_Click" ToolTip="{local:L It=Portafile, En='File holder'}">
               <Viewbox Width="17" Height="17" Margin="0,2">
                 <Canvas Width="16" Height="16">
@@ -64,8 +88,15 @@
                   <TextBlock x:Name="GreetTitle" FontSize="26" FontWeight="Bold"/>
                   <TextBlock Text="{local:L It='Come va?', En='How are you?'}"/>
                 </StackPanel>
-                <TextBlock x:Name="WeatherText" Text="…" FontSize="16" HorizontalAlignment="Right"
-                           VerticalAlignment="Center" TextAlignment="Right"/>
+                <!-- meteo: icona animata, temperatura, descrizione e minima/massima -->
+                <StackPanel x:Name="WeatherBox" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Visibility="Collapsed">
+                  <local:WeatherIcon x:Name="WIcon" Width="58" Height="58"/>
+                  <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
+                    <TextBlock x:Name="WTemp" FontSize="36" FontWeight="Bold" Margin="0,-6,0,-6"/>
+                    <TextBlock x:Name="WDesc" FontSize="14" FontWeight="SemiBold"/>
+                    <TextBlock x:Name="WDetail" FontSize="11" Foreground="{DynamicResource FgDimBrush}"/>
+                  </StackPanel>
+                </StackPanel>
               </Grid>
               <Border x:Name="MusicPanel" CornerRadius="16" Padding="10,0" Visibility="Collapsed">
                 <Grid>
@@ -110,6 +141,11 @@
                 </TextBlock>
               </Grid>
             </Grid>
+
+            <!-- schede calcolatrice, traduttore e wikipedia -->
+            <Grid x:Name="PageCalc" Visibility="Collapsed"><local:CalcPanel x:Name="CalcBox"/></Grid>
+            <Grid x:Name="PageTranslate" Visibility="Collapsed"><local:TranslatePanel x:Name="TranslateBox"/></Grid>
+            <Grid x:Name="PageWiki" Visibility="Collapsed"><local:WikiPanel x:Name="WikiBox"/></Grid>
 
             <!-- scheda holder: file e testo che si trascinano dentro e fuori -->
             <Grid x:Name="PageHolder" Visibility="Collapsed">

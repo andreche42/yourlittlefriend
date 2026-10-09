@@ -60,6 +60,11 @@ public static class Theme
         Set("AccentFgBrush", On(accent));
         Set("MascotBrush", mascot);
         Set("MascotEyeBrush", On(mascot));
-        Set("OutlineBrush", s.Outline ? accent : Colors.Transparent);
+        // la bolla ha sempre il suo contorno; il notch solo se lo accendi
+        bool bubble = s.Style == "bubble", line = s.Outline || bubble;
+        Set("OutlineBrush", line ? accent : Colors.Transparent);
+        // lo spessore è 0 quando il contorno è spento: un bordo trasparente lascerebbe uno spazio visibile attorno al notch. in alto non c'è mai (il notch è attaccato allo schermo)
+        double t = line ? 1.5 : 0;
+        Application.Current.Resources["OutlineThickness"] = bubble ? new Thickness(t) : new Thickness(t, 0, t, t);
     }
 }

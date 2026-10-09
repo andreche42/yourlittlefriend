@@ -1,8 +1,8 @@
 ; installer di yourlittlefriend (Inno Setup 6). si compila con:
 ;   dotnet publish -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o publish
-;   ISCC /DAppVersion=1.1.2 installer\yourlittlefriend.iss
+;   ISCC /DAppVersion=1.1.3 installer\yourlittlefriend.iss
 #ifndef AppVersion
-  #define AppVersion "1.1.2"
+  #define AppVersion "1.1.3"
 #endif
 
 [Setup]

@@ -22,6 +22,31 @@ public class Settings
     public double Opacity { get; set; } = 1;       // opacità dello sfondo del notch
     public bool Outline { get; set; }              // contorno colorato attorno al notch
 
+    // funzioni attivabili e disattivabili (la home c'è sempre)
+    public bool ChatOn { get; set; } = true;
+    public bool HolderOn { get; set; } = true;
+    public bool AskFileOn { get; set; } = true;
+    public bool CalcOn { get; set; } = true;
+    public bool TranslateOn { get; set; } = true;
+    public bool WikiOn { get; set; } = true;
+    public bool WeatherOn { get; set; } = true;
+
+    // calcolatrice
+    public bool CalcDeg { get; set; } = true;       // gradi (true) o radianti
+
+    // traduttore: DeepL e/o LibreTranslate
+    public string DeepLKey { get; set; } = "";
+    public string LibreUrl { get; set; } = "";
+    public string LibreKey { get; set; } = "";
+    public string TrFrom { get; set; } = "auto";
+    public string TrTo { get; set; } = "";
+
+    // aspetto: "notch" (attaccato in alto) oppure "bubble" (bolla volante che si sposta e ricorda dove l'hai lasciata)
+    public string Style { get; set; } = "notch";
+    public double? BubbleX { get; set; }            // centro della bolla sullo schermo
+    public double? BubbleY { get; set; }
+    public double BubbleSize { get; set; } = 84;
+
     internal static readonly string Dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "yourlittlefriend");
     static string FilePath => Path.Combine(Dir, "settings.json");
 
