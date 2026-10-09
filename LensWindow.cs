@@ -66,6 +66,8 @@ sealed class LensOverlay : Window
     }
 
     // x e y sono coordinate dello schermo (unità WPF)
+    public Visual Layer => canvas;   // per rivedere la sottolineatura dentro la lente
+
     public void Begin(double x, double y)
     {
         x -= Left;
@@ -98,6 +100,7 @@ sealed class LensWindow : Window
     readonly int dip;
     readonly Image view = new() { Stretch = Stretch.Fill };
     readonly VisualBrush? appBrush;
+    readonly VisualBrush lineBrush;
     readonly DispatcherTimer timer = new(DispatcherPriority.Render) { Interval = TimeSpan.FromMilliseconds(16) };
     readonly LensOverlay overlay = new();
     System.Drawing.Bitmap? shot, snap;
@@ -106,7 +109,7 @@ sealed class LensWindow : Window
     WriteableBitmap? wb;
     IntPtr hwnd;
     double scale = 1, zoom;
-    bool holding, useSnap, hasFrame;
+    bool holding, useSnap, hasFrame, everLive;
     int blackRun;
 
     public LensWindow(Window app)
@@ -144,6 +147,10 @@ sealed class LensWindow : Window
             var appLayer = new Rectangle { Width = dip, Height = dip, Fill = appBrush, IsHitTestVisible = false, Clip = circle.Clone() };
             root.Children.Add(appLayer);
         }
+
+        // le sottolineature gialle sono disegnate in un'altra finestra: qui si rivedono sopra l'app, ingrandite e nitide
+        lineBrush = new VisualBrush(overlay.Layer) { ViewboxUnits = BrushMappingMode.Absolute, Stretch = Stretch.Fill, TileMode = TileMode.None };
+        root.Children.Add(new Rectangle { Width = dip, Height = dip, Fill = lineBrush, IsHitTestVisible = false, Clip = circle.Clone() });
 
         var ring = new Ellipse { Width = dip - 3, Height = dip - 3, StrokeThickness = 4, IsHitTestVisible = false };
         ring.SetResourceReference(System.Windows.Shapes.Shape.StrokeProperty, "AccentBrush");
@@ -198,6 +205,8 @@ sealed class LensWindow : Window
         int side = (int)Math.Round(dip * scale);
         LensNative.SetWindowPos(hwnd, LensNative.TopMost, c.X - side / 2, c.Y - side / 2, 0, 0, LensNative.NoSize | LensNative.NoActivate);
         Capture(c.X, c.Y);
+        double lw = dip / zoom;
+        lineBrush.Viewbox = new Rect(c.X / scale - overlay.Left - lw / 2, c.Y / scale - overlay.Top - lw / 2, lw, lw);
         if (appBrush != null)
         {
             // la zona dell'app da ingrandire: stessa area dello schermo, ma nelle coordinate (in unità WPF) della finestra dell'app
@@ -263,9 +272,10 @@ sealed class LensWindow : Window
             {
                 if (IsBlack(shot, size))
                 {
-                    if (++blackRun >= 8 && Blit(x, y, size, true) && !IsBlack(shot, size)) useSnap = true;
+                    // solo se la copia dal vivo non ha mai funzionato: se ha già funzionato, un'area nera è nera davvero (es. un video) e non si congela lo schermo
+                    if (!everLive && ++blackRun >= 8 && Blit(x, y, size, true) && !IsBlack(shot, size)) useSnap = true;
                 }
-                else blackRun = 0;
+                else { everLive = true; blackRun = 0; }
             }
 
             var data = shot.LockBits(new System.Drawing.Rectangle(0, 0, size, size), System.Drawing.Imaging.ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppRgb);

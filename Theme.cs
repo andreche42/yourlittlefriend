@@ -43,11 +43,14 @@ public static class Theme
         return TryParse(s.Accent) ?? TryParse(p.Accent)!.Value;
     }
 
+    // il notch è "staccato" quando non sta sul bordo alto dello schermo principale (y = 0), anche se è su un monitor sopra
+    public static bool NotchFloating(Settings s) => s.NotchY is { } y && Math.Abs(y) > 0.5;
+
     // il contorno dipende dalla forma: la bolla e il notch staccato dal bordo (spostato in giro) hanno sempre il loro, il notch attaccato solo se lo accendi
     public static void ApplyOutline()
     {
         var s = Settings.Current;
-        bool bubble = s.Style == "bubble", floating = bubble || s.NotchY is > 0.5;
+        bool bubble = s.Style == "bubble", floating = bubble || NotchFloating(s);
         bool line = s.Outline || floating;
         Set("OutlineBrush", line ? AccentOf(s) : Colors.Transparent);
         // lo spessore è 0 quando il contorno è spento: un bordo trasparente lascerebbe uno spazio visibile attorno al notch. in alto non c'è mai (il notch attaccato è unito allo schermo)

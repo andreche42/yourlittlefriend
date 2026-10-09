@@ -102,7 +102,7 @@ public partial class MainWindow : Window
     bool? expandOverride;         // null = automatico (calcolatrice e wikipedia si espandono da sole); true/false = scelta col pulsante
     Rect closedRect, openRect, expandRect;   // notch/bolla chiusi, pannello normale e pannello espanso, in coordinate della finestra
     NativePoint gripC0;
-    double gripW0, gripH0;
+    double gripW0, gripH0, gripKx = 2, gripKy = 1;
     LensWindow? lens;
     readonly DispatcherTimer pendingOpen = new() { Interval = TimeSpan.FromMilliseconds(300) };   // aspetta un attimo prima di aprire la bolla: potrebbe essere un doppio clic
     NativePoint cursor0;
@@ -110,11 +110,12 @@ public partial class MainWindow : Window
     readonly Stopwatch clock = Stopwatch.StartNew();
 
     [DllImport("user32.dll")] static extern bool GetCursorPos(out NativePoint p);
+    [DllImport("user32.dll")] static extern uint GetDoubleClickTime();
     [StructLayout(LayoutKind.Sequential)] struct NativePoint { public int X, Y; }
 
     bool IsBubble => Settings.Current.Style == "bubble";
     bool IsClosedNow => !isOpen && pos < .02;
-    bool IsFloating => IsBubble || Settings.Current.NotchY is > 0.5;   // false = il notch è attaccato al bordo alto dello schermo
+    bool IsFloating => IsBubble || Theme.NotchFloating(Settings.Current);   // false = il notch è attaccato al bordo alto dello schermo
 
     static double Clamp(double v, double lo, double hi) => hi < lo ? lo : Math.Min(Math.Max(v, lo), hi);
     static double Lerp(double a, double b, double t) => a + (b - a) * t;
@@ -129,6 +130,10 @@ public partial class MainWindow : Window
     static Rect BubbleArea() =>
         SystemParameters.VirtualScreenWidth > SystemParameters.PrimaryScreenWidth + 1 || SystemParameters.VirtualScreenHeight > SystemParameters.PrimaryScreenHeight + 1
             ? ScreenRect() : SystemParameters.WorkArea;
+
+    // pannello di misura w x h con l'angolo ideale in (x, y) sullo schermo: lo si tiene dentro l'area, poi dentro la finestra (coordinate della finestra)
+    static Rect PanelRect(Rect area, double winLeft, double winTop, double x, double y, double w, double h) =>
+        new(Clamp(Clamp(x, area.Left, area.Right - w) - winLeft, 0, WinW - w), Clamp(Clamp(y, area.Top, area.Bottom - h) - winTop, 0, WinH - h), w, h);
 
     // calcola dove stanno notch/bolla e pannello, e mette la finestra al posto giusto.
     // il punto di riferimento (Anchor) è il centro della bolla, oppure il centro del bordo alto del notch: la finestra e il pannello gli stanno attorno
@@ -146,8 +151,9 @@ public partial class MainWindow : Window
             winTop = Clamp(top, sc.Top, sc.Bottom - WinH);
             double rx = cx - winLeft, ry = top - winTop;
             closedRect = new Rect(rx - WClosed / 2, ry, WClosed, HClosed);
-            openRect = new Rect(Clamp(rx - WOpen / 2, 0, WinW - WOpen), Clamp(ry, 0, WinH - HOpen), WOpen, HOpen);
-            expandRect = new Rect(Clamp(rx - ew / 2, 0, WinW - ew), Clamp(ry, 0, WinH - eh), ew, eh);
+            // il pannello deve stare nello schermo (se lo schermo è più piccolo della finestra) e poi nella finestra
+            openRect = PanelRect(sc, winLeft, winTop, cx - WOpen / 2, top, WOpen, HOpen);
+            expandRect = PanelRect(sc, winLeft, winTop, cx - ew / 2, top, ew, eh);
             MiniMascot.WanderRange = 80;
             MiniMascot.Width = MiniMascot.Height = 28;
             MiniMascot.HorizontalAlignment = HorizontalAlignment.Center;
@@ -159,13 +165,14 @@ public partial class MainWindow : Window
         {
             double s = Clamp(st.BubbleSize, 48, 150);
             var wa = BubbleArea();
-            double cx = Clamp(st.BubbleX ?? wa.Right - 90, wa.Left + s / 2, wa.Right - s / 2);
-            double cy = Clamp(st.BubbleY ?? wa.Top + 140, wa.Top + s / 2, wa.Bottom - s / 2);
+            var pw = SystemParameters.WorkArea;   // la posizione predefinita sta sempre sul monitor principale
+            double cx = Clamp(st.BubbleX ?? pw.Right - 90, wa.Left + s / 2, wa.Right - s / 2);
+            double cy = Clamp(st.BubbleY ?? pw.Top + 140, wa.Top + s / 2, wa.Bottom - s / 2);
             winLeft = Clamp(cx - WinW / 2, wa.Left, wa.Right - WinW);
             winTop = Clamp(cy - WinH / 2, wa.Top, wa.Bottom - WinH);
             closedRect = new Rect(cx - winLeft - s / 2, cy - winTop - s / 2, s, s);
-            openRect = new Rect(Clamp(cx - winLeft - WOpen / 2, 0, WinW - WOpen), Clamp(cy - winTop - HOpen / 2, 0, WinH - HOpen), WOpen, HOpen);
-            expandRect = new Rect(Clamp(cx - winLeft - ew / 2, 0, WinW - ew), Clamp(cy - winTop - eh / 2, 0, WinH - eh), ew, eh);
+            openRect = PanelRect(wa, winLeft, winTop, cx - WOpen / 2, cy - HOpen / 2, WOpen, HOpen);
+            expandRect = PanelRect(wa, winLeft, winTop, cx - ew / 2, cy - eh / 2, ew, eh);
             MiniMascot.WanderRange = 0;
             MiniMascot.Width = MiniMascot.Height = s * .8;
             MiniMascot.HorizontalAlignment = HorizontalAlignment.Center;
@@ -409,19 +416,20 @@ public partial class MainWindow : Window
     // o elementi che hanno già un loro clic o trascinamento (Tag = "nodrag")
     bool CanDragFrom(DependencyObject? src)
     {
-        for (var d = src; d != null && !ReferenceEquals(d, Root); d = ParentOf(d))
+        var d = src;
+        for (; d != null && !ReferenceEquals(d, Root); d = ParentOf(d))
         {
             if (d is System.Windows.Controls.Primitives.ButtonBase or System.Windows.Controls.Primitives.TextBoxBase or System.Windows.Controls.Primitives.ScrollBar
                 or System.Windows.Controls.Primitives.Thumb or System.Windows.Controls.Primitives.Selector or Slider or PasswordBox) return false;
             if (d is FrameworkElement { Tag: "nodrag" }) return false;
         }
-        return true;
+        return ReferenceEquals(d, Root);   // quello che sta fuori da Root (menu, popup) non sposta la finestra
     }
 
     void Root_Down(object s, MouseButtonEventArgs e)
     {
         if (e.ClickCount == 2 && IsBubble && IsClosedNow) { e.Handled = true; pressed = false; ToggleLens(); return; }   // doppio clic sulla bolla = lente
-        if (lens != null || e.ClickCount > 1 || !CanDragFrom(e.OriginalSource as DependencyObject)) return;
+        if (lens != null || !CanDragFrom(e.OriginalSource as DependencyObject)) return;
         pressed = true;
         dragging = false;
         pressOpens = IsBubble && IsClosedNow;   // un clic (senza trascinare) sulla bolla chiusa la apre
@@ -480,9 +488,15 @@ public partial class MainWindow : Window
         }
         else if (click && opens)
         {
-            if (Settings.Current.LensOn) { pendingOpen.Stop(); pendingOpen.Start(); }   // un clic la apre, ma aspetta un attimo: potrebbe essere l'inizio di un doppio clic
+            if (Settings.Current.LensOn)   // un clic la apre, ma aspetta il tempo di un doppio clic di windows: potrebbe essere l'inizio di una lente
+            {
+                pendingOpen.Interval = TimeSpan.FromMilliseconds((double)Math.Max(GetDoubleClickTime(), 200u));
+                pendingOpen.Stop();
+                pendingOpen.Start();
+            }
             else SetOpen(true);
         }
+        else if (opens) Jelly(Root.IsMouseOver ? 1.1 : 1);   // la pressione è finita senza clic né trascinamento (es. alt-tab): la bolla torna normale
         UpdateBob();
     }
 
@@ -516,6 +530,9 @@ public partial class MainWindow : Window
         GetCursorPos(out gripC0);
         gripW0 = Settings.Current.ExpW;
         gripH0 = Settings.Current.ExpH;
+        // il pannello è centrato sul punto di riferimento solo se non è stato spinto contro il bordo della finestra: altrimenti cresce da un lato solo
+        gripKx = expandRect.X > .5 && expandRect.Right < WinW - .5 ? 2 : 1;
+        gripKy = IsBubble && expandRect.Y > .5 && expandRect.Bottom < WinH - .5 ? 2 : 1;
         hold.Stop();
         ((UIElement)s).CaptureMouse();
         e.Handled = true;
@@ -528,8 +545,8 @@ public partial class MainWindow : Window
         var dpi = VisualTreeHelper.GetDpi(this);
         double dx = (c.X - gripC0.X) / dpi.DpiScaleX, dy = (c.Y - gripC0.Y) / dpi.DpiScaleY;
         var st = Settings.Current;
-        st.ExpW = Clamp(gripW0 + 2 * dx, MinExpW, MaxExpW);                      // il pannello è centrato: si allarga da entrambi i lati
-        st.ExpH = Clamp(gripH0 + (IsBubble ? 2 : 1) * dy, MinExpH, MaxExpH);   // il notch è attaccato in alto: cresce solo verso il basso
+        st.ExpW = Clamp(gripW0 + gripKx * dx, MinExpW, MaxExpW);                      // il pannello è centrato: si allarga da entrambi i lati
+        st.ExpH = Clamp(gripH0 + gripKy * dy, MinExpH, MaxExpH);   // il notch è attaccato in alto: cresce solo verso il basso
         LayoutRects();
         RenderSpring();
     }

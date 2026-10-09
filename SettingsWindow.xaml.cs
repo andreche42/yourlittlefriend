@@ -60,9 +60,9 @@ public partial class SettingsWindow : Window
 
         // lente di ingrandimento
         LLens.Text = Loc.L("Lente di ingrandimento", "Magnifying glass");
-        LensCb.Content = Loc.L("Attiva la lente (doppio clic sull'omino)", "Turn the magnifier on (double-click the mascot)");
-        LLensNote.Text = Loc.L("Doppio clic sull'omino: diventa una lente che segue il cursore e ingrandisce lo schermo. Tieni premuto per sottolineare, rotella per cambiare l'ingrandimento, doppio clic (o clic destro) per toglierla.",
-                               "Double-click the mascot: it becomes a lens that follows the cursor and magnifies the screen. Hold the button to underline, use the wheel to change the zoom, double-click (or right-click) to remove it.");
+        LensCb.Content = Loc.L("Attiva la lente (doppio clic sull'omino o sulla bolla)", "Turn the magnifier on (double-click the mascot or the bubble)");
+        LLensNote.Text = Loc.L("Doppio clic sull'omino (o sulla bolla): diventa una lente che segue il cursore e ingrandisce l'app, che resta aperta, e lo schermo. Tieni premuto per sottolineare, rotella per cambiare l'ingrandimento, doppio clic (o clic destro) per toglierla.",
+                               "Double-click the mascot (or the bubble): it becomes a lens that follows the cursor and magnifies the app, which stays open, and the screen. Hold the button to underline, use the wheel to change the zoom, double-click (or right-click) to remove it.");
         LLensColor.Text = Loc.L("Colore della sottolineatura", "Underline color");
         LLensSize.Text = Loc.L("Dimensione della lente", "Lens size");
         LLensZoom.Text = Loc.L("Ingrandimento", "Zoom");
