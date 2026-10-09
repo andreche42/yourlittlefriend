@@ -1,4 +1,7 @@
 # yourlittlefriend
+![Project Logo](https://i.ibb.co/pB2J6tTk/Group-1.png%22)
+
+![AGPLV3 License](https://img.shields.io/badge/License-AGPL_v3-blue.svg) ![Spotify](https://img.shields.io/badge/Spotify-%231ED760.svg?style=for-the-badge&logo=spotify&logoColor=white) ![Ollama](https://img.shields.io/badge/ollama-%23000000.svg?style=for-the-badge&logo=ollama&logoColor=white) ![C#](https://img.shields.io/badge/C%23-239120?style=flat&logo=unity&logoColor=purple)
 
 un piccolo amico nel notch del pc (windows). si apre quando ci passi sopra col mouse.
 
