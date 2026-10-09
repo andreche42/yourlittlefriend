@@ -51,6 +51,14 @@
 
         <DockPanel>
           <Button DockPanel.Dock="Right" Content="⚙" Click="Gear_Click" ToolTip="{local:L It=Impostazioni, En=Settings}"/>
+          <Button x:Name="BExpand" DockPanel.Dock="Right" Click="Expand_Click" ToolTip="{local:L It='Espandi / riduci', En='Expand / shrink'}">
+            <Viewbox Width="16" Height="16" Margin="0,3">
+              <Canvas Width="16" Height="16">
+                <Path x:Name="ExpandIcon" Stroke="{DynamicResource FgBrush}" StrokeThickness="1.6" StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                      Data="M2,6 V2 H6 M10,2 H14 V6 M14,10 V14 H10 M6,14 H2 V10"/>
+              </Canvas>
+            </Viewbox>
+          </Button>
           <StackPanel Orientation="Horizontal">
             <Button x:Name="T0" Content="⌂" Tag="0" Click="Tab_Click" ToolTip="{local:L It=Home, En=Home}"/>
             <Button x:Name="T1" Content="💬" Tag="1" Click="Tab_Click" ToolTip="{local:L It=Chat, En=Chat}"/>
@@ -78,7 +86,7 @@
 
         <Grid Grid.Row="1" Margin="0,8,0,0">
           <Grid.ColumnDefinitions><ColumnDefinition Width="96"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-          <local:Mascot x:Name="BigMascot" Width="84" Height="84" VerticalAlignment="Center"/>
+          <local:Mascot x:Name="BigMascot" Width="84" Height="84" VerticalAlignment="Top" Margin="0,16,0,0"/>
 
           <Grid Grid.Column="1">
             <!-- scheda home: saluto + meteo, oppure musica -->
@@ -194,6 +202,13 @@
           </Grid>
         </Grid>
       </Grid>
+
+      <!-- maniglia: trascinala per ridimensionare il pannello espanso -->
+      <Border x:Name="Grip" Visibility="Collapsed" Width="22" Height="22" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,5,5"
+              Background="Transparent" Cursor="SizeNWSE" ToolTip="{local:L It='Trascina per ridimensionare', En='Drag to resize'}"
+              MouseLeftButtonDown="Grip_Down" MouseMove="Grip_Move" MouseLeftButtonUp="Grip_Up">
+        <Path Stroke="{DynamicResource FgDimBrush}" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" Data="M17,6 L6,17 M17,11 L11,17"/>
+      </Border>
     </Grid>
   </Border>
   </Grid>

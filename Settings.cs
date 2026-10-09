@@ -47,6 +47,16 @@ public class Settings
     public double? BubbleY { get; set; }
     public double BubbleSize { get; set; } = 84;
 
+    // dimensione del pannello espanso (si regola trascinando l'angolo in basso a destra)
+    public double ExpW { get; set; } = 820;
+    public double ExpH { get; set; } = 460;
+
+    // lente di ingrandimento (doppio clic sull'omino): colore della sottolineatura, dimensione e ingrandimento
+    public bool LensOn { get; set; } = true;
+    public string LensColor { get; set; } = "#FFE600";
+    public double LensSize { get; set; } = 380;
+    public double LensZoom { get; set; } = 2.5;
+
     internal static readonly string Dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "yourlittlefriend");
     static string FilePath => Path.Combine(Dir, "settings.json");
 

@@ -53,7 +53,10 @@ public partial class MainWindow : Window
         {
             if (e.PropertyName is nameof(SystemParameters.PrimaryScreenWidth) or nameof(SystemParameters.WorkArea)) { LayoutRects(); RenderSpring(); }
         };
-        CalcBox.Easter += () => { MiniMascot.Cool(); BigMascot.Cool(); };   // 104, 67, 69, 420: occhiali da sole e pollice in su
+        CalcBox.Easter += () => { MiniMascot.Cool(); BigMascot.Cool(); };
+        WikiBox.SearchStarted += () => { wikiSearched = true; expandOverride = null; UpdateExpand(); };   // la ricerca allarga il pannello
+        pendingOpen.Tick += (_, _) => { pendingOpen.Stop(); SetOpen(true); };
+        BigMascot.MouseLeftButtonDown += (_, e) => { if (e.ClickCount == 2) { e.Handled = true; ToggleLens(); } };   // doppio clic sull'omino = lente   // 104, 67, 69, 420: occhiali da sole e pollice in su
         Top = 0;
         hold.Tick += (_, _) => { hold.Stop(); MaybeClose(); };
 
@@ -80,10 +83,19 @@ public partial class MainWindow : Window
     // il movimento è una molla fisica: pos va da 0 = chiuso a 1 = aperto (con un po' di rimbalzo), e se il mouse entra e esce
     // di continuo la molla cambia direzione senza strappi. la velocità pilota la scia di "motion blur" (alloni dietro al notch).
     // in modalità bolla la finestra segue la bolla (si sposta quando la trascini, sempre dentro lo schermo) e il pannello si apre attorno a lei.
-    const double WinW = 720, WinH = 192;
+    // il pannello si può anche espandere (molto più grande, si regola trascinando l'angolo): ha una seconda molla (ex) che lo allarga
+    // dal formato normale a quello espanso. la finestra è grande abbastanza per l'espanso più il rimbalzo
+    const double WinW = 980, WinH = 620;
+    const double MinExpW = 700, MinExpH = 300, MaxExpW = 880, MaxExpH = 540;
     double pos, vel, target, lastTime;
-    bool springOn, bobbing, bubbleDown, bubbleDragging;
-    Rect closedRect, openRect;   // notch/bolla chiusi e pannello aperto, in coordinate della finestra
+    double ex, exVel, exTarget;   // 0 = pannello normale, 1 = espanso
+    bool springOn, bobbing, bubbleDown, bubbleDragging, fullBig, gripDown, wikiSearched;
+    bool? expandOverride;         // null = automatico (calcolatrice e wikipedia si espandono da sole); true/false = scelta col pulsante
+    Rect closedRect, openRect, expandRect;   // notch/bolla chiusi, pannello normale e pannello espanso, in coordinate della finestra
+    NativePoint gripC0;
+    double gripW0, gripH0;
+    LensWindow? lens;
+    readonly DispatcherTimer pendingOpen = new() { Interval = TimeSpan.FromMilliseconds(300) };   // aspetta un attimo prima di aprire la bolla: potrebbe essere un doppio clic
     NativePoint cursor0;
     double bx0, by0;
     readonly Stopwatch clock = Stopwatch.StartNew();
@@ -98,6 +110,8 @@ public partial class MainWindow : Window
     static double Lerp(double a, double b, double t) => a + (b - a) * t;
     static Rect LerpRect(Rect a, Rect b, double t) =>
         new(Lerp(a.X, b.X, t), Lerp(a.Y, b.Y, t), Math.Max(Lerp(a.Width, b.Width, t), 1), Math.Max(Lerp(a.Height, b.Height, t), 1));
+    // durante il rimbalzo il pannello può sforare un poco: lo si spinge dentro la finestra così non viene tagliato
+    static Rect Inside(Rect r) => new(Clamp(r.X, 0, WinW - r.Width), Clamp(r.Y, 0, WinH - r.Height), r.Width, r.Height);
     static void Place(FrameworkElement el, Rect r) { el.Margin = new Thickness(r.X, r.Y, 0, 0); el.Width = r.Width; el.Height = r.Height; }
 
     // calcola dove stanno notch/bolla e pannello, e mette la finestra al posto giusto
@@ -105,12 +119,14 @@ public partial class MainWindow : Window
     {
         var st = Settings.Current;
         double winLeft, winTop;
+        double ew = Clamp(st.ExpW, MinExpW, MaxExpW), eh = Clamp(st.ExpH, MinExpH, MaxExpH);
         if (!IsBubble)
         {
             winLeft = (SystemParameters.PrimaryScreenWidth - WinW) / 2;
             winTop = 0;
             closedRect = new Rect((WinW - WClosed) / 2, 0, WClosed, HClosed);
             openRect = new Rect((WinW - WOpen) / 2, 0, WOpen, HOpen);
+            expandRect = new Rect((WinW - ew) / 2, 0, ew, eh);
             MiniMascot.WanderRange = 80;
             MiniMascot.Width = MiniMascot.Height = 28;
             MiniMascot.HorizontalAlignment = HorizontalAlignment.Center;
@@ -128,6 +144,7 @@ public partial class MainWindow : Window
             winTop = Clamp(cy - WinH / 2, wa.Top, wa.Bottom - WinH);
             closedRect = new Rect(cx - winLeft - s / 2, cy - winTop - s / 2, s, s);
             openRect = new Rect(Clamp(cx - winLeft - WOpen / 2, 0, WinW - WOpen), Clamp(cy - winTop - HOpen / 2, 0, WinH - HOpen), WOpen, HOpen);
+            expandRect = new Rect(Clamp(cx - winLeft - ew / 2, 0, WinW - ew), Clamp(cy - winTop - eh / 2, 0, WinH - eh), ew, eh);
             MiniMascot.WanderRange = 0;
             MiniMascot.Width = MiniMascot.Height = s * .8;
             MiniMascot.HorizontalAlignment = HorizontalAlignment.Center;
@@ -143,6 +160,15 @@ public partial class MainWindow : Window
         if (double.IsNaN(Left) || Math.Abs(Left - winLeft) > .01) Left = winLeft;
         if (double.IsNaN(Top) || Math.Abs(Top - winTop) > .01) Top = winTop;
         PlaceRipple();
+        ApplyFullSize();
+    }
+
+    // il contenuto ha la dimensione del pannello finale (normale o espanso): mentre il pannello si allarga si "scopre" invece di rimpaginarsi a ogni fotogramma
+    void ApplyFullSize()
+    {
+        var r = fullBig ? expandRect : openRect;
+        Full.Width = Math.Max(r.Width - 28, 200);
+        Full.Height = Math.Max(r.Height - 16, 100);
     }
 
     // applica lo stile (notch o bolla): parte sempre da chiuso
@@ -150,8 +176,13 @@ public partial class MainWindow : Window
     {
         if (springOn) { CompositionTarget.Rendering -= SpringTick; springOn = false; }
         hold.Stop();
+        pendingOpen.Stop();
         isOpen = false;
         pos = vel = target = 0;
+        ex = exVel = exTarget = 0;
+        expandOverride = null;
+        wikiSearched = false;
+        fullBig = false;
         Jelly(1, 1, false);
         LayoutRects();
         MiniMascot.Home();   // passando da notch a bolla l'omino poteva restare fuori dalla bolla, dov'era andato a spasso
@@ -170,12 +201,35 @@ public partial class MainWindow : Window
             if (pos < .3) BigMascot.Cheer();
             Jelly(1, 150, false);
         }
+        else { expandOverride = null; wikiSearched = false; }   // la prossima volta si riapre normale
         UpdateBob();
         UpdateRipple();
+        UpdateExpand();
+        StartSpring();
+    }
+
+    void StartSpring()
+    {
         if (springOn) return;
         springOn = true;
         lastTime = clock.Elapsed.TotalSeconds;
         CompositionTarget.Rendering += SpringTick;
+    }
+
+    // si espande da solo con la calcolatrice (tastierino) e dopo una ricerca su wikipedia; col pulsante lo decidi tu
+    bool WantExpanded => isOpen && (expandOverride ?? (tab == 4 || (tab == 6 && wikiSearched)));
+
+    void UpdateExpand()
+    {
+        exTarget = WantExpanded ? 1 : 0;
+        ExpandIcon.Data = Geometry.Parse(exTarget == 1 ? "M6,2 V6 H2 M10,2 V6 H14 M14,10 H10 V14 M2,10 H6 V14" : "M2,6 V2 H6 M10,2 H14 V6 M14,10 V14 H10 M6,14 H2 V10");
+        if (Math.Abs(ex - exTarget) > .001 || Math.Abs(exVel) > .02) StartSpring();
+    }
+
+    void Expand_Click(object s, RoutedEventArgs e)
+    {
+        expandOverride = exTarget < .5;   // se è normale lo espande, se è espanso lo riduce
+        UpdateExpand();
     }
 
     void SpringTick(object? s, EventArgs e)
@@ -192,10 +246,12 @@ public partial class MainWindow : Window
         {
             vel += (-2 * zeta * omega * vel - omega * omega * (pos - target)) * h;
             pos += vel * h;
+            exVel += (-2 * .75 * 19 * exVel - 19 * 19 * (ex - exTarget)) * h;   // espansione: un filo di rimbalzo
+            ex += exVel * h;
         }
 
-        bool done = Math.Abs(pos - target) < .001 && Math.Abs(vel) < .02;
-        if (done) { pos = target; vel = 0; }
+        bool done = Math.Abs(pos - target) < .001 && Math.Abs(vel) < .02 && Math.Abs(ex - exTarget) < .001 && Math.Abs(exVel) < .02;
+        if (done) { pos = target; vel = 0; ex = exTarget; exVel = 0; }
         RenderSpring();
         if (!done) return;
         springOn = false;
@@ -210,26 +266,34 @@ public partial class MainWindow : Window
         IsBubble ? new CornerRadius(Lerp(closedRect.Width / 2, 22, Smooth(p))) : new CornerRadius(0, 0, 22, 22);
 
     // scia: una copia più grande e trasparente del notch. più va veloce, più si vede
-    void Ghost(Border g, double p, double speed, int i, double alpha)
+    void Ghost(Border g, Rect open, double p, double speed, int i, double alpha)
     {
         if (alpha < .01) { g.Visibility = Visibility.Collapsed; return; }
-        Place(g, LerpRect(closedRect, openRect, Math.Clamp(p + i * speed * .008, 0, 1.12)));
+        Place(g, LerpRect(closedRect, open, Math.Clamp(p + i * speed * .008, 0, 1.1)));
         g.CornerRadius = Root.CornerRadius;
         g.Opacity = alpha;
         g.Visibility = Visibility.Visible;
     }
 
+    // mentre il pannello cambia formato il contenuto sfuma, si rimpagina quando è invisibile e ricompare
+    static double ExVis(double e) => e > .1 ? Smooth((e - .1) / .4) : Smooth((.1 - e) / .1);
+
     void RenderSpring()
     {
-        double p = Math.Clamp(pos, 0, 1.12);   // oltre 1 = rimbalzo
+        double p = Math.Clamp(pos, 0, 1.1);   // oltre 1 = rimbalzo
         double pc = Math.Clamp(pos, 0, 1);
-        Place(Root, LerpRect(closedRect, openRect, p));
+        var open = LerpRect(openRect, expandRect, Math.Clamp(ex, 0, 1.05));
+        Place(Root, Inside(LerpRect(closedRect, open, p)));
         Root.CornerRadius = CornerAt(pc);
 
-        double fade = Smooth((pc - .3) / .5);        // il contenuto compare quando il pannello è quasi grande
+        bool big = ex > .1;
+        if (big != fullBig) { fullBig = big; ApplyFullSize(); }
+
+        double fade = Smooth((pc - .3) / .5) * ExVis(ex);        // il contenuto compare quando il pannello è quasi grande
         Full.Opacity = fade;
         Full.Visibility = fade > .01 ? Visibility.Visible : Visibility.Collapsed;
         FullShift.Y = (1 - pc) * -14;
+        Grip.Visibility = ex > .95 && pos > .95 ? Visibility.Visible : Visibility.Collapsed;
 
         double mini = 1 - Smooth(pc / .3);           // la mascotte piccola sfuma via mentre si apre
         MiniMascot.Opacity = mini;
@@ -237,9 +301,9 @@ public partial class MainWindow : Window
         Shine.Opacity = IsBubble ? .22 * mini : 0;
 
         double speed = Math.Abs(vel), k = Math.Min(speed / 4, 1);
-        Ghost(G1, p, speed, 1, .22 * k);
-        Ghost(G2, p, speed, 2, .12 * k);
-        Ghost(G3, p, speed, 3, .06 * k);
+        Ghost(G1, open, p, speed, 1, .22 * k);
+        Ghost(G2, open, p, speed, 2, .12 * k);
+        Ghost(G3, open, p, speed, 3, .06 * k);
     }
 
     // ---- bolla: animazioni carine ----
@@ -299,6 +363,7 @@ public partial class MainWindow : Window
 
     void Root_Down(object s, MouseButtonEventArgs e)
     {
+        if (e.ClickCount == 2 && IsBubble && IsClosedNow) { e.Handled = true; bubbleDown = false; ToggleLens(); return; }   // doppio clic sulla bolla = lente
         if (!IsBubble || !IsClosedNow) return;
         bubbleDown = true;
         bubbleDragging = false;
@@ -342,6 +407,7 @@ public partial class MainWindow : Window
             Settings.Current.Save();            // così la ritrovi dove l'hai lasciata
             Jelly(Root.IsMouseOver ? 1.1 : 1);
         }
+        else if (Settings.Current.LensOn) { pendingOpen.Stop(); pendingOpen.Start(); }   // un clic la apre, ma aspetta un attimo: potrebbe essere l'inizio di un doppio clic
         else SetOpen(true);   // un clic la apre
         UpdateBob();
     }
@@ -357,12 +423,62 @@ public partial class MainWindow : Window
         e.Handled = true;
     }
 
+    // ---- maniglia: ridimensiona il pannello espanso (si ricorda la misura) ----
+    void Grip_Down(object s, MouseButtonEventArgs e)
+    {
+        gripDown = true;
+        GetCursorPos(out gripC0);
+        gripW0 = Settings.Current.ExpW;
+        gripH0 = Settings.Current.ExpH;
+        hold.Stop();
+        ((UIElement)s).CaptureMouse();
+        e.Handled = true;
+    }
+
+    void Grip_Move(object s, MouseEventArgs e)
+    {
+        if (!gripDown) return;
+        GetCursorPos(out var c);
+        var dpi = VisualTreeHelper.GetDpi(this);
+        double dx = (c.X - gripC0.X) / dpi.DpiScaleX, dy = (c.Y - gripC0.Y) / dpi.DpiScaleY;
+        var st = Settings.Current;
+        st.ExpW = Clamp(gripW0 + 2 * dx, MinExpW, MaxExpW);                      // il pannello è centrato: si allarga da entrambi i lati
+        st.ExpH = Clamp(gripH0 + (IsBubble ? 2 : 1) * dy, MinExpH, MaxExpH);   // il notch è attaccato in alto: cresce solo verso il basso
+        LayoutRects();
+        RenderSpring();
+    }
+
+    void Grip_Up(object s, MouseButtonEventArgs e)
+    {
+        if (!gripDown) return;
+        gripDown = false;
+        ((UIElement)s).ReleaseMouseCapture();
+        Settings.Current.Save();
+        hold.Start();
+        e.Handled = true;
+    }
+
+    // ---- lente di ingrandimento (doppio clic sull'omino) ----
+    void ToggleLens()
+    {
+        pendingOpen.Stop();
+        if (lens != null) { lens.Close(); return; }
+        if (!Settings.Current.LensOn) return;
+        SetOpen(false);
+        hold.Stop();
+        Opacity = 0;   // l'omino "diventa" la lente: la finestra sparisce finché non la richiudi
+        var l = new LensWindow();
+        l.Closed += (_, _) => { lens = null; Opacity = 1; };
+        lens = l;
+        l.Show();
+    }
+
     bool DragActive => Environment.TickCount64 - dragSeen < 600;
 
     void MaybeClose()
     {
         var menu = (ContextMenu)Resources["Menu"];
-        if (Root.IsMouseOver || DragActive || internalDrag || menu.IsOpen || Root.IsKeyboardFocusWithin) hold.Start();
+        if (Root.IsMouseOver || DragActive || internalDrag || gripDown || menu.IsOpen || Root.IsKeyboardFocusWithin) hold.Start();
         else SetOpen(false);
     }
 
@@ -417,6 +533,9 @@ public partial class MainWindow : Window
             if (j == i) tabs[j].SetResourceReference(BackgroundProperty, "PanelBrush");
             else tabs[j].ClearValue(BackgroundProperty);
         }
+        expandOverride = null;      // ogni scheda decide da sola se espandersi
+        if (i != 6) wikiSearched = false;
+        UpdateExpand();
     }
 
     void Tab_Click(object s, RoutedEventArgs e) => ShowTab(int.Parse((string)((Button)s).Tag));
