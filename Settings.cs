@@ -15,6 +15,12 @@ public class Settings
     public string Language { get; set; } = "";   // "it" o "en"
     public string Model { get; set; } = Llm.DefaultModel;
     public bool Onboarded { get; set; }
+    public bool WebSearch { get; set; } = true;   // l'ia può cercare su internet
+    public string Theme { get; set; } = "dark";
+    public string Accent { get; set; } = "";       // colore principale personalizzato (vuoto = quello del tema)
+    public string MascotColor { get; set; } = ""; // colore dell'omino personalizzato (vuoto = quello del tema)
+    public double Opacity { get; set; } = 1;       // opacità dello sfondo del notch
+    public bool Outline { get; set; }              // contorno colorato attorno al notch
 
     internal static readonly string Dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "yourlittlefriend");
     static string FilePath => Path.Combine(Dir, "settings.json");

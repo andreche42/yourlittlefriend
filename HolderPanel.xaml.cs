@@ -116,13 +116,12 @@ public partial class HolderPanel : UserControl
     UIElement Tile(HolderItem it)
     {
         bool file = it.Kind == "file";
-        var normal = new SolidColorBrush(Color.FromRgb(0x2B, 0x2B, 0x2B));
-        var hover = new SolidColorBrush(Color.FromRgb(0x3A, 0x3A, 0x3A));
         var tile = new Border
         {
             Width = file ? 80 : 140, Height = 92, Margin = new Thickness(4, 0, 4, 0), Padding = new Thickness(8, 8, 8, 4),
-            CornerRadius = new CornerRadius(12), Background = normal, Cursor = Cursors.Hand
+            CornerRadius = new CornerRadius(12), Cursor = Cursors.Hand
         };
+        tile.SetResourceReference(Border.BackgroundProperty, "PanelBrush");
         var grid = new Grid();
         TextBlock? label = null;   // la scritta del testo, per il "copiato!"
 
@@ -158,16 +157,17 @@ public partial class HolderPanel : UserControl
 
         var x = new Button
         {
-            Content = "✕", FontSize = 10, Padding = new Thickness(5, 1, 5, 1), Background = Brushes.Black, Visibility = Visibility.Collapsed,
+            Content = "✕", FontSize = 10, Padding = new Thickness(5, 1, 5, 1), Visibility = Visibility.Collapsed,
             HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Top, Margin = new Thickness(0, -6, -6, 0)
         };
+        x.SetResourceReference(Control.BackgroundProperty, "BgSolidBrush");
         x.ToolTip = Loc.L("Togli", "Remove");
         x.Click += (_, _) => Remove(it);
         grid.Children.Add(x);
         tile.Child = grid;
 
-        tile.MouseEnter += (_, _) => { tile.Background = hover; x.Visibility = Visibility.Visible; };
-        tile.MouseLeave += (_, _) => { tile.Background = normal; x.Visibility = Visibility.Collapsed; };
+        tile.MouseEnter += (_, _) => { tile.SetResourceReference(Border.BackgroundProperty, "PanelHoverBrush"); x.Visibility = Visibility.Visible; };
+        tile.MouseLeave += (_, _) => { tile.SetResourceReference(Border.BackgroundProperty, "PanelBrush"); x.Visibility = Visibility.Collapsed; };
 
         // doppio click: apre il file, oppure copia il testo
         // trascinamento: inizia solo dopo qualche pixel, così i click normali restano click

@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:YourLittleFriend"
         Title="yourlittlefriend" Icon="icon.ico" Width="500" Height="640" WindowStartupLocation="CenterScreen"
-        Background="#111111" Foreground="White" FontFamily="Segoe UI" FontSize="14" Topmost="True">
+        Background="{DynamicResource WindowBrush}" Foreground="{DynamicResource FgBrush}" FontFamily="Segoe UI" FontSize="14" Topmost="True">
   <Grid>
     <Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
     <ScrollViewer VerticalScrollBarVisibility="Auto">
@@ -19,25 +19,44 @@
 
         <TextBlock x:Name="LLang" Margin="0,14,0,6"/>
         <StackPanel Orientation="Horizontal">
-          <RadioButton x:Name="RIt" Foreground="White" Content="Italiano" GroupName="lang" Margin="0,0,20,0"/>
-          <RadioButton x:Name="REn" Foreground="White" Content="English" GroupName="lang"/>
+          <RadioButton x:Name="RIt" Foreground="{DynamicResource FgBrush}" Content="Italiano" GroupName="lang" Margin="0,0,20,0"/>
+          <RadioButton x:Name="REn" Foreground="{DynamicResource FgBrush}" Content="English" GroupName="lang"/>
         </StackPanel>
 
         <TextBlock x:Name="LModel" Margin="0,18,0,4"/>
-        <TextBlock x:Name="ModelText" Foreground="#BBBBBB"/>
+        <TextBlock x:Name="ModelText" Foreground="{DynamicResource FgDimBrush}"/>
         <Button x:Name="BChange" Style="{StaticResource Pill}" HorizontalAlignment="Left" Margin="0,8,0,0" Click="Change_Click"/>
-        <Border x:Name="AiBox" Visibility="Collapsed" Background="#1B1B1B" CornerRadius="12" Padding="16" Margin="0,10,0,0">
+        <Border x:Name="AiBox" Visibility="Collapsed" Background="{DynamicResource CardBrush}" CornerRadius="12" Padding="16" Margin="0,10,0,0">
           <local:AiSetupPanel x:Name="Ai"/>
         </Border>
 
-        <CheckBox x:Name="AutoStart" Foreground="White" Margin="0,22,0,0"/>
+        <TextBlock x:Name="LLook" FontSize="18" FontWeight="Bold" Margin="0,26,0,8"/>
+        <WrapPanel x:Name="PresetBox"/>
+        <TextBlock x:Name="LAccent" Margin="0,14,0,4"/>
+        <StackPanel Orientation="Horizontal">
+          <WrapPanel x:Name="AccentSw" MaxWidth="290"/>
+          <TextBox x:Name="AccentHex" Style="{StaticResource Field}" Width="86" Height="32" Margin="8,0,0,0" MaxLength="9" VerticalAlignment="Top"/>
+        </StackPanel>
+        <TextBlock x:Name="LMascot" Margin="0,12,0,4"/>
+        <StackPanel Orientation="Horizontal">
+          <WrapPanel x:Name="MascotSw" MaxWidth="290"/>
+          <TextBox x:Name="MascotHex" Style="{StaticResource Field}" Width="86" Height="32" Margin="8,0,0,0" MaxLength="9" VerticalAlignment="Top"/>
+        </StackPanel>
+        <TextBlock x:Name="LOpacity" Margin="0,12,0,2"/>
+        <Slider x:Name="OpacitySl" Minimum="0.5" Maximum="1" TickFrequency="0.05" IsSnapToTickEnabled="True" Width="260" HorizontalAlignment="Left"/>
+        <CheckBox x:Name="OutlineCb" Foreground="{DynamicResource FgBrush}" Margin="0,12,0,0"/>
+        <Button x:Name="BResetLook" Style="{StaticResource Pill}" HorizontalAlignment="Left" Margin="0,12,0,0" Click="ResetLook_Click"/>
+
+        <CheckBox x:Name="AutoStart" Foreground="{DynamicResource FgBrush}" Margin="0,22,0,0"/>
+
+        <CheckBox x:Name="WebCb" Foreground="{DynamicResource FgBrush}" Margin="0,12,0,0"/>
 
         <Button x:Name="BUninstall" Style="{StaticResource Pill}" HorizontalAlignment="Left" Margin="0,26,0,0" Background="#4A1F1F" Foreground="#FFB4B4" Click="Uninstall_Click"/>
       </StackPanel>
     </ScrollViewer>
     <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="28,10,28,18">
       <Button x:Name="BCancel" Style="{StaticResource Pill}" Click="Cancel_Click"/>
-      <Button x:Name="BSave" Style="{StaticResource Pill}" Background="#3A6BFF" Margin="0" Click="Save_Click"/>
+      <Button x:Name="BSave" Style="{StaticResource Primary}" Margin="0" Click="Save_Click"/>
     </StackPanel>
   </Grid>
 </Window>

@@ -13,8 +13,8 @@
     </ContextMenu>
   </Window.Resources>
 
-  <Border x:Name="Root" Background="Black" CornerRadius="0,0,22,22" ContextMenu="{StaticResource Menu}"
-          TextElement.Foreground="White" TextElement.FontFamily="Segoe UI" TextElement.FontSize="14" ToolTipService.InitialShowDelay="250"
+  <Border x:Name="Root" Background="{DynamicResource BgBrush}" BorderBrush="{DynamicResource OutlineBrush}" BorderThickness="1.5" CornerRadius="0,0,22,22" ContextMenu="{StaticResource Menu}"
+          TextElement.Foreground="{DynamicResource FgBrush}" TextElement.FontFamily="Segoe UI" TextElement.FontSize="14" ToolTipService.InitialShowDelay="250"
           MouseEnter="OnEnter" MouseLeave="OnLeave">
     <Grid>
       <local:Mascot x:Name="MiniMascot" WanderRange="80" Width="28" Height="28" VerticalAlignment="Top" Margin="0,3,0,0"/>
@@ -32,7 +32,7 @@
             <Button x:Name="T3" Tag="3" Click="Tab_Click" ToolTip="{local:L It=Portafile, En='File holder'}">
               <Viewbox Width="17" Height="17" Margin="0,2">
                 <Canvas Width="16" Height="16">
-                  <Path Stroke="#DDDDDD" StrokeThickness="1.5" StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                  <Path Stroke="{DynamicResource FgBrush}" StrokeThickness="1.5" StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
                         Data="M2,9.5 L2,13 L14,13 L14,9.5 M8,2 L8,9.5 M4.8,6.6 L8,9.8 L11.2,6.6"/>
                 </Canvas>
               </Viewbox>
@@ -63,7 +63,7 @@
                   </Grid.ColumnDefinitions>
                   <Image x:Name="CoverImg" Width="64" Height="64" Stretch="UniformToFill"/>
                   <StackPanel Grid.Column="1" Margin="12,0" VerticalAlignment="Center">
-                    <TextBlock Text="{local:L It='Ascoltando ora:', En='Now playing:'}" FontSize="18" FontWeight="Bold"/>
+                    <TextBlock Text="{local:L It='Ascoltando ora:', En='Now playing:'}" FontSize="18" FontWeight="Bold" Foreground="White"/>
                     <TextBlock x:Name="SongText" FontSize="16" TextWrapping="Wrap"/>
                   </StackPanel>
                   <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
@@ -82,10 +82,10 @@
                 <local:SmokeText x:Name="ChatOut"/>
               </ScrollViewer>
               <Grid Grid.Row="1" Height="36">
-                <Rectangle Fill="#555555" Stroke="White" StrokeThickness="2" StrokeDashArray="3 2" RadiusX="12" RadiusY="12"/>
-                <TextBox x:Name="ChatIn" Background="Transparent" BorderThickness="0" Foreground="White" CaretBrush="White"
+                <Rectangle Fill="{DynamicResource PanelBrush}" Stroke="{DynamicResource FgBrush}" StrokeThickness="2" StrokeDashArray="3 2" RadiusX="12" RadiusY="12"/>
+                <TextBox x:Name="ChatIn" Background="Transparent" BorderThickness="0" Foreground="{DynamicResource FgBrush}" CaretBrush="{DynamicResource FgBrush}"
                          FontSize="16" VerticalContentAlignment="Center" Margin="12,0" AllowDrop="False" KeyDown="ChatKey"/>
-                <TextBlock Text="{local:L It='scrivi qua', En='type here'}" Foreground="#BBBBBB" FontSize="16" Margin="14,0" VerticalAlignment="Center" IsHitTestVisible="False">
+                <TextBlock Text="{local:L It='scrivi qua', En='type here'}" Foreground="{DynamicResource FgDimBrush}" FontSize="16" Margin="14,0" VerticalAlignment="Center" IsHitTestVisible="False">
                   <TextBlock.Style>
                     <Style TargetType="TextBlock">
                       <Setter Property="Visibility" Value="Collapsed"/>
@@ -108,7 +108,7 @@
             <!-- scheda + : trascina un file -->
             <Grid x:Name="PageFile" Visibility="Collapsed">
               <Grid x:Name="DropZone">
-                <Rectangle Stroke="White" StrokeThickness="2" StrokeDashArray="4 3" RadiusX="16" RadiusY="16"/>
+                <Rectangle Stroke="{DynamicResource FgBrush}" StrokeThickness="2" StrokeDashArray="4 3" RadiusX="16" RadiusY="16"/>
                 <TextBlock Text="{local:L It='Trascina o rilascia un file', En='Drag or drop a file'}" FontSize="22" HorizontalAlignment="Center" VerticalAlignment="Center"/>
               </Grid>
               <Grid x:Name="FileView" Visibility="Collapsed">
@@ -119,16 +119,16 @@
                 </StackPanel>
                 <Grid Grid.Column="1">
                   <Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-                  <Border Background="White" CornerRadius="12" Padding="10,5" Margin="0,0,0,6" VerticalAlignment="Top">
+                  <Border Background="{DynamicResource FgBrush}" CornerRadius="12" Padding="10,5" Margin="0,0,0,6" VerticalAlignment="Top">
                     <ScrollViewer VerticalScrollBarVisibility="Hidden">
-                      <local:SmokeText x:Name="Bubble" TextElement.Foreground="Black" TextElement.FontSize="12"/>
+                      <local:SmokeText x:Name="Bubble" TextElement.Foreground="{DynamicResource BgSolidBrush}" TextElement.FontSize="12"/>
                     </ScrollViewer>
                   </Border>
                   <Grid Grid.Row="1" Height="36">
-                    <Rectangle Fill="#555555" Stroke="White" StrokeThickness="2" StrokeDashArray="3 2" RadiusX="12" RadiusY="12"/>
-                    <TextBox x:Name="FileIn" Background="Transparent" BorderThickness="0" Foreground="White" CaretBrush="White"
+                    <Rectangle Fill="{DynamicResource PanelBrush}" Stroke="{DynamicResource FgBrush}" StrokeThickness="2" StrokeDashArray="3 2" RadiusX="12" RadiusY="12"/>
+                    <TextBox x:Name="FileIn" Background="Transparent" BorderThickness="0" Foreground="{DynamicResource FgBrush}" CaretBrush="{DynamicResource FgBrush}"
                              FontSize="16" VerticalContentAlignment="Center" Margin="12,0" AllowDrop="False" KeyDown="FileKey"/>
-                    <TextBlock Text="{local:L It='scrivi qua', En='type here'}" Foreground="#BBBBBB" FontSize="16" Margin="14,0" VerticalAlignment="Center" IsHitTestVisible="False">
+                    <TextBlock Text="{local:L It='scrivi qua', En='type here'}" Foreground="{DynamicResource FgDimBrush}" FontSize="16" Margin="14,0" VerticalAlignment="Center" IsHitTestVisible="False">
                       <TextBlock.Style>
                         <Style TargetType="TextBlock">
                           <Setter Property="Visibility" Value="Collapsed"/>

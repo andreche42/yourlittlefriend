@@ -14,6 +14,7 @@ public partial class App : Application
         single = new Mutex(true, "yourlittlefriend-single", out bool first);
         if (!first) { Shutdown(); return; }
         ShutdownMode = ShutdownMode.OnExplicitShutdown;
+        Theme.Apply();
 
         if (!Settings.Current.Onboarded) new OnboardingWindow().ShowDialog();   // primo avvio
 

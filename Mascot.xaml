@@ -13,9 +13,9 @@
           </TransformGroup>
         </Canvas.RenderTransform>
 
-        <Border Canvas.Left="22" Canvas.Top="28" Width="56" Height="42" CornerRadius="16" Background="#F4F4F4"/>
-        <Ellipse Canvas.Left="8" Canvas.Top="62" Width="10" Height="10" Fill="#F4F4F4"/>
-        <Border Canvas.Left="79" Canvas.Top="26" Width="14" Height="6" CornerRadius="3" Background="#F4F4F4" RenderTransformOrigin="0.5,0.5">
+        <Border Canvas.Left="22" Canvas.Top="28" Width="56" Height="42" CornerRadius="16" Background="{DynamicResource MascotBrush}"/>
+        <Ellipse Canvas.Left="8" Canvas.Top="62" Width="10" Height="10" Fill="{DynamicResource MascotBrush}"/>
+        <Border Canvas.Left="79" Canvas.Top="26" Width="14" Height="6" CornerRadius="3" Background="{DynamicResource MascotBrush}" RenderTransformOrigin="0.5,0.5">
           <Border.RenderTransform><RotateTransform Angle="-35"/></Border.RenderTransform>
         </Border>
 
@@ -27,14 +27,14 @@
               <TranslateTransform x:Name="EyeTr"/>
             </TransformGroup>
           </Canvas.RenderTransform>
-          <Ellipse Canvas.Left="37.5" Canvas.Top="5" Width="5" Height="8" Fill="#222222"/>
-          <Ellipse Canvas.Left="57.5" Canvas.Top="5" Width="5" Height="8" Fill="#222222"/>
+          <Ellipse Canvas.Left="37.5" Canvas.Top="5" Width="5" Height="8" Fill="{DynamicResource MascotEyeBrush}"/>
+          <Ellipse Canvas.Left="57.5" Canvas.Top="5" Width="5" Height="8" Fill="{DynamicResource MascotEyeBrush}"/>
         </Canvas>
 
         <!-- occhi felici ^ ^ e guance rosa -->
         <Canvas x:Name="HappyEyes" Width="100" Height="100" Visibility="Collapsed">
-          <Path Stroke="#222222" StrokeThickness="3" StrokeStartLineCap="Round" StrokeEndLineCap="Round" Data="M 36,52 Q 40,43 44,52"/>
-          <Path Stroke="#222222" StrokeThickness="3" StrokeStartLineCap="Round" StrokeEndLineCap="Round" Data="M 56,52 Q 60,43 64,52"/>
+          <Path Stroke="{DynamicResource MascotEyeBrush}" StrokeThickness="3" StrokeStartLineCap="Round" StrokeEndLineCap="Round" Data="M 36,52 Q 40,43 44,52"/>
+          <Path Stroke="{DynamicResource MascotEyeBrush}" StrokeThickness="3" StrokeStartLineCap="Round" StrokeEndLineCap="Round" Data="M 56,52 Q 60,43 64,52"/>
         </Canvas>
         <Canvas x:Name="Cheeks" Width="100" Height="100" Opacity="0">
           <Ellipse Canvas.Left="27" Canvas.Top="55" Width="9" Height="5" Fill="#FF9DB0"/>
@@ -43,9 +43,9 @@
 
         <!-- puntini "sto pensando" sopra la testa -->
         <Canvas x:Name="Dots" Width="100" Height="100" Visibility="Collapsed">
-          <Ellipse x:Name="D1" Canvas.Left="38" Canvas.Top="14" Width="6" Height="6" Fill="#F4F4F4" Opacity="0"/>
-          <Ellipse x:Name="D2" Canvas.Left="47" Canvas.Top="14" Width="6" Height="6" Fill="#F4F4F4" Opacity="0"/>
-          <Ellipse x:Name="D3" Canvas.Left="56" Canvas.Top="14" Width="6" Height="6" Fill="#F4F4F4" Opacity="0"/>
+          <Ellipse x:Name="D1" Canvas.Left="38" Canvas.Top="14" Width="6" Height="6" Fill="{DynamicResource FgBrush}" Opacity="0"/>
+          <Ellipse x:Name="D2" Canvas.Left="47" Canvas.Top="14" Width="6" Height="6" Fill="{DynamicResource FgBrush}" Opacity="0"/>
+          <Ellipse x:Name="D3" Canvas.Left="56" Canvas.Top="14" Width="6" Height="6" Fill="{DynamicResource FgBrush}" Opacity="0"/>
         </Canvas>
       </Canvas>
     </Canvas>
