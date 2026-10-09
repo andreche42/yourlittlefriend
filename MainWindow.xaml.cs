@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Net.Http;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -48,8 +49,11 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
-        CenterWindow();
-        SystemParameters.StaticPropertyChanged += (_, e) => { if (e.PropertyName == nameof(SystemParameters.PrimaryScreenWidth)) CenterWindow(); };   // cambio schermo o risoluzione
+        SystemParameters.StaticPropertyChanged += (_, e) =>   // cambio schermo o risoluzione
+        {
+            if (e.PropertyName is nameof(SystemParameters.PrimaryScreenWidth) or nameof(SystemParameters.WorkArea)) { LayoutRects(); RenderSpring(); }
+        };
+        CalcBox.Easter += () => { MiniMascot.Cool(); BigMascot.Cool(); };   // 104, 67, 69, 420: occhiali da sole e pollice in su
         Top = 0;
         hold.Tick += (_, _) => { hold.Stop(); MaybeClose(); };
 
@@ -60,6 +64,8 @@ public partial class MainWindow : Window
         weather.Tick += async (_, _) => await LoadWeather();
         weather.Start();
         _ = LoadWeather();
+        ApplyStyle();
+        ApplyFeatures();
         ShowTab(0);
         ChatOut.Show(Loc.L("Chiedimi qualcosa", "Ask me something"));
         Bubble.Show(Loc.L("Cosa faccio con questo?", "What shall I do with this?"));
@@ -69,22 +75,101 @@ public partial class MainWindow : Window
     }
 
     // ---- apri / chiudi ----
-    // la finestra è trasparente e FISSA (grande quanto serve per il notch aperto più il rimbalzo): non cambia mai dimensione né posizione,
-    // quindi niente salti. le zone trasparenti lasciano passare i click. si muove solo il notch (Root) dentro la finestra.
+    // la finestra è trasparente e FISSA (grande quanto serve per il pannello aperto più il rimbalzo): non cambia mai dimensione,
+    // quindi niente salti. le zone trasparenti lasciano passare i click. si muove solo Root (il notch o la bolla) dentro la finestra.
     // il movimento è una molla fisica: pos va da 0 = chiuso a 1 = aperto (con un po' di rimbalzo), e se il mouse entra e esce
-    // di continuo la molla cambia direzione senza strappi. la velocità pilota la scia di "motion blur" (alloni dietro al notch)
+    // di continuo la molla cambia direzione senza strappi. la velocità pilota la scia di "motion blur" (alloni dietro al notch).
+    // in modalità bolla la finestra segue la bolla (si sposta quando la trascini, sempre dentro lo schermo) e il pannello si apre attorno a lei.
+    const double WinW = 720, WinH = 192;
     double pos, vel, target, lastTime;
-    bool springOn;
+    bool springOn, bobbing, bubbleDown, bubbleDragging;
+    Rect closedRect, openRect;   // notch/bolla chiusi e pannello aperto, in coordinate della finestra
+    NativePoint cursor0;
+    double bx0, by0;
     readonly Stopwatch clock = Stopwatch.StartNew();
 
-    void CenterWindow() => Left = (SystemParameters.PrimaryScreenWidth - Width) / 2;
+    [DllImport("user32.dll")] static extern bool GetCursorPos(out NativePoint p);
+    [StructLayout(LayoutKind.Sequential)] struct NativePoint { public int X, Y; }
+
+    bool IsBubble => Settings.Current.Style == "bubble";
+    bool IsClosedNow => !isOpen && pos < .02;
+
+    static double Clamp(double v, double lo, double hi) => hi < lo ? lo : Math.Min(Math.Max(v, lo), hi);
+    static double Lerp(double a, double b, double t) => a + (b - a) * t;
+    static Rect LerpRect(Rect a, Rect b, double t) =>
+        new(Lerp(a.X, b.X, t), Lerp(a.Y, b.Y, t), Math.Max(Lerp(a.Width, b.Width, t), 1), Math.Max(Lerp(a.Height, b.Height, t), 1));
+    static void Place(FrameworkElement el, Rect r) { el.Margin = new Thickness(r.X, r.Y, 0, 0); el.Width = r.Width; el.Height = r.Height; }
+
+    // calcola dove stanno notch/bolla e pannello, e mette la finestra al posto giusto
+    void LayoutRects()
+    {
+        var st = Settings.Current;
+        double winLeft, winTop;
+        if (!IsBubble)
+        {
+            winLeft = (SystemParameters.PrimaryScreenWidth - WinW) / 2;
+            winTop = 0;
+            closedRect = new Rect((WinW - WClosed) / 2, 0, WClosed, HClosed);
+            openRect = new Rect((WinW - WOpen) / 2, 0, WOpen, HOpen);
+            MiniMascot.WanderRange = 80;
+            MiniMascot.Width = MiniMascot.Height = 28;
+            MiniMascot.HorizontalAlignment = HorizontalAlignment.Center;
+            MiniMascot.VerticalAlignment = VerticalAlignment.Top;
+            MiniMascot.Margin = new Thickness(0, 3, 0, 0);
+            MiniMascot.ToolTip = null;
+        }
+        else
+        {
+            double s = Clamp(st.BubbleSize, 48, 150);
+            var wa = SystemParameters.WorkArea;
+            double cx = Clamp(st.BubbleX ?? wa.Right - 90, wa.Left + s / 2, wa.Right - s / 2);
+            double cy = Clamp(st.BubbleY ?? wa.Top + 140, wa.Top + s / 2, wa.Bottom - s / 2);
+            winLeft = Clamp(cx - WinW / 2, wa.Left, wa.Right - WinW);
+            winTop = Clamp(cy - WinH / 2, wa.Top, wa.Bottom - WinH);
+            closedRect = new Rect(cx - winLeft - s / 2, cy - winTop - s / 2, s, s);
+            openRect = new Rect(Clamp(cx - winLeft - WOpen / 2, 0, WinW - WOpen), Clamp(cy - winTop - HOpen / 2, 0, WinH - HOpen), WOpen, HOpen);
+            MiniMascot.WanderRange = 0;
+            MiniMascot.Width = MiniMascot.Height = s * .8;
+            MiniMascot.HorizontalAlignment = HorizontalAlignment.Center;
+            MiniMascot.VerticalAlignment = VerticalAlignment.Center;
+            MiniMascot.Margin = new Thickness(0);
+            MiniMascot.ToolTip = Loc.L("Clic: apri · trascina: sposta · Ctrl + rotella: ridimensiona", "Click: open · drag: move · Ctrl + wheel: resize");
+            Shine.Width = s * .3;
+            Shine.Height = s * .14;
+            Shine.CornerRadius = new CornerRadius(s * .07);
+            Shine.Margin = new Thickness(s * .2, s * .13, 0, 0);
+        }
+        if (Math.Abs(Left - winLeft) > .01) Left = winLeft;
+        if (Math.Abs(Top - winTop) > .01) Top = winTop;
+        PlaceRipple();
+    }
+
+    // applica lo stile (notch o bolla): parte sempre da chiuso
+    void ApplyStyle()
+    {
+        if (springOn) { CompositionTarget.Rendering -= SpringTick; springOn = false; }
+        hold.Stop();
+        isOpen = false;
+        pos = vel = target = 0;
+        Jelly(1, 1, false);
+        LayoutRects();
+        RenderSpring();
+        UpdateBob();
+        UpdateRipple();
+    }
 
     void SetOpen(bool o)
     {
         if (isOpen == o) return;   // evita di ripartire a ogni evento del mouse
         isOpen = o;
         target = o ? 1 : 0;
-        if (o && pos < .3) BigMascot.Cheer();
+        if (o)
+        {
+            if (pos < .3) BigMascot.Cheer();
+            Jelly(1, 150, false);
+        }
+        UpdateBob();
+        UpdateRipple();
         if (springOn) return;
         springOn = true;
         lastTime = clock.Elapsed.TotalSeconds;
@@ -113,17 +198,21 @@ public partial class MainWindow : Window
         if (!done) return;
         springOn = false;
         CompositionTarget.Rendering -= SpringTick;
+        UpdateBob();
+        UpdateRipple();
     }
 
     static double Smooth(double x) { x = Math.Clamp(x, 0, 1); return x * x * (3 - 2 * x); }
 
+    CornerRadius CornerAt(double p) =>
+        IsBubble ? new CornerRadius(Lerp(closedRect.Width / 2, 22, Smooth(p))) : new CornerRadius(0, 0, 22, 22);
+
     // scia: una copia più grande e trasparente del notch. più va veloce, più si vede
-    static void Ghost(Border g, double p, double speed, int i, double alpha)
+    void Ghost(Border g, double p, double speed, int i, double alpha)
     {
         if (alpha < .01) { g.Visibility = Visibility.Collapsed; return; }
-        double gp = Math.Clamp(p + i * speed * .008, 0, 1.12);
-        g.Width = WClosed + (WOpen - WClosed) * gp;
-        g.Height = HClosed + (HOpen - HClosed) * gp;
+        Place(g, LerpRect(closedRect, openRect, Math.Clamp(p + i * speed * .008, 0, 1.12)));
+        g.CornerRadius = Root.CornerRadius;
         g.Opacity = alpha;
         g.Visibility = Visibility.Visible;
     }
@@ -131,11 +220,11 @@ public partial class MainWindow : Window
     void RenderSpring()
     {
         double p = Math.Clamp(pos, 0, 1.12);   // oltre 1 = rimbalzo
-        Root.Width = WClosed + (WOpen - WClosed) * p;
-        Root.Height = HClosed + (HOpen - HClosed) * p;
-
         double pc = Math.Clamp(pos, 0, 1);
-        double fade = Smooth((pc - .3) / .5);        // il contenuto compare quando il notch è quasi grande
+        Place(Root, LerpRect(closedRect, openRect, p));
+        Root.CornerRadius = CornerAt(pc);
+
+        double fade = Smooth((pc - .3) / .5);        // il contenuto compare quando il pannello è quasi grande
         Full.Opacity = fade;
         Full.Visibility = fade > .01 ? Visibility.Visible : Visibility.Collapsed;
         FullShift.Y = (1 - pc) * -14;
@@ -143,6 +232,7 @@ public partial class MainWindow : Window
         double mini = 1 - Smooth(pc / .3);           // la mascotte piccola sfuma via mentre si apre
         MiniMascot.Opacity = mini;
         MiniMascot.Visibility = mini > .01 ? Visibility.Visible : Visibility.Collapsed;
+        Shine.Opacity = IsBubble ? .22 * mini : 0;
 
         double speed = Math.Abs(vel), k = Math.Min(speed / 4, 1);
         Ghost(G1, p, speed, 1, .22 * k);
@@ -150,17 +240,143 @@ public partial class MainWindow : Window
         Ghost(G3, p, speed, 3, .06 * k);
     }
 
+    // ---- bolla: animazioni carine ----
+    // gelatina: si gonfia quando ci passi sopra, si schiaccia quando la premi
+    void Jelly(double to, int ms = 450, bool elastic = true)
+    {
+        var a = new DoubleAnimation(to, TimeSpan.FromMilliseconds(ms))
+        { EasingFunction = elastic ? new ElasticEase { EasingMode = EasingMode.EaseOut, Oscillations = 2, Springiness = 5 } : new CubicEase { EasingMode = EasingMode.EaseOut } };
+        JellySc.BeginAnimation(ScaleTransform.ScaleXProperty, a);
+        JellySc.BeginAnimation(ScaleTransform.ScaleYProperty, a);
+    }
+
+    // galleggia piano su e giù quando è chiusa e ferma
+    void UpdateBob()
+    {
+        if (IsBubble && IsClosedNow && !bubbleDown)
+        {
+            if (bobbing) return;
+            bobbing = true;
+            BobTr.BeginAnimation(TranslateTransform.YProperty, new DoubleAnimation(-4, 4, TimeSpan.FromMilliseconds(1700))
+            { AutoReverse = true, RepeatBehavior = RepeatBehavior.Forever, EasingFunction = new SineEase { EasingMode = EasingMode.EaseInOut } });
+        }
+        else if (bobbing)
+        {
+            bobbing = false;
+            BobTr.BeginAnimation(TranslateTransform.YProperty, null);
+            BobTr.Y = 0;
+        }
+    }
+
+    // onda che si allarga mentre l'ia lavora
+    void UpdateRipple()
+    {
+        bool on = IsBubble && busy > 0 && IsClosedNow;
+        RippleSc.BeginAnimation(ScaleTransform.ScaleXProperty, null);
+        RippleSc.BeginAnimation(ScaleTransform.ScaleYProperty, null);
+        Ripple.BeginAnimation(OpacityProperty, null);
+        if (!on) { Ripple.Visibility = Visibility.Collapsed; Ripple.Opacity = 0; return; }
+        PlaceRipple();
+        double grow = (closedRect.Width + 40) / closedRect.Width;
+        var scale = new DoubleAnimation(1, grow, TimeSpan.FromMilliseconds(1300)) { RepeatBehavior = RepeatBehavior.Forever, EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut } };
+        RippleSc.BeginAnimation(ScaleTransform.ScaleXProperty, scale);
+        RippleSc.BeginAnimation(ScaleTransform.ScaleYProperty, scale);
+        Ripple.BeginAnimation(OpacityProperty, new DoubleAnimation(.7, 0, TimeSpan.FromMilliseconds(1300)) { RepeatBehavior = RepeatBehavior.Forever });
+        Ripple.Visibility = Visibility.Visible;
+    }
+
+    void PlaceRipple()
+    {
+        if (Ripple.Visibility != Visibility.Visible) return;
+        Place(Ripple, closedRect);
+        Ripple.CornerRadius = new CornerRadius(closedRect.Width / 2);
+    }
+
+    // ---- bolla: trascinare, cliccare, ridimensionare ----
+    (double X, double Y) BubbleCenter() => (Left + closedRect.X + closedRect.Width / 2, Top + closedRect.Y + closedRect.Height / 2);
+
+    void Root_Down(object s, MouseButtonEventArgs e)
+    {
+        if (!IsBubble || !IsClosedNow) return;
+        bubbleDown = true;
+        bubbleDragging = false;
+        GetCursorPos(out cursor0);
+        (bx0, by0) = BubbleCenter();
+        Root.CaptureMouse();
+        Jelly(.93, 120, false);
+        UpdateBob();
+    }
+
+    void Root_Move(object s, MouseEventArgs e)
+    {
+        if (!bubbleDown) return;
+        GetCursorPos(out var c);
+        var dpi = VisualTreeHelper.GetDpi(this);   // il cursore è in pixel, la finestra in unità WPF
+        double dx = (c.X - cursor0.X) / dpi.DpiScaleX, dy = (c.Y - cursor0.Y) / dpi.DpiScaleY;
+        if (!bubbleDragging)
+        {
+            if (Math.Abs(dx) + Math.Abs(dy) < 4) return;   // sotto qualche pixel è un clic, non un trascinamento
+            bubbleDragging = true;
+            Jelly(1.06, 150, false);
+        }
+        var st = Settings.Current;
+        st.BubbleX = bx0 + dx;
+        st.BubbleY = by0 + dy;
+        LayoutRects();
+        RenderSpring();
+    }
+
+    void Root_Up(object s, MouseButtonEventArgs e)
+    {
+        if (!bubbleDown) return;
+        bubbleDown = false;
+        Root.ReleaseMouseCapture();
+        if (bubbleDragging)
+        {
+            bubbleDragging = false;
+            var (cx, cy) = BubbleCenter();   // la posizione ritrovata dentro lo schermo
+            Settings.Current.BubbleX = cx;
+            Settings.Current.BubbleY = cy;
+            Settings.Current.Save();            // così la ritrovi dove l'hai lasciata
+            Jelly(Root.IsMouseOver ? 1.1 : 1);
+        }
+        else SetOpen(true);   // un clic la apre
+        UpdateBob();
+    }
+
+    void Root_Wheel(object s, MouseWheelEventArgs e)
+    {
+        if (!IsBubble || !IsClosedNow || (Keyboard.Modifiers & ModifierKeys.Control) == 0) return;
+        var st = Settings.Current;
+        st.BubbleSize = Clamp(st.BubbleSize + (e.Delta > 0 ? 6 : -6), 48, 150);
+        LayoutRects();
+        RenderSpring();
+        st.Save();
+        e.Handled = true;
+    }
+
     bool DragActive => Environment.TickCount64 - dragSeen < 600;
 
     void MaybeClose()
     {
         var menu = (ContextMenu)Resources["Menu"];
-        if (Root.IsMouseOver || DragActive || internalDrag || menu.IsOpen || ChatIn.IsKeyboardFocusWithin || FileIn.IsKeyboardFocusWithin) hold.Start();
+        if (Root.IsMouseOver || DragActive || internalDrag || menu.IsOpen || Root.IsKeyboardFocusWithin) hold.Start();
         else SetOpen(false);
     }
 
-    void OnEnter(object s, MouseEventArgs e) { hold.Stop(); SetOpen(true); }
-    void OnLeave(object s, MouseEventArgs e) { hold.Stop(); hold.Start(); }
+    void OnEnter(object s, MouseEventArgs e)
+    {
+        hold.Stop();
+        if (!IsBubble) SetOpen(true);                  // il notch si apre passandoci sopra
+        else if (IsClosedNow && !bubbleDown) Jelly(1.1);   // la bolla si gonfia e aspetta un clic
+    }
+
+    void OnLeave(object s, MouseEventArgs e)
+    {
+        hold.Stop();
+        hold.Start();
+        if (IsBubble && IsClosedNow && !bubbleDown) Jelly(1);
+    }
 
     // ---- umore della mascotte ----
     // lavora mentre l'ia risponde, balla se c'è musica, altrimenti gira per conto suo
@@ -168,21 +384,34 @@ public partial class MainWindow : Window
     {
         var m = busy > 0 ? MascotMode.Working : playing ? MascotMode.Dance : MascotMode.Idle;
         MiniMascot.Mode = BigMascot.Mode = m;
+        UpdateRipple();
     }
 
     void Cheer() { MiniMascot.Cheer(); BigMascot.Cheer(); }
 
     // ---- schede e menu ----
+    // 0 home, 1 chat, 2 + (chiedi su un file), 3 portafile, 4 calcolatrice, 5 traduttore, 6 wikipedia. tutte tranne la home si possono spegnere dalle impostazioni
+    static bool On(int i)
+    {
+        var st = Settings.Current;
+        return i switch { 1 => st.ChatOn, 2 => st.AskFileOn, 3 => st.HolderOn, 4 => st.CalcOn, 5 => st.TranslateOn, 6 => st.WikiOn, _ => true };
+    }
+
+    void ApplyFeatures()
+    {
+        var tabs = new[] { T0, T1, T2, T3, T4, T5, T6 };
+        for (int i = 0; i < tabs.Length; i++) tabs[i].Visibility = On(i) ? Visibility.Visible : Visibility.Collapsed;
+        if (!On(tab)) ShowTab(0);
+    }
+
     void ShowTab(int i)
     {
-        PageHome.Visibility = i == 0 ? Visibility.Visible : Visibility.Collapsed;
-        PageChat.Visibility = i == 1 ? Visibility.Visible : Visibility.Collapsed;
-        PageFile.Visibility = i == 2 ? Visibility.Visible : Visibility.Collapsed;
-        PageHolder.Visibility = i == 3 ? Visibility.Visible : Visibility.Collapsed;
+        var pages = new UIElement[] { PageHome, PageChat, PageFile, PageHolder, PageCalc, PageTranslate, PageWiki };
+        var tabs = new[] { T0, T1, T2, T3, T4, T5, T6 };
         tab = i;
-        var tabs = new[] { T0, T1, T2, T3 };
         for (int j = 0; j < tabs.Length; j++)
         {
+            pages[j].Visibility = j == i ? Visibility.Visible : Visibility.Collapsed;
             if (j == i) tabs[j].SetResourceReference(BackgroundProperty, "PanelBrush");
             else tabs[j].ClearValue(BackgroundProperty);
         }
@@ -208,6 +437,8 @@ public partial class MainWindow : Window
             if (w.LanguageChanged) { App.Restart(); return; }
             GreetTitle.Text = Loc.L($"Ciao {Settings.Current.Name}!", $"Hi {Settings.Current.Name}!");
             local.Clear();   // il prompt di sistema contiene il nome
+            ApplyFeatures();
+            ApplyStyle();    // notch o bolla, e dimensione della bolla
             _ = LoadWeather();
         }
         hold.Start();
@@ -340,10 +571,11 @@ public partial class MainWindow : Window
     async Task LoadWeather()
     {
         var st = Settings.Current;
-        if (st.Lat is not double lat || st.Lon is not double lon)
+        if (!st.WeatherOn || st.Lat is not double lat || st.Lon is not double lon)
         {
             WeatherBox.Visibility = Visibility.Collapsed;
             MiniMascot.Weather = BigMascot.Weather = WeatherMood.None;
+            MiniMascot.Windy = BigMascot.Windy = false;
             return;
         }
         try
@@ -515,7 +747,13 @@ public partial class MainWindow : Window
         e.Data.GetDataPresent(DataFormats.UnicodeText) ? e.Data.GetData(DataFormats.UnicodeText) as string
         : e.Data.GetDataPresent(DataFormats.Text) ? e.Data.GetData(DataFormats.Text) as string : null;
 
-    bool CanDrop(DragEventArgs e) => !internalDrag && (HasFiles(e) || (tab != 2 && !string.IsNullOrWhiteSpace(DropText(e))));
+    bool CanDrop(DragEventArgs e)
+    {
+        if (internalDrag) return false;
+        var st = Settings.Current;
+        if (HasFiles(e)) return st.HolderOn || st.AskFileOn;
+        return st.HolderOn && tab != 2 && !string.IsNullOrWhiteSpace(DropText(e));
+    }
 
     void OnDragEnter(object s, DragEventArgs e)
     {
@@ -524,7 +762,7 @@ public partial class MainWindow : Window
         dragSeen = Environment.TickCount64;
         hold.Stop();
         SetOpen(true);
-        if (tab != 2 && tab != 3) ShowTab(3);
+        if (tab != 2 && tab != 3) ShowTab(Settings.Current.HolderOn ? 3 : 2);
     }
 
     void OnDragOver(object s, DragEventArgs e)
@@ -544,10 +782,11 @@ public partial class MainWindow : Window
         {
             if (HasFiles(e) && e.Data.GetData(DataFormats.FileDrop) is string[] f && f.Length > 0)
             {
-                if (tab == 2) SetFile(f[0]);
+                var st = Settings.Current;
+                if ((tab == 2 && st.AskFileOn) || !st.HolderOn) SetFile(f[0]);
                 else { Holder.AddFiles(f); ShowTab(3); }
             }
-            else if (tab != 2 && DropText(e) is string t && !string.IsNullOrWhiteSpace(t))
+            else if (Settings.Current.HolderOn && tab != 2 && DropText(e) is string t && !string.IsNullOrWhiteSpace(t))
             {
                 Holder.AddText(t);
                 ShowTab(3);

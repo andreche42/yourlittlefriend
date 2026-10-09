@@ -42,6 +42,43 @@ public partial class SettingsWindow : Window
         WebCb.IsChecked = st.WebSearch;
         BuildLook();
 
+        // forma (notch o bolla)
+        LStyle.Text = Loc.L("Forma", "Shape");
+        RNotch.Content = Loc.L("Notch (attaccato in alto)", "Notch (attached on top)");
+        RBubble.Content = Loc.L("Bolla volante", "Floating bubble");
+        RNotch.IsChecked = st.Style != "bubble";
+        RBubble.IsChecked = st.Style == "bubble";
+        LBubbleSize.Text = Loc.L("Dimensione della bolla (puoi anche usare Ctrl + rotella sulla bolla)", "Bubble size (you can also use Ctrl + wheel on the bubble)");
+        BubbleSl.Value = Math.Clamp(st.BubbleSize, 48, 150);
+        BBubbleHome.Content = Loc.L("Riporta la bolla in alto a destra", "Bring the bubble back to the top right");
+        void ShowBubbleOpts() => BubbleOpts.Visibility = RBubble.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
+        RNotch.Checked += (_, _) => ShowBubbleOpts();
+        RBubble.Checked += (_, _) => ShowBubbleOpts();
+        ShowBubbleOpts();
+
+        // funzioni
+        LFeat.Text = Loc.L("Funzioni (la home c'è sempre)", "Features (home is always on)");
+        FChat.Content = Loc.L("💬 Chat con l'IA", "💬 AI chat");
+        FHolder.Content = Loc.L("Portafile: file e testo da trascinare", "File holder: drag files and text in and out");
+        FAsk.Content = Loc.L("+  Chiedi su un file", "+  Ask about a file");
+        FCalc.Content = Loc.L("Calcolatrice con cronologia", "Calculator with history");
+        FTr.Content = Loc.L("Traduttore", "Translator");
+        FWiki.Content = Loc.L("Wikipedia", "Wikipedia");
+        FWeather.Content = Loc.L("Meteo nella home", "Weather on the home");
+        FChat.IsChecked = st.ChatOn; FHolder.IsChecked = st.HolderOn; FAsk.IsChecked = st.AskFileOn;
+        FCalc.IsChecked = st.CalcOn; FTr.IsChecked = st.TranslateOn; FWiki.IsChecked = st.WikiOn; FWeather.IsChecked = st.WeatherOn;
+
+        // traduttore
+        LTr.Text = Loc.L("Traduttore", "Translator");
+        TrNote.Text = Loc.L("Puoi usare DeepL, LibreTranslate o entrambi (si prova prima DeepL). Le chiavi restano sul tuo PC e non vengono condivise con nessun altro.",
+                            "You can use DeepL, LibreTranslate or both (DeepL is tried first). Keys stay on your PC and are not shared with anyone.");
+        LDeepL.Text = Loc.L("Chiave API di DeepL (le chiavi gratuite finiscono con :fx)", "DeepL API key (free keys end with :fx)");
+        LLibre.Text = Loc.L("Indirizzo del server LibreTranslate (es. https://libretranslate.tuo-sito.it)", "LibreTranslate server address (e.g. https://libretranslate.your-site.com)");
+        LLibreKey.Text = Loc.L("Chiave API di LibreTranslate (se il server la richiede)", "LibreTranslate API key (if the server requires one)");
+        DeepLIn.Text = st.DeepLKey;
+        LibreUrlIn.Text = st.LibreUrl;
+        LibreKeyIn.Text = st.LibreKey;
+
         NameIn.Text = st.Name;
         CityIn.Text = st.City;
         RIt.IsChecked = st.Language == "it";
@@ -151,6 +188,14 @@ public partial class SettingsWindow : Window
         Theme.Apply();
     }
 
+    bool bubbleHome;   // "riporta la bolla in alto a destra": si applica quando salvi
+
+    void BubbleHome_Click(object s, RoutedEventArgs e)
+    {
+        bubbleHome = true;
+        BBubbleHome.Content = Loc.L("Ok: lo faccio quando salvi ✓", "Ok: will do when you save ✓");
+    }
+
     void Change_Click(object s, RoutedEventArgs e) => AiBox.Visibility = AiBox.Visibility == Visibility.Visible ? Visibility.Collapsed : Visibility.Visible;
 
     async void Save_Click(object s, RoutedEventArgs e)
@@ -175,6 +220,14 @@ public partial class SettingsWindow : Window
         LanguageChanged = lang != st.Language;
         st.Language = lang;
         st.WebSearch = WebCb.IsChecked == true;
+        st.Style = RBubble.IsChecked == true ? "bubble" : "notch";
+        st.BubbleSize = BubbleSl.Value;
+        if (bubbleHome) st.BubbleX = st.BubbleY = null;
+        st.ChatOn = FChat.IsChecked == true; st.HolderOn = FHolder.IsChecked == true; st.AskFileOn = FAsk.IsChecked == true;
+        st.CalcOn = FCalc.IsChecked == true; st.TranslateOn = FTr.IsChecked == true; st.WikiOn = FWiki.IsChecked == true; st.WeatherOn = FWeather.IsChecked == true;
+        st.DeepLKey = DeepLIn.Text.Trim();
+        st.LibreUrl = LibreUrlIn.Text.Trim();
+        st.LibreKey = LibreKeyIn.Text.Trim();
         Startup.Set(AutoStart.IsChecked == true);
         st.Save();
         DialogResult = true;

@@ -19,12 +19,13 @@ public partial class Mascot : UserControl
 
     readonly DispatcherTimer idle = new() { Interval = TimeSpan.FromSeconds(3) };
     readonly DispatcherTimer cheerEnd = new() { Interval = TimeSpan.FromMilliseconds(1700) };
+    readonly DispatcherTimer coolEnd = new() { Interval = TimeSpan.FromMilliseconds(3400) };
     readonly Random rnd = new();
     readonly ScaleTransform flip = new(1, 1);
     readonly TranslateTransform walk = new();
     MascotMode mode;
     WeatherMood weather;
-    bool cheering, walking, windy;
+    bool cheering, walking, windy, cool;
     DateTime walkUntil;   // rete di sicurezza: se la camminata viene interrotta, "walking" non resta bloccato
 
     public MascotMode Mode
@@ -63,6 +64,7 @@ public partial class Mascot : UserControl
 
         idle.Tick += (_, _) => { idle.Interval = TimeSpan.FromSeconds(rnd.Next(4, 10)); IdleTick(); };
         cheerEnd.Tick += (_, _) => { cheerEnd.Stop(); cheering = false; Apply(); };
+        coolEnd.Tick += (_, _) => { coolEnd.Stop(); cool = false; Apply(); };
         IsVisibleChanged += (_, e) => { if ((bool)e.NewValue) idle.Start(); else idle.Stop(); };
     }
 
@@ -87,6 +89,19 @@ public partial class Mascot : UserControl
         Apply();
     }
 
+    // occhiali da sole e pollice in su per qualche secondo
+    public void Cool()
+    {
+        cool = true;
+        coolEnd.Stop();
+        coolEnd.Start();
+        Cheer();
+        var pop = new BackEase { EasingMode = EasingMode.EaseOut, Amplitude = .7 };
+        ThumbSc.BeginAnimation(ScaleTransform.ScaleXProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(420)) { EasingFunction = pop });
+        ThumbSc.BeginAnimation(ScaleTransform.ScaleYProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(420)) { EasingFunction = pop });
+        ShadesTr.BeginAnimation(TranslateTransform.YProperty, new DoubleAnimation(-18, 0, TimeSpan.FromMilliseconds(600)) { EasingFunction = new BounceEase { Bounces = 2, Bounciness = 3 } });
+    }
+
     // ferma tutto e fa partire l'animazione dello stato attuale
     void Apply()
     {
@@ -96,6 +111,10 @@ public partial class Mascot : UserControl
         EyeTr.BeginAnimation(TranslateTransform.XProperty, null);
         foreach (var d in new[] { D1, D2, D3 }) d.BeginAnimation(OpacityProperty, null);
         ApplyWeatherLook();
+        ThumbSc.BeginAnimation(ScaleTransform.ScaleXProperty, null);
+        ThumbSc.BeginAnimation(ScaleTransform.ScaleYProperty, null);
+        ThumbSc.ScaleX = ThumbSc.ScaleY = cool ? 1 : 0;
+        Thumb.Visibility = cool ? Visibility.Visible : Visibility.Collapsed;
 
         bool scared = weather == WeatherMood.Storm && !cheering;
         Eyes.Visibility = cheering || scared ? Visibility.Collapsed : Visibility.Visible;
@@ -165,7 +184,7 @@ public partial class Mascot : UserControl
         bool rain = weather == WeatherMood.Rain, storm = weather == WeatherMood.Storm && !cheering, night = weather == WeatherMood.Night && !cheering;
         bool boh = weather == WeatherMood.Cloud && !cheering;
 
-        Shades.Visibility = weather == WeatherMood.Sun ? Visibility.Visible : Visibility.Collapsed;
+        Shades.Visibility = weather == WeatherMood.Sun || cool ? Visibility.Visible : Visibility.Collapsed;
         Umbrella.Visibility = RainDrops.Visibility = rain ? Visibility.Visible : Visibility.Collapsed;
         Scarf.Visibility = weather == WeatherMood.Snow ? Visibility.Visible : Visibility.Collapsed;
         Sweat.Visibility = storm ? Visibility.Visible : Visibility.Collapsed;

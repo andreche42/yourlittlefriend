@@ -82,6 +82,15 @@
           <TextBlock x:Name="Z2" Canvas.Left="76" Canvas.Top="10" Text="Z" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource FgBrush}" Opacity="0"/>
         </Canvas>
 
+        <!-- pollice in su (calcolatrice: 104, 67, 69, 420) -->
+        <Canvas x:Name="Thumb" Width="100" Height="100" Visibility="Collapsed" RenderTransformOrigin="0.85,0.7">
+          <Canvas.RenderTransform><ScaleTransform x:Name="ThumbSc" ScaleX="0" ScaleY="0"/></Canvas.RenderTransform>
+          <Border Canvas.Left="83" Canvas.Top="37" Width="7.5" Height="16" CornerRadius="3.75" Background="{DynamicResource MascotBrush}" BorderBrush="{DynamicResource MascotEyeBrush}" BorderThickness="1.2"/>
+          <Border Canvas.Left="78" Canvas.Top="49" Width="17" Height="15" CornerRadius="5" Background="{DynamicResource MascotBrush}" BorderBrush="{DynamicResource MascotEyeBrush}" BorderThickness="1.2"/>
+          <Rectangle Canvas.Left="80.5" Canvas.Top="53.5" Width="12" Height="1" Fill="{DynamicResource MascotEyeBrush}" Opacity="0.45"/>
+          <Rectangle Canvas.Left="80.5" Canvas.Top="57.5" Width="12" Height="1" Fill="{DynamicResource MascotEyeBrush}" Opacity="0.45"/>
+        </Canvas>
+
         <!-- meteo: ombrello (sopra la testa) e gocce che cadono ai lati -->
         <Canvas x:Name="RainDrops" Width="100" Height="100" Visibility="Collapsed">
           <Rectangle x:Name="R1" Canvas.Left="9" Canvas.Top="20" Width="1.8" Height="6" RadiusX="0.9" RadiusY="0.9" Fill="#7FB8FF" Opacity="0"/>
