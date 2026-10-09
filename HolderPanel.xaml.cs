@@ -45,7 +45,7 @@ public partial class HolderPanel : UserControl
         Commit();
     }
 
-    public void AddText(string text)
+    public new void AddText(string text)
     {
         text = text.Trim();
         if (text == "") return;
