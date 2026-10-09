@@ -27,9 +27,10 @@
         <DockPanel>
           <Button DockPanel.Dock="Right" Content="⚙" Click="Gear_Click"/>
           <StackPanel Orientation="Horizontal">
-            <Button x:Name="T0" Content="⌂" Tag="0" Click="Tab_Click"/>
-            <Button x:Name="T1" Content="💬" Tag="1" Click="Tab_Click"/>
-            <Button x:Name="T2" Content="+" Tag="2" Click="Tab_Click"/>
+            <Button x:Name="T0" Content="⌂" Tag="0" Click="Tab_Click" ToolTip="{local:L It=Home, En=Home}"/>
+            <Button x:Name="T1" Content="💬" Tag="1" Click="Tab_Click" ToolTip="{local:L It=Chat, En=Chat}"/>
+            <Button x:Name="T2" Content="+" Tag="2" Click="Tab_Click" ToolTip="{local:L It='Chiedi su un file', En='Ask about a file'}"/>
+            <Button x:Name="T3" Content="📥" Tag="3" Click="Tab_Click" ToolTip="{local:L It='Holder: file e testo', En='Holder: files and text'}"/>
           </StackPanel>
         </DockPanel>
 
@@ -90,6 +91,11 @@
                   </TextBlock.Style>
                 </TextBlock>
               </Grid>
+            </Grid>
+
+            <!-- scheda holder: file e testo che si trascinano dentro e fuori -->
+            <Grid x:Name="PageHolder" Visibility="Collapsed">
+              <local:HolderPanel x:Name="Holder"/>
             </Grid>
 
             <!-- scheda + : trascina un file -->

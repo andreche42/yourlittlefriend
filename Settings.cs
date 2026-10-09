@@ -16,7 +16,7 @@ public class Settings
     public string Model { get; set; } = Llm.DefaultModel;
     public bool Onboarded { get; set; }
 
-    static readonly string Dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "yourlittlefriend");
+    internal static readonly string Dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "yourlittlefriend");
     static string FilePath => Path.Combine(Dir, "settings.json");
 
     public static Settings Current { get; } = Load();

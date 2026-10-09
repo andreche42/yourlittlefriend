@@ -37,7 +37,8 @@ public partial class MainWindow : Window
     GlobalSystemMediaTransportControlsSessionManager? mgr;
     string? lastTitle, file;
     BitmapSource? cover;
-    bool playing, isOpen;
+    bool playing, isOpen, internalDrag;   // internalDrag: stai trascinando fuori un elemento del holder
+    int tab;
     long dragSeen;   // ultimo momento in cui un file è stato trascinato sopra la finestra
     int busy;   // quante richieste all'ia sono in corso
 
@@ -59,6 +60,7 @@ public partial class MainWindow : Window
         ChatOut.Show(Loc.L("Chiedimi qualcosa", "Ask me something"));
         Bubble.Show(Loc.L("Cosa faccio con questo?", "What shall I do with this?"));
         GreetTitle.Text = Loc.L($"Ciao {Settings.Current.Name}!", $"Hi {Settings.Current.Name}!");
+        Holder.InternalDrag += on => { internalDrag = on; dragSeen = Environment.TickCount64; };
         Closed += (_, _) => Application.Current.Shutdown();
     }
 
@@ -102,7 +104,7 @@ public partial class MainWindow : Window
     void MaybeClose()
     {
         var menu = (ContextMenu)Resources["Menu"];
-        if (Root.IsMouseOver || DragActive || menu.IsOpen || ChatIn.IsKeyboardFocusWithin || FileIn.IsKeyboardFocusWithin) hold.Start();
+        if (Root.IsMouseOver || DragActive || internalDrag || menu.IsOpen || ChatIn.IsKeyboardFocusWithin || FileIn.IsKeyboardFocusWithin) hold.Start();
         else SetOpen(false);
     }
 
@@ -125,7 +127,9 @@ public partial class MainWindow : Window
         PageHome.Visibility = i == 0 ? Visibility.Visible : Visibility.Collapsed;
         PageChat.Visibility = i == 1 ? Visibility.Visible : Visibility.Collapsed;
         PageFile.Visibility = i == 2 ? Visibility.Visible : Visibility.Collapsed;
-        var tabs = new[] { T0, T1, T2 };
+        PageHolder.Visibility = i == 3 ? Visibility.Visible : Visibility.Collapsed;
+        tab = i;
+        var tabs = new[] { T0, T1, T2, T3 };
         for (int j = 0; j < tabs.Length; j++)
             tabs[j].Background = j == i ? new SolidColorBrush(Color.FromRgb(0x2B, 0x2B, 0x2B)) : Brushes.Transparent;
     }
@@ -410,23 +414,32 @@ public partial class MainWindow : Window
     }
 
     // ---- drag & drop ----
-    // DragEnter/DragLeave arrivano anche per ogni elemento interno: per sapere se il file è ancora sopra la finestra
+    // file e testo trascinati sul notch finiscono nel holder; se sei nella scheda "+" il file va invece a chiedere cosa farne.
+    // DragEnter/DragLeave arrivano anche per ogni elemento interno: per sapere se sei ancora sopra la finestra
     // si guarda DragOver, che continua ad arrivare finché ci sei sopra
+    static bool HasFiles(DragEventArgs e) => e.Data.GetDataPresent(DataFormats.FileDrop);
+
+    static string? DropText(DragEventArgs e) =>
+        e.Data.GetDataPresent(DataFormats.UnicodeText) ? e.Data.GetData(DataFormats.UnicodeText) as string
+        : e.Data.GetDataPresent(DataFormats.Text) ? e.Data.GetData(DataFormats.Text) as string : null;
+
+    bool CanDrop(DragEventArgs e) => !internalDrag && (HasFiles(e) || (tab != 2 && !string.IsNullOrWhiteSpace(DropText(e))));
+
     void OnDragEnter(object s, DragEventArgs e)
     {
-        if (!e.Data.GetDataPresent(DataFormats.FileDrop)) return;
+        if (!CanDrop(e)) return;
         e.Effects = DragDropEffects.Copy;
         dragSeen = Environment.TickCount64;
         hold.Stop();
         SetOpen(true);
-        ShowTab(2);
+        if (tab != 2 && tab != 3) ShowTab(3);
     }
 
     void OnDragOver(object s, DragEventArgs e)
     {
-        bool file = e.Data.GetDataPresent(DataFormats.FileDrop);
-        e.Effects = file ? DragDropEffects.Copy : DragDropEffects.None;
-        if (file) dragSeen = Environment.TickCount64;
+        bool ok = CanDrop(e);
+        e.Effects = ok ? DragDropEffects.Copy : DragDropEffects.None;
+        if (ok) dragSeen = Environment.TickCount64;
         e.Handled = true;
     }
 
@@ -435,7 +448,19 @@ public partial class MainWindow : Window
     void OnDrop(object s, DragEventArgs e)
     {
         dragSeen = 0;
-        if (e.Data.GetData(DataFormats.FileDrop) is string[] f && f.Length > 0) SetFile(f[0]);
+        if (!internalDrag)
+        {
+            if (HasFiles(e) && e.Data.GetData(DataFormats.FileDrop) is string[] f && f.Length > 0)
+            {
+                if (tab == 2) SetFile(f[0]);
+                else { Holder.AddFiles(f); ShowTab(3); }
+            }
+            else if (tab != 2 && DropText(e) is string t && !string.IsNullOrWhiteSpace(t))
+            {
+                Holder.AddText(t);
+                ShowTab(3);
+            }
+        }
         hold.Stop();
         hold.Start();
     }
