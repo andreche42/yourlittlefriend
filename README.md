@@ -8,6 +8,7 @@ un piccolo amico nel notch del pc (windows). si apre quando ci passi sopra col m
 - **home**: saluto + meteo; se parte una canzone mostra copertina, titolo, controlli e i colori seguono la copertina
 - **chat**: parli con un llm locale (ollama) che può anche controllare il pc
 - **+**: trascina un file, scrivi cosa farne e ti risponde
+- **📥 holder** (il "portabicchieri"): trascina sul notch file o testo e restano lì, ordinati in caselle (icona o miniatura per i file, un pezzo di testo per il testo). li puoi ritrascinare dove vuoi, anche dopo aver riavviato il pc. doppio click apre il file o copia il testo, ✕ toglie un elemento, 🗑 svuota tutto. i file non vengono copiati: il holder ricorda solo dove stanno
 - le risposte arrivano in tempo reale, parola per parola, con un effetto "fumo" che si dirada (stile imessage)
 - l'omino è animato: sbatte gli occhi, va a spasso nel notch, lavora (puntini e occhi che leggono) mentre l'ia risponde, sorride quando ha finito (o quando apri il notch) e balla se c'è musica
 - tasto destro (o ⚙) per uscire
@@ -45,9 +46,6 @@ hai suggerimenti o consigli? sbizzarrisciti! apri un issue su questa repo e dicc
 
 
 ## roadmap
-### holder
-holder ti permetterà di trascinare dei file sulla notch in alto. i file rimangono li e puoi ri-trascinarli dove vuoi. si integra con le api di sistema per garantire che funzioni su tutte le app.
-
 ### byollm
 porta la tua LLM su yourlittlefriend: l'autoinstaller di ollama c'è già (impostazioni). in arrivo: collegati alle API di qualche AI (vercel, openai, anthropic) e usa modelli premium a pagamento.
 

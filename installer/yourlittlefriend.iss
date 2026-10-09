@@ -60,3 +60,4 @@ Filename: "{app}\yourlittlefriend.exe"; Description: "{cm:LaunchApp}"; Flags: no
 
 [UninstallDelete]
 Type: files; Name: "{userappdata}\yourlittlefriend\settings.json"
+Type: files; Name: "{userappdata}\yourlittlefriend\holder.json"
