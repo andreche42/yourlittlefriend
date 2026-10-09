@@ -67,7 +67,16 @@ public partial class MainWindow : Window
         weather.Tick += async (_, _) => await LoadWeather();
         weather.Start();
         _ = LoadWeather();
-        ApplyStyle();
+        Width = WinW;    // la misura della finestra deve sempre essere quella delle costanti: tutte le posizioni sono calcolate su di lei
+        Height = WinH;
+        try { ApplyStyle(); }
+        catch   // rete di sicurezza: se la bolla dà errore all'avvio si torna al notch, così l'app non resta inutilizzabile
+        {
+            Settings.Current.Style = "notch";
+            Settings.Current.Save();
+            Theme.Apply();
+            ApplyStyle();
+        }
         ApplyFeatures();
         ShowTab(0);
         ChatOut.Show(Loc.L("Chiedimi qualcosa", "Ask me something"));
