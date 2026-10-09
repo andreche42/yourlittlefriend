@@ -45,10 +45,10 @@ public static class Actions
 
     static readonly Dictionary<string, (string Cmd, string Args, string Desc)> Power = new()
     {
-        ["lock"] = ("rundll32.exe", "user32.dll,LockWorkStation", "bloccare il pc"),
-        ["sleep"] = ("rundll32.exe", "powrprof.dll,SetSuspendState 0,1,0", "mettere il pc in sospensione"),
-        ["shutdown"] = ("shutdown", "/s /t 30", "spegnere il pc tra 30 secondi"),
-        ["restart"] = ("shutdown", "/r /t 30", "riavviare il pc tra 30 secondi")
+        ["lock"] = ("rundll32.exe", "user32.dll,LockWorkStation", Loc.L("bloccare il pc", "lock the PC")),
+        ["sleep"] = ("rundll32.exe", "powrprof.dll,SetSuspendState 0,1,0", Loc.L("mettere il pc in sospensione", "put the PC to sleep")),
+        ["shutdown"] = ("shutdown", "/s /t 30", Loc.L("spegnere il pc tra 30 secondi", "shut down the PC in 30 seconds")),
+        ["restart"] = ("shutdown", "/r /t 30", Loc.L("riavviare il pc tra 30 secondi", "restart the PC in 30 seconds"))
     };
 
     static Func<Task<string>> Sync(Func<string> f) => () => Task.FromResult(f());
@@ -63,59 +63,63 @@ public static class Actions
             case "set_volume":
             {
                 int l = Math.Clamp(I("level"), 0, 100);
-                return new($"mettere il volume al {l}%", new[] { $"imposto il volume di sistema al {l}%" }, false,
-                    Sync(() => { Vol().MasterVolumeLevelScalar = l / 100f; return $"volume al {l}%"; }));
+                return new(Loc.L($"mettere il volume al {l}%", $"set the volume to {l}%"),
+                    new[] { Loc.L($"imposto il volume di sistema al {l}%", $"I set the system volume to {l}%") }, false,
+                    Sync(() => { Vol().MasterVolumeLevelScalar = l / 100f; return Loc.L($"volume al {l}%", $"volume at {l}%"); }));
             }
             case "change_volume":
             {
                 int d = Math.Clamp(I("delta"), -100, 100);
-                return new($"cambiare il volume di {d:+#;-#}%", new[] { $"sposto il volume di {d:+#;-#}%" }, false,
+                return new(Loc.L($"cambiare il volume di {d:+#;-#}%", $"change the volume by {d:+#;-#}%"),
+                    new[] { Loc.L($"sposto il volume di {d:+#;-#}%", $"I move the volume by {d:+#;-#}%") }, false,
                     Sync(() =>
                     {
                         var v = Vol();
                         v.MasterVolumeLevelScalar = Math.Clamp(v.MasterVolumeLevelScalar + d / 100f, 0f, 1f);
-                        return $"volume al {Math.Round(v.MasterVolumeLevelScalar * 100)}%";
+                        var now = Math.Round(v.MasterVolumeLevelScalar * 100);
+                        return Loc.L($"volume al {now}%", $"volume at {now}%");
                     }));
             }
             case "toggle_mute":
-                return new("mutare o riattivare l'audio", new[] { "inverto lo stato muto" }, false,
-                    Sync(() => { var v = Vol(); v.Mute = !v.Mute; return v.Mute ? "audio mutato" : "audio riattivato"; }));
+                return new(Loc.L("mutare o riattivare l'audio", "mute or unmute the audio"), new[] { Loc.L("inverto lo stato muto", "I toggle mute") }, false,
+                    Sync(() => { var v = Vol(); v.Mute = !v.Mute; return v.Mute ? Loc.L("audio mutato", "audio muted") : Loc.L("audio riattivato", "audio unmuted"); }));
             case "media_control":
             {
                 var act = S("action");
                 byte vk = act switch { "next" => 0xB0, "previous" => 0xB1, _ => 0xB3 };
-                return new("controllare la musica", new[] { $"premo il tasto multimediale «{act}»" }, false,
-                    Sync(() => { Key(vk); return "fatto"; }));
+                return new(Loc.L("controllare la musica", "control the music"), new[] { Loc.L($"premo il tasto multimediale «{act}»", $"I press the media key «{act}»") }, false,
+                    Sync(() => { Key(vk); return Loc.L("fatto", "done"); }));
             }
             case "play_on_spotify":
             {
                 var q = S("query");
-                return new($"cercare «{q}» su spotify", new[] { "cerco il brano su spotify", "lo metto in riproduzione" }, false,
+                return new(Loc.L($"cercare «{q}» su spotify", $"search «{q}» on spotify"),
+                    new[] { Loc.L("cerco il brano su spotify", "I search the track on spotify"), Loc.L("lo metto in riproduzione", "I start playing it") }, false,
                     () => Spotify.Play(q));
             }
             case "open_app":
             {
                 var n = S("name").Trim();
                 if (!Apps.TryGetValue(n, out var target))
-                    return new($"aprire «{n}»", Array.Empty<string>(), false,
-                        () => Task.FromResult("app non in lista, posso aprire: " + string.Join(", ", Apps.Keys)));
-                return new($"aprire «{n}»", new[] { $"avvio «{target}»" }, true,
-                    Sync(() => { Open(target); return $"aperto {n}"; }));
+                    return new(Loc.L($"aprire «{n}»", $"open «{n}»"), Array.Empty<string>(), false,
+                        () => Task.FromResult(Loc.L("app non in lista, posso aprire: ", "app not in the list, I can open: ") + string.Join(", ", Apps.Keys)));
+                return new(Loc.L($"aprire «{n}»", $"open «{n}»"), new[] { Loc.L($"avvio «{target}»", $"I launch «{target}»") }, true,
+                    Sync(() => { Open(target); return Loc.L($"aperto {n}", $"opened {n}"); }));
             }
             case "search_web":
             {
                 var q = S("query");
                 var url = "https://www.google.com/search?q=" + Uri.EscapeDataString(q);
-                return new($"cercare «{q}» su google", new[] { "apro il browser predefinito", url }, true,
-                    Sync(() => { Open(url); return "ricerca aperta"; }));
+                return new(Loc.L($"cercare «{q}» su google", $"search «{q}» on google"), new[] { Loc.L("apro il browser predefinito", "I open the default browser"), url }, true,
+                    Sync(() => { Open(url); return Loc.L("ricerca aperta", "search opened"); }));
             }
             case "pc_power":
             {
                 var act = S("action");
                 if (!Power.TryGetValue(act, out var p)) return null;
-                var steps = new List<string> { $"eseguo: {p.Cmd} {p.Args}" };
-                if (act is "shutdown" or "restart") steps.Add("puoi annullare entro 30 secondi con: shutdown /a");
-                return new(p.Desc, steps.ToArray(), true, Sync(() => { Open(p.Cmd, p.Args); return "fatto"; }));
+                var steps = new List<string> { Loc.L($"eseguo: {p.Cmd} {p.Args}", $"I run: {p.Cmd} {p.Args}") };
+                if (act is "shutdown" or "restart") steps.Add(Loc.L("puoi annullare entro 30 secondi con: shutdown /a", "you can cancel within 30 seconds with: shutdown /a"));
+                return new(p.Desc, steps.ToArray(), true, Sync(() => { Open(p.Cmd, p.Args); return Loc.L("fatto", "done"); }));
             }
         }
         return null;

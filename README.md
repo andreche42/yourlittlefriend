@@ -12,13 +12,32 @@ un piccolo amico nel notch del pc (windows). si apre quando ci passi sopra col m
 - l'omino è animato: sbatte gli occhi, va a spasso nel notch, lavora (puntini e occhi che leggono) mentre l'ia risponde, sorride quando ha finito (o quando apri il notch) e balla se c'è musica
 - tasto destro (o ⚙) per uscire
 
-## avvio
-se vuoi scaricare i binaries e avviarti il programma da solo:
+## installazione (consigliata)
+scarica `yourlittlefriend-setup-x.y.z.exe` dalle [release](../../releases) e avvialo. non servono permessi di amministratore e non devi installare .net.
+
+1. scegli la lingua (italiano / english)
+2. scegli la cartella (di base `AppData\Roaming\yourlittlefriend`)
+3. scegli se farlo partire all'avvio del pc
+
+al primo avvio l'app ti chiede:
+
+1. il tuo **nome**
+2. la tua **città** per il meteo (puoi saltare)
+3. l'**ia**: l'installazione guidata scarica da sola ollama e il modello. puoi usare il modello consigliato oppure scriverne uno tuo: l'app controlla se il tuo pc (ram e spazio su disco) ce la fa. puoi anche saltare e farlo dopo
+
+tutto si cambia dalle **impostazioni** (⚙ → impostazioni): nome, città, lingua, modello, avvio automatico e il pulsante per **disinstallare**. i dati stanno in `%APPDATA%\yourlittlefriend\settings.json`.
+
+## avvio da sorgente
 serve il [.net 8 sdk](https://dotnet.microsoft.com/download) su windows 10/11.
 
     dotnet run
 
-in alternativa, puoi prendere le build stabili dalle release. le build stabili hanno installer e partono al avvio del pc. sono fatte in modo set-and-forget. ricordati: puoi disinstallare l'app quando vuoi o disabilitare l'avvio automatico da task manager!
+## creare una release (per chi mantiene il progetto)
+l'installer si costruisce con github actions (`.github/workflows/build.yml`, usa [inno setup](https://jrsoftware.org/isinfo.php) con `installer/yourlittlefriend.iss`).
+ogni pull request produce l'installer come artifact per provarlo. per pubblicare una release basta un tag:
+
+    git tag v1.0.0
+    git push origin v1.0.0
 
 ## avviso ⚠️
 l'app è ancora in sviluppo e non è ancora in uno stato utilizzabile, ovvero può fare poche cose utili che puoi tranquillamente fare come faresti. nei prossimi aggiornamenti l'app (dovrebbe) migliorare!
@@ -29,11 +48,8 @@ hai suggerimenti o consigli? sbizzarrisciti! apri un issue su questa repo e dicc
 ### holder
 holder ti permetterà di trascinare dei file sulla notch in alto. i file rimangono li e puoi ri-trascinarli dove vuoi. si integra con le api di sistema per garantire che funzioni su tutte le app.
 
-### menu impostazioni migliorato
-gestisci città per il meteo, cambia nome, cambia lingua, e personalizza l'app a tuo piacere, anche i colori!
-
 ### byollm
-porta la tua LLM su yourlittlefriend: dal menu impostazioni trovi l'autoinstaller di ollama per scaricare LLM da usare per yourlittlefriend. in alternativa, collegati alle API di qualche AI (vercel, openai, anthropic) e usa modelli premium a pagamento.
+porta la tua LLM su yourlittlefriend: l'autoinstaller di ollama c'è già (impostazioni). in arrivo: collegati alle API di qualche AI (vercel, openai, anthropic) e usa modelli premium a pagamento.
 
 ### più animazioni del omino
 nuove espressioni e reazioni per rendere yourlittlefriend ancora più carino :)
@@ -45,7 +61,7 @@ nuove espressioni e reazioni per rendere yourlittlefriend ancora più carino :)
 2. nel terminale: `ollama pull qwen3.5:4b` (circa 3 gb, gira bene anche senza scheda video)
 3. lascia ollama acceso in background
 
-il modello si cambia in `Llm.cs` (`Model`).
+l'installazione di ollama e del modello è guidata dall'app (primo avvio o impostazioni). se vuoi farlo a mano: installa ollama e poi `ollama pull <modello>`; il modello si sceglie dalle impostazioni.
 
 ## cosa può fare dalla chat
 

@@ -19,21 +19,26 @@ namespace YourLittleFriend;
 public partial class MainWindow : Window
 {
     // ---- impostazioni ----
-    const string Lat = "45.07", Lon = "7.69";              // per il meteo
     const string Model = "claude-haiku-5-5";                // ia veloce
-    const string SystemPrompt = "sei un piccolo assistente nel notch del pc. rispondi in italiano, molto breve.";
+    static string SystemPrompt => Loc.L("sei un piccolo assistente nel notch del pc. rispondi in italiano, molto breve.",
+                                        "you are a tiny assistant living in the PC's notch. answer in English, very briefly.");
     const double WOpen = 640, HOpen = 170, WClosed = 230, HClosed = 34;
 
     static readonly HttpClient Http = new() { Timeout = TimeSpan.FromSeconds(60) };
     readonly DispatcherTimer hold = new() { Interval = TimeSpan.FromMilliseconds(500) };
     readonly JsonArray local = new();
-    const string LocalSystem = "sei YourLittleFriend, un piccolo assistente nel notch del pc di Andrea. rispondi sempre in italiano, brevissimo. "
+    static string LocalSystem => Loc.L(
+        $"sei YourLittleFriend, un piccolo assistente nel notch del pc di {Settings.Current.Name}. rispondi sempre in italiano, brevissimo. "
         + "usa gli strumenti solo se l'utente chiede un'azione sul pc, poi conferma in una frase. non inventare risultati. "
-        + "se non esiste uno strumento adatto dillo.";
+        + "se non esiste uno strumento adatto dillo.",
+        $"you are YourLittleFriend, a tiny assistant living in the notch of {Settings.Current.Name}'s PC. always answer in English, very briefly. "
+        + "use tools only if the user asks for an action on the PC, then confirm in one sentence. never invent results. "
+        + "if no suitable tool exists, say so.");
     GlobalSystemMediaTransportControlsSessionManager? mgr;
     string? lastTitle, file;
     BitmapSource? cover;
-    bool dragging, playing;
+    bool playing, isOpen;
+    long dragSeen;   // ultimo momento in cui un file è stato trascinato sopra la finestra
     int busy;   // quante richieste all'ia sono in corso
 
     public MainWindow()
@@ -51,32 +56,58 @@ public partial class MainWindow : Window
         weather.Start();
         _ = LoadWeather();
         ShowTab(0);
-        ChatOut.Show("Chiedimi qualcosa");
-        Bubble.Show("Cosa faccio con questo?");
+        ChatOut.Show(Loc.L("Chiedimi qualcosa", "Ask me something"));
+        Bubble.Show(Loc.L("Cosa faccio con questo?", "What shall I do with this?"));
+        GreetTitle.Text = Loc.L($"Ciao {Settings.Current.Name}!", $"Hi {Settings.Current.Name}!");
+        Closed += (_, _) => Application.Current.Shutdown();
     }
 
     // ---- apri / chiudi ----
+    // il contenuto ha dimensione fissa e compare con una dissolvenza: la finestra si allarga con un piccolo rimbalzo
     void SetOpen(bool o)
     {
+        if (isOpen == o) return;   // evita di riavviare le animazioni a ogni evento del mouse
+        isOpen = o;
         double w = o ? WOpen : WClosed, h = o ? HOpen : HClosed;
-        if (o && Full.Visibility != Visibility.Visible) BigMascot.Cheer();
-        Full.Visibility = o ? Visibility.Visible : Visibility.Collapsed;
-        MiniMascot.Visibility = o ? Visibility.Collapsed : Visibility.Visible;
-        var d = TimeSpan.FromMilliseconds(220);
-        DoubleAnimation Anim(double to) => new(to, d) { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut } };
+        IEasingFunction ease = o ? new BackEase { Amplitude = .3, EasingMode = EasingMode.EaseOut } : new CubicEase { EasingMode = EasingMode.EaseInOut };
+        var d = TimeSpan.FromMilliseconds(o ? 420 : 240);
+        DoubleAnimation Anim(double to) => new(to, d) { EasingFunction = ease };
         BeginAnimation(WidthProperty, Anim(w));
         BeginAnimation(HeightProperty, Anim(h));
-        BeginAnimation(LeftProperty, Anim((SystemParameters.PrimaryScreenWidth - w) / 2));
+        BeginAnimation(LeftProperty, Anim((SystemParameters.PrimaryScreenWidth - w) / 2));   // stessa curva: resta sempre centrata
+
+        var soft = new CubicEase { EasingMode = EasingMode.EaseOut };
+        if (o)
+        {
+            if (Full.Visibility != Visibility.Visible) BigMascot.Cheer();
+            Full.Visibility = Visibility.Visible;
+            Full.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(260)) { BeginTime = TimeSpan.FromMilliseconds(110) });
+            FullShift.BeginAnimation(TranslateTransform.YProperty, new DoubleAnimation(-12, 0, TimeSpan.FromMilliseconds(380)) { BeginTime = TimeSpan.FromMilliseconds(80), EasingFunction = soft });
+            var hide = new DoubleAnimation(0, TimeSpan.FromMilliseconds(120));
+            hide.Completed += (_, _) => { if (isOpen) MiniMascot.Visibility = Visibility.Collapsed; };
+            MiniMascot.BeginAnimation(OpacityProperty, hide);
+        }
+        else
+        {
+            var fade = new DoubleAnimation(0, TimeSpan.FromMilliseconds(130));
+            fade.Completed += (_, _) => { if (!isOpen) Full.Visibility = Visibility.Collapsed; };
+            Full.BeginAnimation(OpacityProperty, fade);
+            MiniMascot.Visibility = Visibility.Visible;
+            MiniMascot.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(220)) { BeginTime = TimeSpan.FromMilliseconds(100) });
+        }
     }
+
+    bool DragActive => Environment.TickCount64 - dragSeen < 600;
 
     void MaybeClose()
     {
-        if (Root.IsMouseOver || dragging || ChatIn.IsKeyboardFocusWithin || FileIn.IsKeyboardFocusWithin) hold.Start();
+        var menu = (ContextMenu)Resources["Menu"];
+        if (Root.IsMouseOver || DragActive || menu.IsOpen || ChatIn.IsKeyboardFocusWithin || FileIn.IsKeyboardFocusWithin) hold.Start();
         else SetOpen(false);
     }
 
     void OnEnter(object s, MouseEventArgs e) { hold.Stop(); SetOpen(true); }
-    void OnLeave(object s, MouseEventArgs e) => hold.Start();
+    void OnLeave(object s, MouseEventArgs e) { hold.Stop(); hold.Start(); }
 
     // ---- umore della mascotte ----
     // lavora mentre l'ia risponde, balla se c'è musica, altrimenti gira per conto suo
@@ -109,6 +140,20 @@ public partial class MainWindow : Window
     }
 
     void Quit_Click(object s, RoutedEventArgs e) => Application.Current.Shutdown();
+
+    void Settings_Click(object s, RoutedEventArgs e)
+    {
+        hold.Stop();
+        var w = new SettingsWindow();
+        if (w.ShowDialog() == true)
+        {
+            if (w.LanguageChanged) { App.Restart(); return; }
+            GreetTitle.Text = Loc.L($"Ciao {Settings.Current.Name}!", $"Hi {Settings.Current.Name}!");
+            local.Clear();   // il prompt di sistema contiene il nome
+            _ = LoadWeather();
+        }
+        hold.Start();
+    }
 
     // ---- musica ----
     async Task PollMedia()
@@ -214,16 +259,24 @@ public partial class MainWindow : Window
     // ---- meteo ----
     async Task LoadWeather()
     {
+        var st = Settings.Current;
+        if (st.Lat is not double lat || st.Lon is not double lon) { WeatherText.Text = ""; return; }
         try
         {
-            var j = await Http.GetStringAsync($"https://api.open-meteo.com/v1/forecast?latitude={Lat}&longitude={Lon}&current=temperature_2m,weather_code");
+            var j = await Http.GetStringAsync($"https://api.open-meteo.com/v1/forecast?latitude={lat.ToString(CultureInfo.InvariantCulture)}&longitude={lon.ToString(CultureInfo.InvariantCulture)}&current=temperature_2m,weather_code");
             using var d = JsonDocument.Parse(j);
             var cur = d.RootElement.GetProperty("current");
             int c = cur.GetProperty("weather_code").GetInt32();
             double t = cur.GetProperty("temperature_2m").GetDouble();
-            string x = c <= 1 ? "è previsto sole" : c <= 3 ? "sono previste nuvole" : c <= 48 ? "è prevista nebbia"
-                : (c is >= 71 and <= 77 or 85 or 86) ? "è prevista neve" : c >= 95 ? "è previsto temporale" : "è prevista pioggia";
-            WeatherText.Text = $"Oggi ci sono {Math.Round(t).ToString(CultureInfo.InvariantCulture)}°\nPer oggi {x}";
+            bool snow = c is >= 71 and <= 77 or 85 or 86;
+            string x = c <= 1 ? Loc.L("è previsto sole", "sunny")
+                : c <= 3 ? Loc.L("sono previste nuvole", "cloudy")
+                : c <= 48 ? Loc.L("è prevista nebbia", "foggy")
+                : snow ? Loc.L("è prevista neve", "snow")
+                : c >= 95 ? Loc.L("è previsto temporale", "thunderstorms")
+                : Loc.L("è prevista pioggia", "rain");
+            var deg = Math.Round(t).ToString(CultureInfo.InvariantCulture);
+            WeatherText.Text = Loc.L($"Oggi ci sono {deg}°\nPer oggi {x}", $"It's {deg}° now\nToday: {x}");
         }
         catch { }
     }
@@ -357,11 +410,13 @@ public partial class MainWindow : Window
     }
 
     // ---- drag & drop ----
+    // DragEnter/DragLeave arrivano anche per ogni elemento interno: per sapere se il file è ancora sopra la finestra
+    // si guarda DragOver, che continua ad arrivare finché ci sei sopra
     void OnDragEnter(object s, DragEventArgs e)
     {
         if (!e.Data.GetDataPresent(DataFormats.FileDrop)) return;
         e.Effects = DragDropEffects.Copy;
-        dragging = true;
+        dragSeen = Environment.TickCount64;
         hold.Stop();
         SetOpen(true);
         ShowTab(2);
@@ -369,16 +424,19 @@ public partial class MainWindow : Window
 
     void OnDragOver(object s, DragEventArgs e)
     {
-        e.Effects = e.Data.GetDataPresent(DataFormats.FileDrop) ? DragDropEffects.Copy : DragDropEffects.None;
+        bool file = e.Data.GetDataPresent(DataFormats.FileDrop);
+        e.Effects = file ? DragDropEffects.Copy : DragDropEffects.None;
+        if (file) dragSeen = Environment.TickCount64;
         e.Handled = true;
     }
 
-    void OnDragLeave(object s, DragEventArgs e) { dragging = false; hold.Start(); }
+    void OnDragLeave(object s, DragEventArgs e) { hold.Stop(); hold.Start(); }
 
     void OnDrop(object s, DragEventArgs e)
     {
-        dragging = false;
+        dragSeen = 0;
         if (e.Data.GetData(DataFormats.FileDrop) is string[] f && f.Length > 0) SetFile(f[0]);
+        hold.Stop();
         hold.Start();
     }
 

@@ -8,7 +8,8 @@ namespace YourLittleFriend;
 // client minimale per ollama (llm locale)
 public static class Llm
 {
-    public const string Model = "qwen3.5:4b";
+    public const string DefaultModel = "qwen3.5:4b";
+    public static string Model => Settings.Current.Model;
     static readonly HttpClient Http = new() { Timeout = TimeSpan.FromMinutes(3) };
 
     // se passi onText la risposta arriva in streaming: onText viene chiamato a ogni pezzo di testo
@@ -30,7 +31,7 @@ public static class Llm
             { Content = new StringContent(body.ToJsonString(), Encoding.UTF8, "application/json") };
             res = await Http.SendAsync(req, HttpCompletionOption.ResponseHeadersRead);
         }
-        catch (HttpRequestException) { throw new Exception($"ollama non risponde: installalo da ollama.com e poi scrivi nel terminale: ollama pull {Model}"); }
+        catch (HttpRequestException) { throw new Exception(Loc.L($"ollama non risponde: apri Impostazioni (⚙) per installarlo, oppure scrivi nel terminale: ollama pull {Model}", $"ollama is not responding: open Settings (⚙) to install it, or run in a terminal: ollama pull {Model}")); }
         if (!res.IsSuccessStatusCode) throw new Exception(await res.Content.ReadAsStringAsync());
         if (onText == null) return JsonNode.Parse(await res.Content.ReadAsStringAsync())!["message"]!;
 

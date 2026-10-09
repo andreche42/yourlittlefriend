@@ -21,7 +21,7 @@ public static class Confirm
             Text = s, FontSize = size, Foreground = b, TextWrapping = TextWrapping.Wrap,
             FontWeight = fw ?? FontWeights.Normal, Margin = new Thickness(0, 0, 0, 8)
         };
-        sp.Children.Add(T($"Vuoi che {Actions.AppName} faccia questo?", 18, Brushes.White, FontWeights.Bold));
+        sp.Children.Add(T(Loc.L($"Vuoi che {Actions.AppName} faccia questo?", $"Do you want {Actions.AppName} to do this?"), 18, Brushes.White, FontWeights.Bold));
         sp.Children.Add(T(p.Title, 15, Brushes.White));
         for (int i = 0; i < p.Steps.Length; i++) sp.Children.Add(T($"{i + 1}. {p.Steps[i]}", 13, Brushes.LightGray));
         var row = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(0, 12, 0, 0) };
@@ -36,7 +36,7 @@ public static class Confirm
             return b;
         }
         row.Children.Add(B("No", false));
-        row.Children.Add(B("Sì, fai", true));
+        row.Children.Add(B(Loc.L("Sì, fai", "Yes, do it"), true));
         sp.Children.Add(row);
         w.Content = sp;
         return w.ShowDialog() == true;
