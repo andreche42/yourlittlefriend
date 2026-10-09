@@ -8,10 +8,28 @@ un piccolo amico nel notch del pc (windows). si apre quando ci passi sopra col m
 - tasto destro (o ⚙) per uscire
 
 ## avvio
-
+se vuoi scaricare i binaries e avviarti il programma da solo:
 serve il [.net 8 sdk](https://dotnet.microsoft.com/download) su windows 10/11.
 
     dotnet run
+
+in alternativa, puoi prendere le build stabili dalle release. le build stabili hanno installer e partono al avvio del pc. sono fatte in modo set-and-forget. ricordati: puoi disinstallare l'app quando vuoi o disabilitare l'avvio automatico da task manager!
+
+## roadmap
+### holder
+holder ti permettera' di trascinare dei file sulla notch in alto. i file rimangono li e puoi ri-trascinarli dove vuoi. si integra con le api di sistema per garantire che funzioni su tutte le app.
+
+### menu impostazioni migliorato
+gestisci citta' per il meteo, cambia nome, cambia lingua, e personalizza l'app a tuo piacere, anche i colori!
+
+### byollm
+porta la tua LLM su yourlittlefriend: dal menu impostazioni trovi l'autoinstaller di ollama per scaricare LLM da usare per yourlittlefriend. in alternativa, collegati alle API di qualche AI (vercel, openai, anthropic) e usa modelli premium a pagamento.
+
+### animazioni del omino
+yourlittlefriend ancora piu' carino :)
+
+---
+guide:
 
 ## llm locale (ollama)
 
