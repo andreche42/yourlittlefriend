@@ -104,6 +104,32 @@ public static class Ollama
                                $"✗ Too heavy: you have {ram:0} GB of RAM and would need at least {need:0.#}. Pick a smaller model."));
     }
 
+    public static bool IsInstalled => FindExe() != null;
+
+    // se ollama è installato ma spento, avvia il server in nascosto (senza finestre). true se alla fine risponde
+    public static async Task<bool> StartIfInstalled(CancellationToken ct = default)
+    {
+        if (await IsUp()) return true;
+        var exe = FindExe();
+        if (exe == null) return false;
+        try { Process.Start(new ProcessStartInfo(exe, "serve") { UseShellExecute = false, CreateNoWindow = true }); } catch { return false; }
+        for (int i = 0; i < 20 && !await IsUp(); i++) await Task.Delay(1000, ct);
+        return await IsUp();
+    }
+
+    // modelli già scaricati (nome e dimensione in byte)
+    public static async Task<List<(string Name, long Size)>> ListModels()
+    {
+        var list = new List<(string, long)>();
+        using var cts = new CancellationTokenSource(5000);
+        using var d = JsonDocument.Parse(await Http.GetStringAsync(Api + "/api/tags", cts.Token));
+        if (d.RootElement.TryGetProperty("models", out var ms))
+            foreach (var m in ms.EnumerateArray())
+                list.Add((m.GetProperty("name").GetString() ?? "", m.TryGetProperty("size", out var sz) ? sz.GetInt64() : 0));
+        list.RemoveAll(m => m.Item1 == "");
+        return list;
+    }
+
     // l'installer di ollama apre la sua app (finestra + icona nella barra): chiudiamo la finestra per non confondere l'utente.
     // il server resta attivo, oppure lo riavviamo noi in nascosto con "ollama serve"
     static void CloseOllamaWindows()

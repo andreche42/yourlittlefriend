@@ -4,6 +4,9 @@
   <!-- installer guidato di ollama + modello. usato da onboarding e impostazioni -->
   <StackPanel>
     <TextBlock x:Name="Intro" TextWrapping="Wrap" Margin="0,0,0,10"/>
+    <TextBlock x:Name="OllamaStatus" TextWrapping="Wrap" Margin="0,0,0,8"/>
+    <TextBlock x:Name="InstHeader" FontWeight="SemiBold" Margin="0,0,0,2" Visibility="Collapsed"/>
+    <StackPanel x:Name="Installed" Margin="0,0,0,8"/>
     <RadioButton x:Name="RDef" Foreground="{DynamicResource FgBrush}" GroupName="model" IsChecked="True" Margin="0,3"/>
     <RadioButton x:Name="RCus" Foreground="{DynamicResource FgBrush}" GroupName="model" Margin="0,3"/>
     <TextBox x:Name="CusIn" Style="{StaticResource Field}" Margin="22,4,0,0" IsEnabled="False"/>

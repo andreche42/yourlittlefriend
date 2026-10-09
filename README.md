@@ -28,7 +28,7 @@ al primo avvio l'app ti chiede:
 
 1. il tuo **nome**
 2. la tua **città** per il meteo (puoi saltare)
-3. l'**ia**: l'installazione guidata scarica da sola ollama (senza lasciare finestre aperte) e il modello. puoi usare il modello consigliato oppure scriverne uno tuo: l'app controlla se il tuo pc (ram e spazio su disco) ce la fa. puoi anche saltare e farlo dopo
+3. l'**ia**: l'installazione guidata controlla subito se ollama è già installato e quali modelli hai già: se ne trovi uno che ti va bene lo usi al volo, senza scaricare niente. altrimenti scarica da sola ollama (senza lasciare finestre aperte) e il modello. puoi usare il modello consigliato oppure scriverne uno tuo: l'app controlla se il tuo pc (ram e spazio su disco) ce la fa. puoi anche saltare e farlo dopo
 
 tutto si cambia dalle **impostazioni** (⚙ → impostazioni): nome, città, lingua, modello, avvio automatico e il pulsante per **disinstallare**. i dati stanno in `%APPDATA%\yourlittlefriend\settings.json`.
 
