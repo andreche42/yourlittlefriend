@@ -27,7 +27,7 @@ public partial class MainWindow : Window
     static readonly HttpClient Http = new() { Timeout = TimeSpan.FromSeconds(60) };
     readonly DispatcherTimer hold = new() { Interval = TimeSpan.FromMilliseconds(500) };
     readonly JsonArray local = new();
-    const string LocalSystem = "sei MyLittleFriend, un piccolo assistente nel notch del pc di Andrea. rispondi sempre in italiano, brevissimo. "
+    const string LocalSystem = "sei YourLittleFriend, un piccolo assistente nel notch del pc di Andrea. rispondi sempre in italiano, brevissimo. "
         + "usa gli strumenti solo se l'utente chiede un'azione sul pc, poi conferma in una frase. non inventare risultati. "
         + "se non esiste uno strumento adatto dillo.";
     GlobalSystemMediaTransportControlsSessionManager? mgr;

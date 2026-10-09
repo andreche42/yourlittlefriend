@@ -10,7 +10,7 @@ public record Plan(string Title, string[] Steps, bool Sensitive, Func<Task<strin
 // azioni sul pc che il modello puo' chiamare. niente comandi liberi: solo queste, con argomenti controllati.
 public static class Actions
 {
-    public const string AppName = "MyLittleFriend";
+    public const string AppName = "YourLittleFriend";
 
     public const string ToolsJson = """
     [
