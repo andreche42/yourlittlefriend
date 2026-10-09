@@ -139,8 +139,9 @@ public partial class MainWindow : Window
             Shine.CornerRadius = new CornerRadius(s * .07);
             Shine.Margin = new Thickness(s * .2, s * .13, 0, 0);
         }
-        if (Math.Abs(Left - winLeft) > .01) Left = winLeft;
-        if (Math.Abs(Top - winTop) > .01) Top = winTop;
+        // all'avvio Left è NaN (non impostato): il confronto con NaN è sempre falso, quindi va controllato a parte
+        if (double.IsNaN(Left) || Math.Abs(Left - winLeft) > .01) Left = winLeft;
+        if (double.IsNaN(Top) || Math.Abs(Top - winTop) > .01) Top = winTop;
         PlaceRipple();
     }
 
@@ -153,6 +154,7 @@ public partial class MainWindow : Window
         pos = vel = target = 0;
         Jelly(1, 1, false);
         LayoutRects();
+        MiniMascot.Home();   // passando da notch a bolla l'omino poteva restare fuori dalla bolla, dov'era andato a spasso
         RenderSpring();
         UpdateBob();
         UpdateRipple();
@@ -438,6 +440,7 @@ public partial class MainWindow : Window
             GreetTitle.Text = Loc.L($"Ciao {Settings.Current.Name}!", $"Hi {Settings.Current.Name}!");
             local.Clear();   // il prompt di sistema contiene il nome
             ApplyFeatures();
+            Theme.Apply();   // il contorno dipende dalla forma (la bolla ha sempre il suo)
             ApplyStyle();    // notch o bolla, e dimensione della bolla
             _ = LoadWeather();
         }

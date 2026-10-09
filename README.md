@@ -27,6 +27,7 @@ scarica `yourlittlefriend-setup-x.y.z.exe` dalle [release](../../releases) e avv
 1. scegli la lingua (italiano / english)
 2. scegli la cartella (di base `AppData\Roaming\yourlittlefriend`)
 3. scegli se farlo partire all'avvio del pc
+4. scegli se creare l'icona sul desktop (c'è anche nel menu start)
 
 **aggiornare**: scarica il nuovo installer e avvialo, senza disinstallare niente. chiude da solo l'app aperta, si installa sopra la versione vecchia (stessa cartella), ricorda se avevi l'avvio automatico e non tocca le tue impostazioni né il portafile. se per sbaglio provi a installare una versione più vecchia di quella che hai, ti avvisa.
 
