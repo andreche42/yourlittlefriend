@@ -33,7 +33,8 @@ public partial class MainWindow : Window
     GlobalSystemMediaTransportControlsSessionManager? mgr;
     string? lastTitle, file;
     BitmapSource? cover;
-    bool dragging;
+    bool dragging, playing;
+    int busy;   // quante richieste all'ia sono in corso
 
     public MainWindow()
     {
@@ -50,12 +51,15 @@ public partial class MainWindow : Window
         weather.Start();
         _ = LoadWeather();
         ShowTab(0);
+        ChatOut.Show("Chiedimi qualcosa");
+        Bubble.Show("Cosa faccio con questo?");
     }
 
     // ---- apri / chiudi ----
     void SetOpen(bool o)
     {
         double w = o ? WOpen : WClosed, h = o ? HOpen : HClosed;
+        if (o && Full.Visibility != Visibility.Visible) BigMascot.Cheer();
         Full.Visibility = o ? Visibility.Visible : Visibility.Collapsed;
         MiniMascot.Visibility = o ? Visibility.Collapsed : Visibility.Visible;
         var d = TimeSpan.FromMilliseconds(220);
@@ -73,6 +77,16 @@ public partial class MainWindow : Window
 
     void OnEnter(object s, MouseEventArgs e) { hold.Stop(); SetOpen(true); }
     void OnLeave(object s, MouseEventArgs e) => hold.Start();
+
+    // ---- umore della mascotte ----
+    // lavora mentre l'ia risponde, balla se c'è musica, altrimenti gira per conto suo
+    void UpdateMood()
+    {
+        var m = busy > 0 ? MascotMode.Working : playing ? MascotMode.Dance : MascotMode.Idle;
+        MiniMascot.Mode = BigMascot.Mode = m;
+    }
+
+    void Cheer() { MiniMascot.Cheer(); BigMascot.Cheer(); }
 
     // ---- schede e menu ----
     void ShowTab(int i)
@@ -111,15 +125,25 @@ public partial class MainWindow : Window
                 cover = await LoadCover(p.Thumbnail);
                 ApplyCover();
             }
-            BPlay.Content = s.GetPlaybackInfo().PlaybackStatus == GlobalSystemMediaTransportControlsSessionPlaybackStatus.Playing ? "⏸" : "▶";
+            bool on = s.GetPlaybackInfo().PlaybackStatus == GlobalSystemMediaTransportControlsSessionPlaybackStatus.Playing;
+            BPlay.Content = on ? "⏸" : "▶";
+            SetPlaying(on);
             SongText.Text = $"{p.Title} - {p.Artist}";
             SetMusic(true);
         }
         catch { SetMusic(false); }
     }
 
+    void SetPlaying(bool on)
+    {
+        if (playing == on) return;
+        playing = on;
+        UpdateMood();
+    }
+
     void SetMusic(bool on)
     {
+        if (!on) SetPlaying(false);
         Greet.Visibility = on ? Visibility.Collapsed : Visibility.Visible;
         MusicPanel.Visibility = on ? Visibility.Visible : Visibility.Collapsed;
     }
@@ -205,27 +229,44 @@ public partial class MainWindow : Window
     }
 
     // ---- ia ----
-    static async Task<string> CallApi(List<object> messages)
+    // streaming sse dell'api anthropic: ogni pezzo di testo va a push
+    static async Task CallApi(List<object> messages, Action<string> push)
     {
         var key = Environment.GetEnvironmentVariable("ANTHROPIC_API_KEY");
-        if (string.IsNullOrEmpty(key)) return "manca la variabile ANTHROPIC_API_KEY";
+        if (string.IsNullOrEmpty(key)) throw new Exception("manca la variabile ANTHROPIC_API_KEY");
         var req = new HttpRequestMessage(HttpMethod.Post, "https://api.anthropic.com/v1/messages");
         req.Headers.Add("x-api-key", key);
         req.Headers.Add("anthropic-version", "2023-06-01");
         req.Content = new StringContent(
-            JsonSerializer.Serialize(new { model = Model, max_tokens = 500, system = SystemPrompt, messages }),
+            JsonSerializer.Serialize(new { model = Model, max_tokens = 500, system = SystemPrompt, messages, stream = true }),
             Encoding.UTF8, "application/json");
-        var res = await Http.SendAsync(req);
-        var body = await res.Content.ReadAsStringAsync();
-        if (!res.IsSuccessStatusCode) return "errore: " + body;
-        using var d = JsonDocument.Parse(body);
-        return string.Concat(d.RootElement.GetProperty("content").EnumerateArray()
-            .Select(b => b.TryGetProperty("text", out var t) ? t.GetString() : ""));
+        var res = await Http.SendAsync(req, HttpCompletionOption.ResponseHeadersRead);
+        if (!res.IsSuccessStatusCode) throw new Exception(await res.Content.ReadAsStringAsync());
+        using var sr = new StreamReader(await res.Content.ReadAsStreamAsync());
+        string? line;
+        while ((line = await sr.ReadLineAsync()) != null)
+        {
+            if (!line.StartsWith("data:")) continue;
+            using var d = JsonDocument.Parse(line[5..]);
+            var r = d.RootElement;
+            var type = r.GetProperty("type").GetString();
+            if (type == "error") throw new Exception(r.GetProperty("error").GetRawText());
+            if (type == "content_block_delta" && r.GetProperty("delta").TryGetProperty("text", out var t)) push(t.GetString() ?? "");
+        }
     }
 
-    static async Task<string> Safe(Func<Task<string>> f)
+    // esegue una richiesta all'ia: la mascotte lavora, la risposta compare man mano, alla fine sorride
+    async Task Stream(SmokeText box, Func<Task> work)
     {
-        try { return await f(); } catch (Exception ex) { return "errore: " + ex.Message; }
+        busy++;
+        UpdateMood();
+        box.Show("…");
+        bool ok = true;
+        try { await work(); }
+        catch (Exception ex) { ok = false; box.Show("errore: " + ex.Message); }
+        finally { busy--; UpdateMood(); }
+        box.Flush();
+        if (ok) Cheer();
     }
 
     static List<object> FileBlocks(string path, string q)
@@ -251,26 +292,26 @@ public partial class MainWindow : Window
         var q = ChatIn.Text.Trim();
         if (q == "") return;
         ChatIn.Clear();
-        ChatOut.Text = "…";
-        ChatOut.Text = await Safe(() => LocalChat(q));
+        await Stream(ChatOut, () => LocalChat(q, ChatOut));
     }
 
     // chat con llm locale (ollama) + azioni sul pc. le azioni sensibili passano dal popup di conferma.
-    async Task<string> LocalChat(string q)
+    async Task LocalChat(string q, SmokeText box)
     {
         if (local.Count == 0) local.Add(new JsonObject { ["role"] = "system", ["content"] = LocalSystem });
         local.Add(new JsonObject { ["role"] = "user", ["content"] = q });
         var tools = JsonNode.Parse(Actions.ToolsJson)!;
         for (int i = 0; i < 4; i++)
         {
-            var msg = await Llm.Chat(local, tools);
+            var msg = await Llm.Chat(local, tools, box.Append);
             local.Add(msg.DeepClone());
             if (msg["tool_calls"] is not JsonArray calls || calls.Count == 0)
             {
                 while (local.Count > 15) local.RemoveAt(1);
                 while (local.Count > 1 && local[1]!["role"]!.ToString() != "user") local.RemoveAt(1);
-                return Llm.Clean(msg["content"]?.ToString());
+                return;
             }
+            box.Show("…");   // ha chiamato degli strumenti: il testo parziale lascia il posto alla risposta finale
             foreach (var c in calls)
             {
                 var fn = c!["function"]!;
@@ -286,11 +327,11 @@ public partial class MainWindow : Window
                 local.Add(new JsonObject { ["role"] = "tool", ["tool_name"] = name, ["content"] = res });
             }
         }
-        return "non sono riuscito a finire, riprova";
+        box.Show("non sono riuscito a finire, riprova");
     }
 
     // file di testo: llm locale, senza strumenti (cosi' un file non puo' far partire azioni)
-    static async Task<string> LocalFile(string path, string q)
+    static async Task LocalFile(string path, string q, Action<string> push)
     {
         string t;
         try { t = File.ReadAllText(path); if (t.Length > 8000) t = t[..8000]; } catch { t = ""; }
@@ -299,8 +340,7 @@ public partial class MainWindow : Window
             new JsonObject { ["role"] = "system", ["content"] = LocalSystem },
             new JsonObject { ["role"] = "user", ["content"] = $"file {Path.GetFileName(path)}:\n{t}\n\n{q}" }
         };
-        var m = await Llm.Chat(msgs, null);
-        return Llm.Clean(m["content"]?.ToString());
+        await Llm.Chat(msgs, null, push);
     }
 
     async void FileKey(object s, KeyEventArgs e)
@@ -309,12 +349,11 @@ public partial class MainWindow : Window
         var q = FileIn.Text.Trim();
         if (q == "") return;
         FileIn.Clear();
-        Bubble.Text = "…";
         var path = file;
         bool isImg = Path.GetExtension(path).ToLowerInvariant() is ".png" or ".jpg" or ".jpeg" or ".webp" or ".gif";
-        Bubble.Text = await Safe(() => isImg
-            ? CallApi(new List<object> { new { role = "user", content = FileBlocks(path, q) } })
-            : LocalFile(path, q));
+        await Stream(Bubble, () => isImg
+            ? CallApi(new List<object> { new { role = "user", content = FileBlocks(path, q) } }, Bubble.Append)
+            : LocalFile(path, q, Bubble.Append));
     }
 
     // ---- drag & drop ----
@@ -347,7 +386,7 @@ public partial class MainWindow : Window
     {
         file = path;
         FileNameText.Text = Path.GetFileName(path);
-        Bubble.Text = "Cosa faccio con questo?";
+        Bubble.Show("Cosa faccio con questo?");
         DropZone.Visibility = Visibility.Collapsed;
         FileView.Visibility = Visibility.Visible;
         ShowTab(2);

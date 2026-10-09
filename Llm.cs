@@ -1,7 +1,7 @@
+using System.IO;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json.Nodes;
-using System.Text.RegularExpressions;
 
 namespace YourLittleFriend;
 
@@ -11,24 +11,47 @@ public static class Llm
     public const string Model = "qwen3.5:4b";
     static readonly HttpClient Http = new() { Timeout = TimeSpan.FromMinutes(3) };
 
-    public static async Task<JsonNode> Chat(JsonArray messages, JsonNode? tools)
+    // se passi onText la risposta arriva in streaming: onText viene chiamato a ogni pezzo di testo
+    public static async Task<JsonNode> Chat(JsonArray messages, JsonNode? tools, Action<string>? onText = null)
     {
         var body = new JsonObject
         {
             ["model"] = Model,
             ["messages"] = messages.DeepClone(),
-            ["stream"] = false,
+            ["stream"] = onText != null,
             ["think"] = false,
             ["options"] = new JsonObject { ["temperature"] = 0.3 }
         };
         if (tools != null) body["tools"] = tools.DeepClone();
         HttpResponseMessage res;
-        try { res = await Http.PostAsync("http://localhost:11434/api/chat", new StringContent(body.ToJsonString(), Encoding.UTF8, "application/json")); }
+        try
+        {
+            var req = new HttpRequestMessage(HttpMethod.Post, "http://localhost:11434/api/chat")
+            { Content = new StringContent(body.ToJsonString(), Encoding.UTF8, "application/json") };
+            res = await Http.SendAsync(req, HttpCompletionOption.ResponseHeadersRead);
+        }
         catch (HttpRequestException) { throw new Exception($"ollama non risponde: installalo da ollama.com e poi scrivi nel terminale: ollama pull {Model}"); }
-        var txt = await res.Content.ReadAsStringAsync();
-        if (!res.IsSuccessStatusCode) throw new Exception(txt);
-        return JsonNode.Parse(txt)!["message"]!;
-    }
+        if (!res.IsSuccessStatusCode) throw new Exception(await res.Content.ReadAsStringAsync());
+        if (onText == null) return JsonNode.Parse(await res.Content.ReadAsStringAsync())!["message"]!;
 
-    public static string Clean(string? s) => Regex.Replace(s ?? "", "<think>.*?</think>", "", RegexOptions.Singleline).Trim();
+        // streaming: ollama manda una riga json per pezzo di testo
+        var text = new StringBuilder();
+        var calls = new JsonArray();
+        using var sr = new StreamReader(await res.Content.ReadAsStreamAsync());
+        string? line;
+        while ((line = await sr.ReadLineAsync()) != null)
+        {
+            if (line.Length == 0) continue;
+            var j = JsonNode.Parse(line)!;
+            if (j["error"] != null) throw new Exception(j["error"]!.ToString());
+            var m = j["message"];
+            if (m == null) continue;
+            var piece = m["content"]?.ToString();
+            if (!string.IsNullOrEmpty(piece)) { text.Append(piece); onText(piece); }
+            if (m["tool_calls"] is JsonArray tc) foreach (var t in tc) calls.Add(t!.DeepClone());
+        }
+        var msg = new JsonObject { ["role"] = "assistant", ["content"] = text.ToString() };
+        if (calls.Count > 0) msg["tool_calls"] = calls;
+        return msg;
+    }
 }
