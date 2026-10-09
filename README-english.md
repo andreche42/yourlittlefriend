@@ -68,8 +68,8 @@ new expressions and reactions to make yourlittlefriend even cuter :)
 
 ### guides
 ## api key deepl
-you can follow this guide: [deepl api key guide](https://support.deepl.com/hc/en-us/articles/360020695820-API-key-for-DeepL-API)
-when it asks you for the plan you can click on the free one, it will ask you name, surname and address but you can put it fake information
+you can follow this guide: [deepl api key guide](https://support.deepl.com/hc/en-us/articles/360020695820-API-key-for-DeepL-API),
+when it asks you for the plan you can click on the free one, it will ask you name, surname and address but you can put it fake information,
 then go to the notch > right click > settings > scroll all the way down and then find "DeepL API Key" and put it there, then restart the app.
 
 ## local llm (ollama)
