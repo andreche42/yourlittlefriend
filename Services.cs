@@ -130,6 +130,47 @@ public static class Ollama
         return list;
     }
 
+    // modelli caricati in memoria in questo momento (nome, dimensione, quanta sta nella scheda video)
+    public static async Task<List<(string Name, long Size, long Vram)>> Running()
+    {
+        var list = new List<(string, long, long)>();
+        using var cts = new CancellationTokenSource(4000);
+        using var d = JsonDocument.Parse(await Http.GetStringAsync(Api + "/api/ps", cts.Token));
+        if (d.RootElement.TryGetProperty("models", out var ms))
+            foreach (var m in ms.EnumerateArray())
+                list.Add((m.GetProperty("name").GetString() ?? "",
+                          m.TryGetProperty("size", out var sz) ? sz.GetInt64() : 0,
+                          m.TryGetProperty("size_vram", out var vr) ? vr.GetInt64() : 0));
+        list.RemoveAll(m => m.Item1 == "");
+        return list;
+    }
+
+    static async Task Generate(string model, JsonNode keepAlive, CancellationToken ct)
+    {
+        var body = new JsonObject { ["model"] = model, ["keep_alive"] = keepAlive };
+        using var res = await Http.PostAsync(Api + "/api/generate", new StringContent(body.ToJsonString(), Encoding.UTF8, "application/json"), ct);
+        if (!res.IsSuccessStatusCode) throw new Exception(await res.Content.ReadAsStringAsync(ct));
+    }
+
+    // carica il modello in memoria (senza fare domande), così la prima risposta non aspetta. resta caricato 30 minuti
+    public static Task Load(string model, CancellationToken ct = default) => Generate(model, JsonValue.Create("30m")!, ct);
+
+    // toglie il modello dalla memoria
+    public static Task Unload(string model, CancellationToken ct = default) => Generate(model, JsonValue.Create(0), ct);
+
+    // ferma ollama: scarica i modelli e chiude il server (e la sua icona nella barra, se c'è)
+    public static async Task Stop()
+    {
+        try { foreach (var m in await Running()) await Unload(m.Name); } catch { }
+        foreach (var name in new[] { "ollama app", "ollama", "ollama_llama_server" })
+            foreach (var pr in Process.GetProcessesByName(name))
+            {
+                try { pr.Kill(true); } catch { }
+                finally { pr.Dispose(); }
+            }
+        for (int i = 0; i < 10 && await IsUp(); i++) await Task.Delay(500);
+    }
+
     // l'installer di ollama apre la sua app (finestra + icona nella barra): chiudiamo la finestra per non confondere l'utente.
     // il server resta attivo, oppure lo riavviamo noi in nascosto con "ollama serve"
     static void CloseOllamaWindows()

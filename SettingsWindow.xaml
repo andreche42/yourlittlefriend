@@ -30,6 +30,8 @@
           <local:AiSetupPanel x:Name="Ai"/>
         </Border>
 
+        <local:OllamaStatusPanel x:Name="OllamaBox" Margin="0,12,0,0"/>
+
         <TextBlock x:Name="LLook" FontSize="18" FontWeight="Bold" Margin="0,26,0,8"/>
         <WrapPanel x:Name="PresetBox"/>
         <TextBlock x:Name="LAccent" Margin="0,14,0,4"/>
