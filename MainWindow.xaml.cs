@@ -48,7 +48,8 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
-        Left = (SystemParameters.PrimaryScreenWidth - Width) / 2;
+        CenterWindow();
+        SystemParameters.StaticPropertyChanged += (_, e) => { if (e.PropertyName == nameof(SystemParameters.PrimaryScreenWidth)) CenterWindow(); };   // cambio schermo o risoluzione
         Top = 0;
         hold.Tick += (_, _) => { hold.Stop(); MaybeClose(); };
 
@@ -68,35 +69,22 @@ public partial class MainWindow : Window
     }
 
     // ---- apri / chiudi ----
-    // la finestra (trasparente) cambia dimensione solo due volte: grande appena inizia ad aprirsi, piccola quando ha finito di chiudersi.
-    // nel mezzo si muove soltanto il notch (Root) dentro la finestra, che è molto più leggero e senza scatti.
+    // la finestra è trasparente e FISSA (grande quanto serve per il notch aperto più il rimbalzo): non cambia mai dimensione né posizione,
+    // quindi niente salti. le zone trasparenti lasciano passare i click. si muove solo il notch (Root) dentro la finestra.
     // il movimento è una molla fisica: pos va da 0 = chiuso a 1 = aperto (con un po' di rimbalzo), e se il mouse entra e esce
     // di continuo la molla cambia direzione senza strappi. la velocità pilota la scia di "motion blur" (alloni dietro al notch)
-    const double WinW = 720, WinH = 192;   // finestra aperta: un po' più grande del notch aperto, per lasciare spazio al rimbalzo
     double pos, vel, target, lastTime;
-    bool springOn, windowBig;
+    bool springOn;
     readonly Stopwatch clock = Stopwatch.StartNew();
 
-    void SetWindowBig(bool big)
-    {
-        if (windowBig == big) return;
-        windowBig = big;
-        double w = big ? WinW : WClosed, h = big ? WinH : HClosed;
-        Width = w;
-        Height = h;
-        Left = (SystemParameters.PrimaryScreenWidth - w) / 2;
-    }
+    void CenterWindow() => Left = (SystemParameters.PrimaryScreenWidth - Width) / 2;
 
     void SetOpen(bool o)
     {
         if (isOpen == o) return;   // evita di ripartire a ogni evento del mouse
         isOpen = o;
         target = o ? 1 : 0;
-        if (o)
-        {
-            if (pos < .3) BigMascot.Cheer();
-            SetWindowBig(true);
-        }
+        if (o && pos < .3) BigMascot.Cheer();
         if (springOn) return;
         springOn = true;
         lastTime = clock.Elapsed.TotalSeconds;
@@ -125,7 +113,6 @@ public partial class MainWindow : Window
         if (!done) return;
         springOn = false;
         CompositionTarget.Rendering -= SpringTick;
-        if (target == 0) SetWindowBig(false);   // chiuso: la finestra torna piccola e non copre niente
     }
 
     static double Smooth(double x) { x = Math.Clamp(x, 0, 1); return x * x * (3 - 2 * x); }
@@ -328,28 +315,65 @@ public partial class MainWindow : Window
     }
 
     // ---- meteo ----
+    // dal codice del tempo di open-meteo: icona, come reagisce l'omino e descrizione
+    static (WeatherKind Kind, WeatherMood Mood, string Desc) Describe(int code, bool day, double temp)
+    {
+        var r = code switch
+        {
+            0 => day ? (WeatherKind.ClearDay, WeatherMood.Sun, Loc.L("Soleggiato", "Sunny")) : (WeatherKind.ClearNight, WeatherMood.Night, Loc.L("Sereno", "Clear")),
+            1 => day ? (WeatherKind.ClearDay, WeatherMood.Sun, Loc.L("Quasi sereno", "Mostly clear")) : (WeatherKind.ClearNight, WeatherMood.Night, Loc.L("Quasi sereno", "Mostly clear")),
+            2 => (day ? WeatherKind.PartlyCloudy : WeatherKind.Cloudy, WeatherMood.Cloud, Loc.L("Poco nuvoloso", "Partly cloudy")),
+            3 => (WeatherKind.Cloudy, WeatherMood.Cloud, Loc.L("Nuvoloso", "Cloudy")),
+            45 or 48 => (WeatherKind.Fog, WeatherMood.Cloud, Loc.L("Nebbia", "Foggy")),
+            51 or 53 or 55 or 56 or 57 => (WeatherKind.Rain, WeatherMood.Rain, Loc.L("Pioggerella", "Drizzle")),
+            61 or 63 or 65 or 66 or 67 => (WeatherKind.Rain, WeatherMood.Rain, Loc.L("Pioggia", "Rain")),
+            80 or 81 or 82 => (WeatherKind.Rain, WeatherMood.Rain, Loc.L("Rovesci", "Showers")),
+            71 or 73 or 75 or 77 or 85 or 86 => (WeatherKind.Snow, WeatherMood.Snow, Loc.L("Neve", "Snow")),
+            >= 95 => (WeatherKind.Storm, WeatherMood.Storm, Loc.L("Temporale", "Thunderstorm")),
+            _ => (WeatherKind.Cloudy, WeatherMood.Cloud, Loc.L("Variabile", "Changeable"))
+        };
+        // con il freddo mette la sciarpa anche se non nevica
+        if (temp <= 3 && r.Item2 is WeatherMood.Sun or WeatherMood.Cloud or WeatherMood.Night) r.Item2 = WeatherMood.Snow;
+        return r;
+    }
+
     async Task LoadWeather()
     {
         var st = Settings.Current;
-        if (st.Lat is not double lat || st.Lon is not double lon) { WeatherText.Text = ""; return; }
+        if (st.Lat is not double lat || st.Lon is not double lon)
+        {
+            WeatherBox.Visibility = Visibility.Collapsed;
+            MiniMascot.Weather = BigMascot.Weather = WeatherMood.None;
+            return;
+        }
         try
         {
-            var j = await Http.GetStringAsync($"https://api.open-meteo.com/v1/forecast?latitude={lat.ToString(CultureInfo.InvariantCulture)}&longitude={lon.ToString(CultureInfo.InvariantCulture)}&current=temperature_2m,weather_code");
+            string F(double v) => v.ToString(CultureInfo.InvariantCulture);
+            var j = await Http.GetStringAsync($"https://api.open-meteo.com/v1/forecast?latitude={F(lat)}&longitude={F(lon)}"
+                + "&current=temperature_2m,apparent_temperature,weather_code,is_day,wind_speed_10m&daily=temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=1");
             using var d = JsonDocument.Parse(j);
             var cur = d.RootElement.GetProperty("current");
-            int c = cur.GetProperty("weather_code").GetInt32();
+            int code = cur.GetProperty("weather_code").GetInt32();
             double t = cur.GetProperty("temperature_2m").GetDouble();
-            bool snow = c is >= 71 and <= 77 or 85 or 86;
-            string x = c <= 1 ? Loc.L("è previsto sole", "sunny")
-                : c <= 3 ? Loc.L("sono previste nuvole", "cloudy")
-                : c <= 48 ? Loc.L("è prevista nebbia", "foggy")
-                : snow ? Loc.L("è prevista neve", "snow")
-                : c >= 95 ? Loc.L("è previsto temporale", "thunderstorms")
-                : Loc.L("è prevista pioggia", "rain");
-            var deg = Math.Round(t).ToString(CultureInfo.InvariantCulture);
-            WeatherText.Text = Loc.L($"Oggi ci sono {deg}°\nPer oggi {x}", $"It's {deg}° now\nToday: {x}");
+            bool day = !cur.TryGetProperty("is_day", out var dayEl) || dayEl.GetInt32() == 1;
+            double feels = cur.TryGetProperty("apparent_temperature", out var fe) ? fe.GetDouble() : t;
+            double wind = cur.TryGetProperty("wind_speed_10m", out var wi) ? wi.GetDouble() : 0;
+            string Deg(double v) => Math.Round(v).ToString(CultureInfo.InvariantCulture) + "°";
+
+            var (kind, mood, desc) = Describe(code, day, t);
+            string range = "";
+            if (d.RootElement.TryGetProperty("daily", out var daily))
+                range = $"↑{Deg(daily.GetProperty("temperature_2m_max")[0].GetDouble())} ↓{Deg(daily.GetProperty("temperature_2m_min")[0].GetDouble())}";
+            WIcon.Set(kind);
+            WTemp.Text = Deg(t);
+            WDesc.Text = desc;
+            WDetail.Text = string.IsNullOrEmpty(st.City) ? range : $"{range} · {st.City}";
+            WeatherBox.ToolTip = Loc.L($"Percepita {Deg(feels)} · vento {Math.Round(wind)} km/h", $"Feels like {Deg(feels)} · wind {Math.Round(wind)} km/h");
+            WeatherBox.Visibility = Visibility.Visible;
+            BigMascot.Windy = MiniMascot.Windy = wind >= 35;
+            MiniMascot.Weather = BigMascot.Weather = mood;
         }
-        catch { }
+        catch { }   // offline: resta quello che c'era
     }
 
     // ---- ia ----

@@ -61,5 +61,8 @@ public static class Theme
         Set("MascotBrush", mascot);
         Set("MascotEyeBrush", On(mascot));
         Set("OutlineBrush", s.Outline ? accent : Colors.Transparent);
+        // lo spessore è 0 quando il contorno è spento: un bordo trasparente lascerebbe uno spazio visibile attorno al notch. in alto non c'è mai (è attaccato allo schermo)
+        double t = s.Outline ? 1.5 : 0;
+        Application.Current.Resources["OutlineThickness"] = new Thickness(t, 0, t, t);
     }
 }

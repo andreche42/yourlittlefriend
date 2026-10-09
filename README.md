@@ -11,6 +11,7 @@ un piccolo amico nel notch del pc (windows). si apre quando ci passi sopra col m
 - **portafile** (il "portabicchieri", la scheda con la vaschetta): trascina sul notch file o testo e restano lì, ordinati in caselle (icona o miniatura per i file, un pezzo di testo per il testo). li puoi ritrascinare dove vuoi, anche dopo aver riavviato il pc. doppio click apre il file o copia il testo, ✕ toglie un elemento, 🗑 svuota tutto. i file non vengono copiati: il portafile ricorda solo dove stanno
 - le risposte arrivano in tempo reale, parola per parola, con un effetto "fumo" che si dirada (stile imessage)
 - l'omino è animato: sbatte gli occhi, va a spasso nel notch, lavora (puntini e occhi che leggono) mentre l'ia risponde, sorride quando ha finito (o quando apri il notch) e balla se c'è musica
+- **meteo**: nella home trovi un widget con icona animata (sole che gira, pioggia, neve, lampi...), temperatura, descrizione, minima e massima. l'omino reagisce al tempo: con il sole mette gli occhiali da sole, con la pioggia apre l'ombrello (e con vento forte vola via appeso all'ombrello), col temporale trema dalla paura, quando è nuvoloso fa spallucce ("boh"), con neve o freddo mette la sciarpa, di notte dorme
 - **ricerca sul web**: se chiedi una notizia o qualcosa che non sa, l'ia cerca da sola su internet (duckduckgo, con wikipedia come riserva) e risponde in base ai risultati, senza chiederti conferma. google non permette di leggere i suoi risultati in modo affidabile, per questo non si usa. si può spegnere dalle impostazioni
 - **aspetto**: dalle impostazioni scegli un tema (notte, giorno, oceano, tramonto, foresta, caramella), il colore principale, il colore dell'omino (anche in esadecimale), la trasparenza e un contorno colorato per il notch. cambia tutto al volo e se annulli torna com'era
 - tasto destro (o ⚙) per uscire
@@ -43,13 +44,13 @@ serve il [.net 8 sdk](https://dotnet.microsoft.com/download) su windows 10/11.
 l'installer si costruisce con github actions (`.github/workflows/build.yml`, usa [inno setup](https://jrsoftware.org/isinfo.php) con `installer/yourlittlefriend.iss`).
 ogni pull request produce l'installer come artifact per provarlo. per pubblicare una release basta un tag:
 
-    git tag v1.1.2-beta
-    git push origin v1.1.2-beta
+    git tag 1.1.3
+    git push origin 1.1.3
 
-un tag con il trattino (`-beta`) viene pubblicato come **pre-release**. la versione compare in fondo alle impostazioni.
+il tag può avere o no la "v" davanti. se crei la release a mano da github, la build allega da sola l'installer (con la versione giusta) senza toccare titolo e note. un tag con il trattino (`-beta`) creato dalla build esce come **pre-release**. la versione compare in fondo alle impostazioni.
 
 ## avviso ⚠️
-**versione 1.1.2 semi-beta**: funziona, ma è ancora giovane e può avere qualche spigolo. segnalaci cosa non va con un issue!
+**versione 1.1.3 semi-beta**: funziona, ma è ancora giovane e può avere qualche spigolo. segnalaci cosa non va con un issue!
 
 l'app è ancora in sviluppo e non è ancora in uno stato utilizzabile, ovvero può fare poche cose utili che puoi tranquillamente fare come faresti. nei prossimi aggiornamenti l'app (dovrebbe) migliorare!
 hai suggerimenti o consigli? sbizzarrisciti! apri un issue su questa repo e dicci tutto. faremmo il possibile per portare le tue idee in vita. se sai programmare (anche usando agenti AI) apri una pull request (PR)
