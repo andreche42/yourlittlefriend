@@ -75,8 +75,9 @@ nuove espressioni e reazioni per rendere yourlittlefriend ancora più carino :)
 
 ### guide
 ## chiave api deepl
-seguite questa guida: [guida api key deepl](https://support.deepl.com/hc/en-us/articles/360020695820-API-key-for-DeepL-API)
-quando vi chiede per il piano premete su quello free, vi chiederà noe cognome e indirizzo ma potete anche mettere informazioni fittizzie
+seguite questa guida: [guida api key deepl](https://support.deepl.com/hc/en-us/articles/360020695820-API-key-for-DeepL-API),
+quando vi chiede per il piano premete su quello free, vi chiederà nome cognome e indirizzo ma potete anche mettere informazioni fittizie,
+poi vai sulla notch (o bolla) > tasto destro > impostazioni > scendi tutto giù e poi trova "Chiave DeepL" mettila là, poi riavvia l'app.
 
 ## llm locale (ollama)
 
