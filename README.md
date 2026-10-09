@@ -8,6 +8,8 @@ un piccolo amico nel notch del pc (windows). si apre quando ci passi sopra col m
 - **home**: saluto + meteo; se parte una canzone mostra copertina, titolo, controlli e i colori seguono la copertina
 - **chat**: parli con un llm locale (ollama) che può anche controllare il pc
 - **+**: trascina un file, scrivi cosa farne e ti risponde
+- le risposte arrivano in tempo reale, parola per parola, con un effetto "fumo" che si dirada (stile imessage)
+- l'omino è animato: sbatte gli occhi, va a spasso nel notch, lavora (puntini e occhi che leggono) mentre l'ia risponde, sorride quando ha finito (o quando apri il notch) e balla se c'è musica
 - tasto destro (o ⚙) per uscire
 
 ## avvio
@@ -33,8 +35,8 @@ gestisci città per il meteo, cambia nome, cambia lingua, e personalizza l'app a
 ### byollm
 porta la tua LLM su yourlittlefriend: dal menu impostazioni trovi l'autoinstaller di ollama per scaricare LLM da usare per yourlittlefriend. in alternativa, collegati alle API di qualche AI (vercel, openai, anthropic) e usa modelli premium a pagamento.
 
-### animazioni del omino
-yourlittlefriend ancora più carino :)
+### più animazioni del omino
+nuove espressioni e reazioni per rendere yourlittlefriend ancora più carino :)
 
 ### guide
 ## llm locale (ollama)
