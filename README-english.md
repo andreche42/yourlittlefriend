@@ -91,11 +91,7 @@ sensitive actions (opening apps, browser, shutdown etc.) first ask for confirmat
 the model can't run free-form commands: only the actions written in `Actions.cs`.
 files dragged into the + tab are read but can't trigger actions.
 
-## spotify (automatic playback)
+## ai online (images only)
 
-you need a premium account. without these steps the chat only opens the search in the app.
+For images dragged into the + tab, you need `ANTHROPIC_API_KEY` (the local model only reads text).
 
-1. go to https://developer.spotify.com/dashboard and create an app
-2. as redirect uri put `http://127.0.0.1:8888/`
-3. copy the client id and set it: `setx SPOTIFY_CLIENT_ID "your-client-id"` (then reopen the terminal)
-4. the first time the browser opens for the login, then it remembers the access
