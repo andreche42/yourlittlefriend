@@ -79,12 +79,7 @@ when it asks you for the plan you can click on the free one, it will ask you nam
 then go to the notch > right click > settings > scroll all the way down and then find "DeepL API Key" and put it there, then restart the app.
 
 ## local llm (ollama)
-
-1. install ollama from https://ollama.com/download
-2. in the terminal: `ollama pull qwen3.5:4b` (about 3 gb, runs well even without a graphics card)
-3. leave ollama running in the background
-
-the installation of ollama and of the model is guided by the app (first launch or settings). if you want to do it by hand: install ollama and then `ollama pull <model>`; the model is chosen from the settings.
+the installation of ollama and of the model is guided by the app (first launch or settings). if you want to do it by hand: install ollama and then `ollama pull <model>`; the model is chosen from the settings. you can also turn it off when you're not using it in settings.
 
 ## what it can do from the chat
 
