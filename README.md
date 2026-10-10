@@ -80,12 +80,7 @@ quando vi chiede per il piano premete su quello free, vi chiederà nome cognome 
 poi vai sulla notch (o bolla) > tasto destro > impostazioni > scendi tutto giù e poi trova "Chiave DeepL" mettila là, poi riavvia l'app.
 
 ## llm locale (ollama)
-
-1. installa ollama da https://ollama.com/download
-2. nel terminale: `ollama pull qwen3.5:4b` (circa 3 gb, gira bene anche senza scheda video)
-3. lascia ollama acceso in background
-
-l'installazione di ollama e del modello è guidata dall'app (primo avvio o impostazioni). se vuoi farlo a mano: installa ollama e poi `ollama pull <modello>`; il modello si sceglie dalle impostazioni.
+l'installazione di ollama e del modello è guidata dall'app (primo avvio o impostazioni). se vuoi farlo a mano: installa ollama e poi `ollama pull <modello>`; il modello si sceglie dalle impostazioni. si può anche fermare/stoppare quando non lo usate dalle impostazioni
 
 ## cosa può fare dalla chat
 
