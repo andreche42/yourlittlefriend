@@ -83,7 +83,6 @@ the installation of ollama and of the model is guided by the app (first launch o
 ## what it can do from the chat
 
 - volume (set, raise/lower, mute), play/pause/next/previous
-- searches for a song on spotify and plays it
 - opens apps from the list (`Apps` in `Actions.cs`), searches on google, locks/suspends/shuts down/restarts the pc
 
 sensitive actions (opening apps, browser, shutdown etc.) first ask for confirmation with a popup that shows the steps.
