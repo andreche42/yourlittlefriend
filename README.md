@@ -68,7 +68,7 @@ hai suggerimenti o consigli? sbizzarrisciti! apri un issue su questa repo e dicc
 
 ## roadmap
 ### byollm
-porta la tua LLM su yourlittlefriend: l'autoinstaller di ollama c'è già (impostazioni). in arrivo: collegati alle API di qualche AI (vercel, openai, anthropic) e usa modelli premium a pagamento.
+porta la tua LLM su YourLittleFriend: l'autoinstaller di ollama c'è già (impostazioni). in arrivo: collegati alle API di qualche AI (vercel, openai, anthropic) e usa modelli premium a pagamento.
 
 ### più animazioni del omino
 nuove espressioni e reazioni per rendere YourLittleFriend ancora più carino :)
