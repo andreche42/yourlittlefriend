@@ -74,7 +74,7 @@ porta la tua LLM su yourlittlefriend: l'autoinstaller di ollama c'è già (impos
 nuove espressioni e reazioni per rendere yourlittlefriend ancora più carino :)
 
 ### lettura immagini e OCR da llm locale
-incolla un immagine e la LLM locale leggera' l'immagine per OCR o guardera' l'immagine e i dettagli.
+incolla un immagine e la LLM locale leggerà l'immagine per OCR o guarderà l'immagine e i dettagli.
 
 ---
 
@@ -95,7 +95,3 @@ l'installazione di ollama e del modello è guidata dall'app (primo avvio o impos
 le azioni sensibili (aprire app, browser, spegnimento ecc.) chiedono prima conferma con un popup che mostra i passaggi.
 il modello non può eseguire comandi liberi: solo le azioni scritte in `Actions.cs`.
 i file trascinati nella scheda + vengono letti ma non possono far partire azioni.
-
-## ia online (solo immagini)
-
-per le immagini trascinate nella scheda + serve `ANTHROPIC_API_KEY` (il modello locale legge solo testo).
