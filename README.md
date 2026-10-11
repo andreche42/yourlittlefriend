@@ -73,6 +73,11 @@ porta la tua LLM su yourlittlefriend: l'autoinstaller di ollama c'è già (impos
 ### più animazioni del omino
 nuove espressioni e reazioni per rendere yourlittlefriend ancora più carino :)
 
+### lettura immagini e OCR da llm locale
+incolla un immagine e la LLM locale leggera' l'immagine per OCR o guardera' l'immagine e i dettagli.
+
+---
+
 ### guide
 ## chiave api deepl
 seguite questa guida: [guida api key deepl](https://support.deepl.com/hc/en-us/articles/360020695820-API-key-for-DeepL-API),
