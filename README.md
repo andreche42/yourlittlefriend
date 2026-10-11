@@ -71,10 +71,10 @@ hai suggerimenti o consigli? sbizzarrisciti! apri un issue su questa repo e dicc
 porta la tua LLM su yourlittlefriend: l'autoinstaller di ollama c'è già (impostazioni). in arrivo: collegati alle API di qualche AI (vercel, openai, anthropic) e usa modelli premium a pagamento.
 
 ### più animazioni del omino
-nuove espressioni e reazioni per rendere yourlittlefriend ancora più carino :)
+nuove espressioni e reazioni per rendere YourLittleFriend ancora più carino :)
 
 ### lettura immagini e OCR da llm locale
-incolla un immagine e la LLM locale leggerà l'immagine per OCR o guarderà l'immagine e i dettagli.
+incolla un immagine e la LLM locale leggerà l'immagine per OCR o guarderà l'immagine e i dettagli. (in sviluppo)
 
 ---
 
