@@ -48,10 +48,10 @@ nelle impostazioni c'è anche la sezione **Ollama**: vedi se è acceso, lo avvii
 
 tutto si cambia dalle **impostazioni** (⚙ → impostazioni): nome, città, lingua, modello, avvio automatico e il pulsante per **disinstallare**. i dati stanno in `%APPDATA%\yourlittlefriend\settings.json`.
 
-## avvio da sorgente
-serve il [.net 8 sdk](https://dotnet.microsoft.com/download) su windows 10/11.
-
-    dotnet run
+## avvio da sorgente (solo per esperti)
+scarica lo zip completo da github, estrailo in una cartella a piacimento. avvia powershell su quella cartella. dopodichè esegui:
+```    dotnet run```
+*serve il [.net 8 sdk](https://dotnet.microsoft.com/download) su windows 10/11.
 
 ## creare una release (per chi mantiene il progetto)
 l'installer si costruisce con github actions (`.github/workflows/build.yml`, usa [inno setup](https://jrsoftware.org/isinfo.php) con `installer/yourlittlefriend.iss`).
