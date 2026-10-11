@@ -85,7 +85,6 @@ l'installazione di ollama e del modello è guidata dall'app (primo avvio o impos
 ## cosa può fare dalla chat
 
 - volume (imposta, alza/abbassa, muta), play/pausa/avanti/indietro
-- cerca una canzone su spotify e la riproduce
 - apre app della lista (`Apps` in `Actions.cs`), cerca su google, blocca/sospende/spegne/riavvia il pc
 
 le azioni sensibili (aprire app, browser, spegnimento ecc.) chiedono prima conferma con un popup che mostra i passaggi.
