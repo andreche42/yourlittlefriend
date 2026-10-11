@@ -71,6 +71,11 @@ bring your own LLM to yourlittlefriend: the ollama auto-installer is already the
 ### more animations for the little guy
 new expressions and reactions to make yourlittlefriend even cuter :)
 
+### Image Recognition and OCR Using a Local LLM
+Paste an image, and the local LLM will process the image for OCR or analyze the image and its details. (in development)
+
+------
+
 ### guides
 ## api key deepl
 you can follow this guide: [deepl api key guide](https://support.deepl.com/hc/en-us/articles/360020695820-API-key-for-DeepL-API),
@@ -88,8 +93,3 @@ the installation of ollama and of the model is guided by the app (first launch o
 sensitive actions (opening apps, browser, shutdown etc.) first ask for confirmation with a popup that shows the steps.
 the model can't run free-form commands: only the actions written in `Actions.cs`.
 files dragged into the + tab are read but can't trigger actions.
-
-## ai online (images only)
-
-For images dragged into the + tab, you need `ANTHROPIC_API_KEY` (the local model only reads text).
-
