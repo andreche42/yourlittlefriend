@@ -78,7 +78,6 @@ incolla un immagine e la LLM locale leggerà l'immagine per OCR o guarderà l'im
 
 ### NUOVO: balla a ritmo della canzone!
 se stai riproducendo qualcosa (preferibilmente una canzone), l'omino balla a ritmo, e boh, magari quando l'audio raggiunge il peak (tipo nel ritornello) fa un gesto con le mani!
-(andre metti questo anche sul readme inglese grazie <3)
 
 ---
 
