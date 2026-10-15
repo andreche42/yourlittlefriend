@@ -1,5 +1,5 @@
 # YourLittleFriend 🤖
-![Project Logo](https://cdn.discordapp.com/attachments/1288804469748006995/1558769257725300806/210751.jpg?ex=6acca47f&is=6acb52ff&hm=ad0435e5cff2b6b9cf6861b5d965ff9c467e320a7ddc5af15d8523dc54aeaf8d&)
+![Project Logo](https://i.postimg.cc/nLwcdMWd/210751.jpg)
 
 ![AGPLV3 License](https://img.shields.io/badge/License-AGPL_v3-blue.svg) ![Windows 10/11](https://camo.githubusercontent.com/d3b3df0bdfd988f32acfbcc61353fed15852a6051287f0ea9ec1a3ad6d30b6ba/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f57696e646f77732d313025324631312d3030373844343f6c6f676f3d77696e646f7773266c6f676f436f6c6f723d7768697465) ![C#](https://img.shields.io/badge/C%23-239120?style=flat&logo=unity&logoColor=purple) ![Ollama](https://img.shields.io/badge/ollama-%23000000.svg?style=for-the-badge&logo=ollama&logoColor=white) 
 
@@ -73,6 +73,9 @@ new expressions and reactions to make yourlittlefriend even cuter :)
 
 ### Image Recognition and OCR Using a Local LLM
 Paste an image, and the local LLM will process the image for OCR or analyze the image and its details. (in development)
+
+### NEW: He dances to the beat of the song!
+If you're playing something (preferably a song), the little guy dances to the beat, and who knows, maybe when the audio hits its peak (like during the chorus), he'll make a hand gesture!
 
 ------
 
