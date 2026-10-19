@@ -77,15 +77,6 @@ Paste an image, and the local LLM will process the image for OCR or analyze the 
 ### NEW: He dances to the beat of the song!
 If you're playing something (preferably a song), the little guy dances to the beat, and who knows, maybe when the audio hits its peak (like during the chorus), he'll make a hand gesture!
 
-### new music icons
-the music control icons are currently buggy emojis: we're replacing them with proper icons, with tactile feedback when you press them.
-
-### weather and music together on the home
-right now, when music is playing, the home shows only that. coming soon: the home will show both the weather (and the other stuff) and the music, without removing the music.
-
-### automatic updates
-no more downloading each new installer by hand: the app checks the releases on github, tells you when there's a new one and updates itself (with a file integrity check), keeping your settings and data.
-
 ------
 
 ### guides
