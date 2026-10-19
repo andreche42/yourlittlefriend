@@ -79,6 +79,15 @@ incolla un immagine e la LLM locale leggerà l'immagine per OCR o guarderà l'im
 ### NUOVO: balla a ritmo della canzone!
 se stai riproducendo qualcosa (preferibilmente una canzone), l'omino balla a ritmo, e boh, magari quando l'audio raggiunge il peak (tipo nel ritornello) fa un gesto con le mani!
 
+### icone della musica nuove
+le icone dei controlli musica sono emoji buggate: le sostituiamo con vere icone, con feedback tattile quando le premi.
+
+### meteo e musica insieme nella home
+ora, quando c'è della musica in riproduzione, la home mostra solo quella. in arrivo: nella home potrai vedere sia il meteo (e le altre cose) sia la musica, senza togliere la musica.
+
+### aggiornamenti automatici
+non dovrai più scaricare a mano ogni nuovo installer: l'app controlla le release su github, ti avvisa quando ce n'è una nuova e si aggiorna da sola (con verifica dell'integrità del file), tenendo impostazioni e dati.
+
 ---
 
 ### guide
