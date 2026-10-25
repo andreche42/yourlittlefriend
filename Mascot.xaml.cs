@@ -169,6 +169,12 @@ public partial class Mascot : UserControl
         Rot.BeginAnimation(RotateTransform.AngleProperty, null);
         Sc.BeginAnimation(ScaleTransform.ScaleYProperty, null);
         EyeTr.BeginAnimation(TranslateTransform.XProperty, null);
+        PallinoTr.BeginAnimation(TranslateTransform.XProperty, null);
+        PallinoTr.BeginAnimation(TranslateTransform.YProperty, null);
+        PallinoSc.BeginAnimation(ScaleTransform.ScaleXProperty, null);
+        PallinoSc.BeginAnimation(ScaleTransform.ScaleYProperty, null);
+        PallinoTr.X = PallinoTr.Y = 0;
+        PallinoSc.ScaleX = PallinoSc.ScaleY = 1;
         foreach (var d in new[] { D1, D2, D3 }) d.BeginAnimation(OpacityProperty, null);
         ApplyWeatherLook();
         ThumbSc.BeginAnimation(ScaleTransform.ScaleXProperty, null);
@@ -334,8 +340,10 @@ public partial class Mascot : UserControl
         if (celebrating) return;
         celebrating = true;
         lastAction = DateTime.UtcNow;
-        WaveArm.Visibility = Visibility.Visible;
-        WaveRot.BeginAnimation(RotateTransform.AngleProperty, Keys(false, (0, -10), (150, 46), (330, 38), (520, 46), (700, 38), (880, 0)));
+        // le due mani: il pallino (la destra) e il braccino in alto a destra (la sinistra)
+        PallinoTr.BeginAnimation(TranslateTransform.YProperty, Keys(false, (0, 0), (200, -9), (520, -7), (840, -9), (1100, 0)));
+        PallinoSc.BeginAnimation(ScaleTransform.ScaleXProperty, Keys(false, (0, 1), (240, 1.2), (840, 1.2), (1100, 1)));
+        PallinoSc.BeginAnimation(ScaleTransform.ScaleYProperty, Keys(false, (0, 1), (240, 1.2), (840, 1.2), (1100, 1)));
         ArmRot.BeginAnimation(RotateTransform.AngleProperty, Keys(false, (0, -35), (200, -80), (520, -72), (840, -80), (1100, -35)));
         Thumb.Visibility = Visibility.Visible;
         var pop = new BackEase { EasingMode = EasingMode.EaseOut, Amplitude = .7 };
@@ -352,8 +360,11 @@ public partial class Mascot : UserControl
         if (waving || celebrating) return;
         waving = true;
         lastAction = DateTime.UtcNow;
-        WaveArm.Visibility = Visibility.Visible;
-        WaveRot.BeginAnimation(RotateTransform.AngleProperty, Keys(false, (0, -10), (140, 20), (300, -14), (460, 20), (620, -14), (780, 20), (940, 0)));
+        // la mano destra (il pallino) si alza e fa ciao: su e giù e un po' più grande, così si vede anche nel notch piccolo
+        PallinoTr.BeginAnimation(TranslateTransform.YProperty, Keys(false, (0, 0), (120, -7), (900, -7), (1060, 0)));
+        PallinoTr.BeginAnimation(TranslateTransform.XProperty, Keys(false, (0, 0), (130, -2), (250, 3), (370, -2), (490, 3), (610, -2), (730, 0)));
+        PallinoSc.BeginAnimation(ScaleTransform.ScaleXProperty, Keys(false, (0, 1), (140, 1.25), (760, 1.25), (980, 1)));
+        PallinoSc.BeginAnimation(ScaleTransform.ScaleYProperty, Keys(false, (0, 1), (140, 1.25), (760, 1.25), (980, 1)));
         armEnd.Interval = TimeSpan.FromMilliseconds(1000);
         armEnd.Stop();
         armEnd.Start();
@@ -364,10 +375,9 @@ public partial class Mascot : UserControl
     {
         armEnd.Stop();
         waving = celebrating = false;
-        WaveArm.Visibility = Visibility.Collapsed;
         ArmRot.BeginAnimation(RotateTransform.AngleProperty, null);
         ArmRot.Angle = -35;
-        Apply();
+        Apply();   // rimette a posto anche la mano / il pallino
     }
 
     // gli hai cliccato sopra: saltella e arrossisce
