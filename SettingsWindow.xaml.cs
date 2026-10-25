@@ -25,9 +25,9 @@ public partial class SettingsWindow : Window
         LLang.Text = Loc.L("Lingua (l'app si riavvia)", "Language (the app restarts)");
         LModel.Text = Loc.L("Intelligenza artificiale", "Artificial intelligence");
         BChange.Content = Loc.L("Cambia modello / installa Ollama", "Change model / install Ollama");
-        AutoStart.Content = Loc.L("Avvia yourlittlefriend all'avvio del PC", "Start yourlittlefriend when the PC starts");
-        VersionText.Text = $"yourlittlefriend {App.Version}";
-        BUninstall.Content = Loc.L("Disinstalla yourlittlefriend", "Uninstall yourlittlefriend");
+        AutoStart.Content = Loc.L($"Avvia {Actions.AppName} all'avvio del PC", $"Start {Actions.AppName} when the PC starts");
+        VersionText.Text = $"{Actions.AppName} {App.Version}";
+        BUninstall.Content = Loc.L($"Disinstalla {Actions.AppName}", $"Uninstall {Actions.AppName}");
         BCancel.Content = Loc.L("Annulla", "Cancel");
         BSave.Content = Loc.L("Salva", "Save");
 
@@ -265,14 +265,14 @@ public partial class SettingsWindow : Window
     void Uninstall_Click(object s, RoutedEventArgs e)
     {
         var ask = MessageBox.Show(
-            Loc.L("Vuoi davvero disinstallare yourlittlefriend?\n\nOllama e i modelli scaricati restano sul PC (puoi toglierli da Impostazioni di Windows).",
-                  "Do you really want to uninstall yourlittlefriend?\n\nOllama and the downloaded models stay on your PC (you can remove them from Windows Settings)."),
-            "yourlittlefriend", MessageBoxButton.YesNo, MessageBoxImage.Question);
+            Loc.L($"Vuoi davvero disinstallare {Actions.AppName}?\n\nOllama e i modelli scaricati restano sul PC (puoi toglierli da Impostazioni di Windows).",
+                  $"Do you really want to uninstall {Actions.AppName}?\n\nOllama and the downloaded models stay on your PC (you can remove them from Windows Settings)."),
+            Actions.AppName, MessageBoxButton.YesNo, MessageBoxImage.Question);
         if (ask != MessageBoxResult.Yes) return;
         if (!App.Uninstall())
             MessageBox.Show(Loc.L("Questa copia non è stata installata con l'installer, quindi non c'è nulla da disinstallare: basta cancellare la cartella.",
                                   "This copy wasn't installed with the installer, so there's nothing to uninstall: just delete its folder."),
-                            "yourlittlefriend", MessageBoxButton.OK, MessageBoxImage.Information);
+                            Actions.AppName, MessageBoxButton.OK, MessageBoxImage.Information);
     }
 
     protected override void OnClosing(CancelEventArgs e)
