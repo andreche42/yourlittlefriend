@@ -16,6 +16,7 @@ public class Settings
     public string Model { get; set; } = Llm.DefaultModel;
     public bool Onboarded { get; set; }
     public bool WebSearch { get; set; } = true;   // l'ia può cercare su internet
+    public bool AutoUpdate { get; set; } = true;  // controlla da solo se ci sono aggiornamenti
     public string Theme { get; set; } = "dark";
     public string Accent { get; set; } = "";       // colore principale personalizzato (vuoto = quello del tema)
     public string MascotColor { get; set; } = ""; // colore dell'omino personalizzato (vuoto = quello del tema)
@@ -30,6 +31,7 @@ public class Settings
     public bool TranslateOn { get; set; } = true;
     public bool WikiOn { get; set; } = true;
     public bool WeatherOn { get; set; } = true;
+    public bool BeatDance { get; set; } = true;   // l'omino balla a tempo, ascoltando quello che esce dalle casse
 
     // calcolatrice
     public bool CalcDeg { get; set; } = true;       // gradi (true) o radianti

@@ -25,6 +25,12 @@ public partial class MainWindow : Window
     static string SystemPrompt => Loc.L("sei un piccolo assistente nel notch del pc. rispondi in italiano, molto breve.",
                                         "you are a tiny assistant living in the PC's notch. answer in English, very briefly.");
     const double WOpen = 640, HOpen = 170, WClosed = 230, HClosed = 34;
+    // icone dei controlli musica (path a linea, come le altre icone dell'app)
+    const string IconPlay = "M5.6,2.6 L13.2,8 L5.6,13.4 Z";
+    const string IconPause = "M6,2.6 V13.4 M10,2.6 V13.4";
+    // icone del bottone che scambia musica e meteo nella home
+    const string IconNote = "M6.1,12.3 V4.2 L12.6,2.6 V10.6 M2.7,12.3 Q2.7,10.9 4.4,10.9 Q6.1,10.9 6.1,12.3 Q6.1,13.7 4.4,13.7 Q2.7,13.7 2.7,12.3 Z M9.2,10.6 Q9.2,9.2 10.9,9.2 Q12.6,9.2 12.6,10.6 Q12.6,12 10.9,12 Q9.2,12 9.2,10.6 Z";
+    const string IconCloud = "M4.7,11.9 H11.1 Q13.5,11.9 13.5,9.8 Q13.5,8.1 11.5,7.8 Q11.2,5.1 8.8,5.1 Q6.5,5.1 6,7.4 Q4.2,7.6 4.2,9.5 Q4.2,11.9 4.7,11.9 Z";
 
     static readonly HttpClient Http = new() { Timeout = TimeSpan.FromSeconds(60) };
     readonly DispatcherTimer hold = new() { Interval = TimeSpan.FromMilliseconds(500) };
@@ -42,9 +48,14 @@ public partial class MainWindow : Window
     string? lastTitle, file;
     BitmapSource? cover;
     bool playing, isOpen, internalDrag;   // internalDrag: stai trascinando fuori un elemento del holder
+    bool homeWeather;   // nella home, con la musica accesa, stai guardando il meteo invece della musica
+    Update.Info? pendingUpdate;   // aggiornamento trovato e non ancora fatto
+    bool updateAsked, updateRunning;
+    DateTime lastOpen = DateTime.MinValue;   // ultima volta che il notch si è aperto (dopo un bel po' l'omino saluta con la mano)
     int tab;
     long dragSeen;   // ultimo momento in cui un file è stato trascinato sopra la finestra
     int busy;   // quante richieste all'ia sono in corso
+    readonly Beat beat = new();   // ascolta il battito della musica (per ballare a tempo)
 
     public MainWindow()
     {
@@ -56,10 +67,36 @@ public partial class MainWindow : Window
         CalcBox.Easter += () => { MiniMascot.Cool(); BigMascot.Cool(); };
         WikiBox.SearchStarted += () => { wikiSearched = true; expandOverride = null; UpdateExpand(); };   // la ricerca allarga il pannello
         pendingOpen.Tick += (_, _) => { pendingOpen.Stop(); SetOpen(true); };
-        BigMascot.MouseLeftButtonDown += (_, e) => { if (e.ClickCount == 2) { e.Handled = true; ToggleLens(); } };   // doppio clic sull'omino = lente   // 104, 67, 69, 420: occhiali da sole e pollice in su
+        // sull'omino: doppio clic = lente, un clic = saltella e arrossisce (o ripropone l'aggiornamento, se ce n'è uno)
+        BigMascot.MouseLeftButtonDown += (_, e) =>
+        {
+            if (e.ClickCount == 2) { e.Handled = true; ToggleLens(); return; }
+            if (UpdatePending) { Dispatcher.BeginInvoke(new Action(AskUpdate)); return; }
+            MiniMascot.Poke();
+            BigMascot.Poke();
+        };
+        MiniMascot.MouseLeftButtonDown += (_, e) =>
+        {
+            if (e.ClickCount >= 2) return;
+            if (UpdatePending) { Dispatcher.BeginInvoke(new Action(AskUpdate)); return; }
+            MiniMascot.Poke();
+            BigMascot.Poke();
+        };
         Top = 0;
         hold.Tick += (_, _) => { hold.Stop(); MaybeClose(); };
 
+        // ballo a tempo: il battito arriva dal thread dell'audio, la mascotte si tocca dal thread della finestra
+        beat.OnBeat += b => Dispatcher.BeginInvoke(() => SetDanceTempo(b));
+        beat.OnPeak += () => Dispatcher.BeginInvoke(() =>
+        {
+            if (!playing || !Settings.Current.BeatDance) return;
+            MiniMascot.Celebrate();
+            BigMascot.Celebrate();
+        });
+        // aggiornamenti: dopo qualche minuto dall'avvio si guarda se c'è una versione nuova, poi ogni tanto
+        var upd = new DispatcherTimer { Interval = TimeSpan.FromMinutes(5) };
+        upd.Tick += async (_, _) => { upd.Interval = TimeSpan.FromHours(6); await LookForUpdate(); };
+        upd.Start();
         var media = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
         media.Tick += async (_, _) => await PollMedia();
         media.Start();
@@ -83,7 +120,7 @@ public partial class MainWindow : Window
         Bubble.Show(Loc.L("Cosa faccio con questo?", "What shall I do with this?"));
         GreetTitle.Text = Loc.L($"Ciao {Settings.Current.Name}!", $"Hi {Settings.Current.Name}!");
         Holder.InternalDrag += on => { internalDrag = on; dragSeen = Environment.TickCount64; };
-        Closed += (_, _) => Application.Current.Shutdown();
+        Closed += (_, _) => { beat.Dispose(); Application.Current.Shutdown(); };
     }
 
     // ---- apri / chiudi ----
@@ -222,9 +259,18 @@ public partial class MainWindow : Window
         if (o)
         {
             if (pos < .3) BigMascot.Cheer();
+            if (DateTime.UtcNow - lastOpen > TimeSpan.FromHours(1)) { MiniMascot.Wave(); BigMascot.Wave(); }   // riaperto dopo un'ora: saluta con la mano
+            lastOpen = DateTime.UtcNow;
+            if (UpdatePending && !updateAsked) Dispatcher.BeginInvoke(new Action(AskUpdate));   // c'è un aggiornamento: te lo chiede appena apri il notch
             Jelly(1, 150, false);
         }
-        else { expandOverride = null; wikiSearched = false; }   // la prossima volta si riapre normale
+        else
+        {
+            expandOverride = null;
+            wikiSearched = false;   // la prossima volta si riapre normale
+            homeWeather = false;    // e la home torna a mostrare la musica
+            ApplyHome();
+        }
         UpdateBob();
         UpdateRipple();
         UpdateExpand();
@@ -620,6 +666,7 @@ public partial class MainWindow : Window
         }
         expandOverride = null;      // ogni scheda decide da sola se espandersi
         if (i != 6) wikiSearched = false;
+        ApplyHome();                // il bottone musica/meteo si vede solo nella home
         UpdateExpand();
     }
 
@@ -647,6 +694,7 @@ public partial class MainWindow : Window
             Theme.Apply();   // il contorno dipende dalla forma (la bolla ha sempre il suo)
             ApplyStyle();    // notch o bolla, e dimensione della bolla
             _ = LoadWeather();
+            ApplyBeat();     // se hai appena spento il ballo a tempo, smette subito di ascoltare
         }
         hold.Start();
     }
@@ -667,7 +715,7 @@ public partial class MainWindow : Window
                 ApplyCover();
             }
             bool on = s.GetPlaybackInfo().PlaybackStatus == GlobalSystemMediaTransportControlsSessionPlaybackStatus.Playing;
-            BPlay.Content = on ? "⏸" : "▶";
+            BPlayIcon.Data = Geometry.Parse(on ? IconPause : IconPlay);
             SetPlaying(on);
             SongText.Text = $"{p.Title} - {p.Artist}";
             SetMusic(true);
@@ -679,14 +727,49 @@ public partial class MainWindow : Window
     {
         if (playing == on) return;
         playing = on;
+        ApplyBeat();
         UpdateMood();
+    }
+
+    // l'ascolto del battito va solo con la musica accesa e il ballo a tempo acceso
+    void ApplyBeat()
+    {
+        if (playing && Settings.Current.BeatDance) beat.Start();
+        else { beat.Stop(); SetDanceTempo(0); }
+    }
+
+    // i bpm stimati diventano la velocità del dondolio (0 = il ballo di sempre)
+    void SetDanceTempo(double bpm)
+    {
+        double ms = bpm > 0 && Settings.Current.BeatDance ? 60000 / bpm : 0;
+        MiniMascot.DanceSpeed = BigMascot.DanceSpeed = ms;
     }
 
     void SetMusic(bool on)
     {
-        if (!on) SetPlaying(false);
-        Greet.Visibility = on ? Visibility.Collapsed : Visibility.Visible;
-        MusicPanel.Visibility = on ? Visibility.Visible : Visibility.Collapsed;
+        if (!on) homeWeather = false;   // la musica si è fermata: la prossima volta si riparte dalla musica
+        SetPlaying(on);
+        ApplyHome();
+    }
+
+    // la home: con la musica accesa mostra la musica (come sempre), e il bottone in alto la scambia con il meteo.
+    // senza musica resta il meteo (o solo il saluto, se il meteo è spento)
+    void ApplyHome()
+    {
+        bool weather = WeatherBox.Visibility == Visibility.Visible;   // c'è un meteo da mostrare?
+        bool music = playing;
+        bool weatherView = music && homeWeather && weather;
+        MusicPanel.Visibility = music && !weatherView ? Visibility.Visible : Visibility.Collapsed;
+        Greet.Visibility = music && !weatherView ? Visibility.Collapsed : Visibility.Visible;
+        BHomeToggle.Visibility = tab == 0 && music && weather ? Visibility.Visible : Visibility.Collapsed;
+        HomeToggleIcon.Data = Geometry.Parse(weatherView ? IconNote : IconCloud);
+        BHomeToggle.ToolTip = weatherView ? Loc.L("Torna alla musica", "Back to the music") : Loc.L("Mostra il meteo", "Show the weather");
+    }
+
+    void HomeToggle_Click(object s, RoutedEventArgs e)
+    {
+        homeWeather = !homeWeather;
+        ApplyHome();
     }
 
     static async Task<BitmapSource?> LoadCover(IRandomAccessStreamReference? t)
@@ -783,6 +866,7 @@ public partial class MainWindow : Window
             WeatherBox.Visibility = Visibility.Collapsed;
             MiniMascot.Weather = BigMascot.Weather = WeatherMood.None;
             MiniMascot.Windy = BigMascot.Windy = false;
+            ApplyHome();
             return;
         }
         try
@@ -813,6 +897,7 @@ public partial class MainWindow : Window
             MiniMascot.Weather = BigMascot.Weather = mood;
         }
         catch { }   // offline: resta quello che c'era
+        ApplyHome();
     }
 
     // ---- ia ----
@@ -1011,5 +1096,57 @@ public partial class MainWindow : Window
         DropZone.Visibility = Visibility.Collapsed;
         FileView.Visibility = Visibility.Visible;
         ShowTab(2);
+    }
+
+    // ---- aggiornamenti ----
+    bool UpdatePending => pendingUpdate != null && !updateRunning;
+
+    // guarda l'ultima release di github (qualche minuto dopo l'avvio, poi ogni tanto)
+    async Task LookForUpdate()
+    {
+        if (!Settings.Current.AutoUpdate || UpdatePending) return;
+        var info = await Update.Find();
+        if (info == null) return;
+        pendingUpdate = info;
+        MiniMascot.Alert = BigMascot.Alert = true;   // pallino rosso: c'è un aggiornamento da fare
+    }
+
+    // lo chiede l'utente: si apre il notch con un aggiornamento in sospeso, oppure clicca sull'omino
+    async void AskUpdate()
+    {
+        if (!UpdatePending) return;
+        updateAsked = true;
+        var info = pendingUpdate!;
+        if (!UpdateAsk.Ask(info)) return;   // "dopo": il pallino resta, basta un clic sull'omino per riproporlo
+        if (!Update.Installed)
+        {
+            // copia avviata da sorgente: non c'è niente da aggiornare da sola, si scarica a mano
+            UpdateAsk.Warn(Loc.L("Questa copia non è stata installata con l'installer, quindi non può aggiornarsi da sola. Ti apro la pagina delle release: scarica l'installer e avvialo.",
+                                 "This copy wasn't installed with the installer, so it can't update itself. I'll open the releases page: download the installer and run it."));
+            Update.OpenPage(info);
+            return;
+        }
+        await RunUpdate(info);
+    }
+
+    // scarica (con la barra), controlla l'impronta, installa in silenzio e si chiude: l'installer riapre l'app
+    async Task RunUpdate(Update.Info info)
+    {
+        updateRunning = true;
+        var win = new UpdateProgress();
+        win.Show();
+        try
+        {
+            var file = await Update.Download(info, win.Report);
+            win.Report(1, Loc.L("Installo…", "Installing…"));
+            Update.Launch(file);
+            Application.Current.Shutdown();
+        }
+        catch (Exception ex)
+        {
+            win.Close();
+            UpdateAsk.Warn(Loc.L($"L'aggiornamento non è riuscito: {ex.Message}", $"The update failed: {ex.Message}"));
+        }
+        finally { updateRunning = false; }
     }
 }

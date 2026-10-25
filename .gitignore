@@ -3,3 +3,6 @@ obj/
 .vs/
 dist/
 publish/
+
+# anteprime generate mentre si lavora (non fanno parte del progetto)
+preview-*.png

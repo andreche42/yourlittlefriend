@@ -26,17 +26,18 @@ English translation: [README-english.md](https://github.com/andreche42/yourlittl
 - **meteo**: nella home trovi un widget con icona animata (sole che gira, pioggia, neve, lampi...), temperatura, descrizione, minima e massima. l'omino reagisce al tempo: con il sole mette gli occhiali da sole, con la pioggia apre l'ombrello (e con vento forte vola via appeso all'ombrello), col temporale trema dalla paura, quando è nuvoloso fa spallucce ("boh"), con neve o freddo mette la sciarpa, di notte dorme
 - **ricerca sul web**: se chiedi una notizia o qualcosa che non sa, l'ia cerca da sola su internet (duckduckgo, con wikipedia come riserva) e risponde in base ai risultati, senza chiederti conferma. google non permette di leggere i suoi risultati in modo affidabile, per questo non si usa. si può spegnere dalle impostazioni
 - **aspetto**: dalle impostazioni scegli un tema (notte, giorno, oceano, tramonto, foresta, caramella), il colore principale, il colore dell'omino (anche in esadecimale), la trasparenza e un contorno colorato per il notch. cambia tutto al volo e se annulli torna com'era
+- **aggiornamenti**: qualche minuto dopo l'avvio l'app controlla da sola se c'è una versione nuova (pallino rosso sull'omino, e ti chiede se aggiornare). scarica, verifica il file e si aggiorna in silenzio, poi riparte. si può spegnere dalle impostazioni
 - tasto destro (o ⚙) per uscire
 
 ## installazione (consigliata)
-scarica `yourlittlefriend-setup-x.y.z.exe` dalle [release](../../releases) e avvialo. non servono permessi di amministratore e non devi installare .net.
+scarica `YourLittleFriend-setup-x.y.z.exe` dalle [release](../../releases) e avvialo. non servono permessi di amministratore e non devi installare .net.
 
 1. scegli la lingua (italiano / english)
 2. scegli la cartella (di base `AppData\Roaming\yourlittlefriend`)
 3. scegli se farlo partire all'avvio del pc
 4. scegli se creare l'icona sul desktop (c'è anche nel menu start)
 
-**aggiornare**: scarica il nuovo installer e avvialo, senza disinstallare niente. chiude da solo l'app aperta, si installa sopra la versione vecchia (stessa cartella), ricorda se avevi l'avvio automatico e non tocca le tue impostazioni né il portafile. se per sbaglio provi a installare una versione più vecchia di quella che hai, ti avvisa.
+**aggiornare**: non devi fare niente. qualche minuto dopo l'avvio l'app controlla se c'è una versione nuova e, se c'è, mette un pallino rosso sull'omino: apri il notch e ti chiede se vuoi aggiornare. se dici sì scarica, controlla l'integrità del file, si installa in silenzio e riparte da sola, tenendo impostazioni e portafile. puoi anche scaricare il nuovo installer e avviarlo a mano, senza disinstallare niente: chiude da solo l'app aperta, si installa sopra la versione vecchia (stessa cartella), ricorda se avevi l'avvio automatico e non tocca i tuoi dati. se per sbaglio provi a installare una versione più vecchia di quella che hai, ti avvisa.
 
 al primo avvio l'app ti chiede:
 
@@ -84,9 +85,6 @@ le icone dei controlli musica sono emoji buggate: verranno sostituite con vere i
 
 ### meteo e musica insieme nella home
 nella home potrai vedere sia il meteo (e le altre cose) sia la musica, senza togliere la musica.
-
-### aggiornamenti automatici
-non dovrai più scaricare a mano ogni nuovo installer: l'app controlla le release su github, avvisa quando ce n'è una nuova e si aggiorna da sola (con verifica dell'integrità del file), tenendo impostazioni e dati.
 
 ---
 

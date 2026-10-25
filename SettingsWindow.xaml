@@ -85,6 +85,7 @@
         <CheckBox x:Name="FTr" Foreground="{DynamicResource FgBrush}" Margin="0,3"/>
         <CheckBox x:Name="FWiki" Foreground="{DynamicResource FgBrush}" Margin="0,3"/>
         <CheckBox x:Name="FWeather" Foreground="{DynamicResource FgBrush}" Margin="0,3"/>
+        <CheckBox x:Name="FBeat" Foreground="{DynamicResource FgBrush}" Margin="0,3"/>
 
         <!-- traduttore -->
         <TextBlock x:Name="LTr" FontSize="18" FontWeight="Bold" Margin="0,28,0,4"/>
@@ -97,6 +98,8 @@
         <TextBox x:Name="LibreKeyIn" Style="{StaticResource Field}"/>
 
         <CheckBox x:Name="AutoStart" Foreground="{DynamicResource FgBrush}" Margin="0,22,0,0"/>
+
+        <CheckBox x:Name="UpdCb" Foreground="{DynamicResource FgBrush}" Margin="0,12,0,0"/>
 
         <CheckBox x:Name="WebCb" Foreground="{DynamicResource FgBrush}" Margin="0,12,0,0"/>
 

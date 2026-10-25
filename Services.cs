@@ -29,6 +29,19 @@ public static class Startup
         }
         catch { }
     }
+
+    // dopo un aggiornamento l'exe può aver cambiato nome: se il percorso salvato non esiste più si riallinea a questo
+    public static void Repair()
+    {
+        try
+        {
+            using var k = Registry.CurrentUser.OpenSubKey(Key);
+            if (k?.GetValue(ValueName) is not string v || Environment.ProcessPath == null) return;
+            if (File.Exists(v.Trim('"'))) return;   // va bene com'è
+            Set(true);
+        }
+        catch { }
+    }
 }
 
 // cerca una città con l'api di geocoding di open-meteo

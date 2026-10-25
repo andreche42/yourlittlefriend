@@ -19,6 +19,8 @@ public partial class App : Application
         single = new Mutex(true, "yourlittlefriend-single", out bool first);
         if (!first) { Shutdown(); return; }
         ShutdownMode = ShutdownMode.OnExplicitShutdown;
+        YourLittleFriend.Startup.Repair();   // se l'app è appena stata aggiornata l'exe ha un altro nome: l'avvio automatico si riallinea
+        YourLittleFriend.Update.CleanOldExe();   // e la copia vecchia con il nome minuscolo non resta in giro
         Theme.Apply();
 
         if (!Settings.Current.Onboarded) new OnboardingWindow().ShowDialog();   // primo avvio

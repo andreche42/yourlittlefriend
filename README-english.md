@@ -24,17 +24,18 @@ YourLittleFriend is a little buddy in your pc's notch or in a bubble (windows). 
 - **weather**: in the home you'll find a widget with an animated icon (spinning sun, rain, snow, lightning...), temperature, description, min and max. the little guy reacts to the weather: with sun he puts on sunglasses, with rain he opens an umbrella (and with strong wind he flies away hanging from the umbrella), with a thunderstorm he shakes with fear, when it's cloudy he shrugs ("dunno"), with snow or cold he puts on a scarf, at night he sleeps
 - **web search**: if you ask for news or something it doesn't know, the ai searches the internet on its own (duckduckgo, with wikipedia as a fallback) and answers based on the results, without asking you for confirmation. google doesn't allow reading its results reliably, which is why it's not used. it can be turned off from the settings
 - **look**: from the settings you pick a theme (night, day, ocean, sunset, forest, candy), the main color, the little guy's color (even in hex), the transparency and a colored outline for the notch. everything changes on the fly and if you cancel it goes back to how it was
+- **updates**: a few minutes after start the app checks by itself whether there's a new version (red dot on the little guy, and it asks you whether to update). it downloads, verifies the file and updates silently, then comes back. it can be turned off in the settings
 - right click (or ⚙) to quit
 
 ## installation (recommended)
-download `yourlittlefriend-setup-x.y.z.exe` from the [releases](../../releases) and run it. you don't need administrator permissions and you don't have to install .net.
+download `YourLittleFriend-setup-x.y.z.exe` from the [releases](../../releases) and run it. you don't need administrator permissions and you don't have to install .net.
 
 1. choose the language (italiano / english)
 2. choose the folder (by default `AppData\Roaming\yourlittlefriend`)
 3. choose whether to start it when the pc starts
 4. choose whether to create the desktop icon (it's also in the start menu)
 
-**updating**: download the new installer and run it, without uninstalling anything. it closes the open app by itself, installs over the old version (same folder), remembers if you had autostart and doesn't touch your settings or the file holder. if you accidentally try to install a version older than the one you have, it warns you.
+**updating**: you don't have to do anything. a few minutes after start the app checks whether there's a new version and, if there is, puts a red dot on the little guy: open the notch and it asks you whether to update. if you say yes it downloads, checks the file's integrity, installs silently and comes back by itself, keeping settings and the file holder. you can also download the new installer and run it by hand, without uninstalling anything: it closes the open app by itself, installs over the old version (same folder), remembers if you had autostart and doesn't touch your data. if you accidentally try to install a version older than the one you have, it warns you.
 
 on first launch the app asks you for:
 
@@ -82,9 +83,6 @@ the music control icons are currently buggy emojis: we're replacing them with pr
 
 ### weather and music together on the home
 the home will show both the weather (and the other stuff) and the music, without removing the music.
-
-### automatic updates
-no more downloading each new installer by hand: the app checks automatically the releases on github, tells you when there's a new one and updates itself (with a file integrity check), keeping your settings and data.
 
 ------
 
