@@ -34,25 +34,22 @@ public partial class Mascot : UserControl
     readonly DispatcherTimer idle = new() { Interval = TimeSpan.FromSeconds(3) };
     readonly DispatcherTimer cheerEnd = new() { Interval = TimeSpan.FromMilliseconds(1700) };
     readonly DispatcherTimer coolEnd = new() { Interval = TimeSpan.FromMilliseconds(3400) };
-    readonly DispatcherTimer yawnEnd = new() { Interval = TimeSpan.FromMilliseconds(1400) };   // fine dello sbadiglio
     readonly DispatcherTimer armEnd = new() { Interval = TimeSpan.FromMilliseconds(1000) };    // fine del saluto / delle mani in alto
     readonly DispatcherTimer pokeEnd = new() { Interval = TimeSpan.FromMilliseconds(700) };    // fine della reazione al clic
-    readonly DispatcherTimer watch = new() { Interval = TimeSpan.FromSeconds(20) };            // controlla se è rimasto troppo solo
     readonly Random rnd = new();
     readonly ScaleTransform flip = new(1, 1);
     readonly TranslateTransform walk = new();
     MascotMode mode;
     WeatherMood weather;
     bool cheering, walking, windy, cool;
-    bool yawning, waving, celebrating, alert;
+    bool waving, celebrating, alert;
     double danceMs;                          // durata di un dondolio: 0 = quella di sempre, altrimenti segue il battito
-    DateTime lastAction = DateTime.UtcNow;   // ultima volta che è successo qualcosa: dopo un po' si sbadiglia
     DateTime walkUntil;   // rete di sicurezza: se la camminata viene interrotta, "walking" non resta bloccato
 
     public MascotMode Mode
     {
         get => mode;
-        set { if (mode == value) return; mode = value; lastAction = DateTime.UtcNow; Apply(); }
+        set { if (mode == value) return; mode = value; Apply(); }
     }
 
     public WeatherMood Weather
@@ -112,14 +109,12 @@ public partial class Mascot : UserControl
         idle.Tick += (_, _) => { idle.Interval = TimeSpan.FromSeconds(rnd.Next(4, 10)); IdleTick(); };
         cheerEnd.Tick += (_, _) => { cheerEnd.Stop(); cheering = false; Apply(); };
         coolEnd.Tick += (_, _) => { coolEnd.Stop(); cool = false; Apply(); };
-        yawnEnd.Tick += (_, _) => { yawnEnd.Stop(); yawning = false; StartBlink(); Apply(); };   // finito lo sbadiglio torna com'era e ricomincia a sbattere gli occhi
         armEnd.Tick += (_, _) => ArmDone();
         pokeEnd.Tick += (_, _) => { pokeEnd.Stop(); if (mode == MascotMode.Dance && !cheering) Apply(); };   // se stava ballando, il dondolio riparte
-        watch.Tick += (_, _) => Watch();
         IsVisibleChanged += (_, e) =>
         {
-            if ((bool)e.NewValue) { idle.Start(); watch.Start(); lastAction = DateTime.UtcNow; }
-            else { idle.Stop(); watch.Stop(); }
+            if ((bool)e.NewValue) idle.Start();
+            else idle.Stop();
         };
     }
 
@@ -135,7 +130,7 @@ public partial class Mascot : UserControl
     static DoubleAnimation Swing(double from, double to, double ms) => new(from, to, TimeSpan.FromMilliseconds(ms))
     { AutoReverse = true, RepeatBehavior = RepeatBehavior.Forever, EasingFunction = new SineEase { EasingMode = EasingMode.EaseInOut } };
 
-    // sbatte gli occhi (parte all'inizio e riparte dopo lo sbadiglio, che gli chiude gli occhi per conto suo)
+    // sbatte gli occhi, sempre
     void StartBlink() =>
         EyeSc.BeginAnimation(ScaleTransform.ScaleYProperty, Keys(true, (0, 1), (3000, 1), (3080, .1), (3200, 1), (3300, 1)));
 
@@ -143,7 +138,6 @@ public partial class Mascot : UserControl
     public void Cheer()
     {
         cheering = true;
-        lastAction = DateTime.UtcNow;
         cheerEnd.Stop();
         cheerEnd.Start();
         Apply();
@@ -339,7 +333,6 @@ public partial class Mascot : UserControl
     {
         if (celebrating) return;
         celebrating = true;
-        lastAction = DateTime.UtcNow;
         // le due mani: il pallino (la destra) e il braccino in alto a destra (la sinistra)
         PallinoTr.BeginAnimation(TranslateTransform.YProperty, Keys(false, (0, 0), (200, -9), (520, -7), (840, -9), (1100, 0)));
         PallinoSc.BeginAnimation(ScaleTransform.ScaleXProperty, Keys(false, (0, 1), (240, 1.2), (840, 1.2), (1100, 1)));
@@ -359,7 +352,6 @@ public partial class Mascot : UserControl
     {
         if (waving || celebrating) return;
         waving = true;
-        lastAction = DateTime.UtcNow;
         // la mano destra (il pallino) si alza e fa ciao: su e giù e un po' più grande, così si vede anche nel notch piccolo
         PallinoTr.BeginAnimation(TranslateTransform.YProperty, Keys(false, (0, 0), (120, -7), (900, -7), (1060, 0)));
         PallinoTr.BeginAnimation(TranslateTransform.XProperty, Keys(false, (0, 0), (130, -2), (250, 3), (370, -2), (490, 3), (610, -2), (730, 0)));
@@ -383,34 +375,10 @@ public partial class Mascot : UserControl
     // gli hai cliccato sopra: saltella e arrossisce
     public void Poke()
     {
-        lastAction = DateTime.UtcNow;
         Tr.BeginAnimation(TranslateTransform.YProperty, Keys(false, (0, 0), (140, -10), (280, 0), (400, -5), (520, 0)));
         Cheeks.BeginAnimation(OpacityProperty, Keys(false, (0, 0), (180, 1), (900, 1), (1300, 0)));
         pokeEnd.Stop();
         pokeEnd.Start();
-    }
-
-    // sbadiglio: occhi chiusi, bocca aperta e si stiracchia
-    public void Yawn()
-    {
-        if (yawning || waving || celebrating || mode != MascotMode.Idle || !IsVisible || weather == WeatherMood.Storm) return;   // col temporale è terrorizzato: niente sbadiglio
-        yawning = true;
-        lastAction = DateTime.UtcNow;
-        EyeSc.BeginAnimation(ScaleTransform.ScaleYProperty, Keys(false, (0, 1), (160, .08), (250, .14), (1000, .14), (1250, 1)));
-        Sc.BeginAnimation(ScaleTransform.ScaleYProperty, Keys(false, (0, 1), (350, 1.07), (1000, 1.07), (1300, 1)));
-        Rot.BeginAnimation(RotateTransform.AngleProperty, Keys(false, (0, 0), (350, -4), (1000, -4), (1300, 0)));
-        Mouth.Data = Geometry.Parse("M43,58 A7,9 0 1 1 57,58 A7,9 0 1 1 43,58 Z");
-        Mouth.SetResourceReference(Shape.FillProperty, "MascotEyeBrush");
-        Mouth.Visibility = Visibility.Visible;
-        yawnEnd.Stop();
-        yawnEnd.Start();
-    }
-
-    // se nessuno lo considera da un po', si sbadiglia
-    void Watch()
-    {
-        if (yawning || waving || celebrating || cheering || mode != MascotMode.Idle || !IsVisible) return;
-        if (DateTime.UtcNow - lastAction > TimeSpan.FromMinutes(4)) Yawn();
     }
 
     // ---- vita da mascotte: ogni tanto fa qualcosa da sola ----
