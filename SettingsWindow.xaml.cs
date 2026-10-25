@@ -40,6 +40,8 @@ public partial class SettingsWindow : Window
         BResetLook.Content = Loc.L("Ripristina aspetto", "Reset look");
         WebCb.Content = Loc.L("Permetti all'IA di cercare sul web (le domande vanno su DuckDuckGo/Wikipedia)", "Let the AI search the web (queries go to DuckDuckGo/Wikipedia)");
         WebCb.IsChecked = st.WebSearch;
+        UpdCb.Content = Loc.L("Controlla da solo se ci sono aggiornamenti (qualche minuto dopo l'avvio)", "Check for updates on its own (a few minutes after start)");
+        UpdCb.IsChecked = st.AutoUpdate;
         BuildLook();
 
         // forma (notch o bolla)
@@ -82,8 +84,10 @@ public partial class SettingsWindow : Window
         FTr.Content = Loc.L("Traduttore", "Translator");
         FWiki.Content = Loc.L("Wikipedia", "Wikipedia");
         FWeather.Content = Loc.L("Meteo nella home", "Weather on the home");
+        FBeat.Content = Loc.L("L'omino balla a tempo (ascolta quello che esce dalle casse)", "The little guy dances on the beat (listens to what comes out of the speakers)");
         FChat.IsChecked = st.ChatOn; FHolder.IsChecked = st.HolderOn; FAsk.IsChecked = st.AskFileOn;
         FCalc.IsChecked = st.CalcOn; FTr.IsChecked = st.TranslateOn; FWiki.IsChecked = st.WikiOn; FWeather.IsChecked = st.WeatherOn;
+        FBeat.IsChecked = st.BeatDance;
 
         // traduttore
         LTr.Text = Loc.L("Traduttore", "Translator");
@@ -237,11 +241,13 @@ public partial class SettingsWindow : Window
         LanguageChanged = lang != st.Language;
         st.Language = lang;
         st.WebSearch = WebCb.IsChecked == true;
+        st.AutoUpdate = UpdCb.IsChecked == true;
         st.Style = RBubble.IsChecked == true ? "bubble" : "notch";
         st.BubbleSize = BubbleSl.Value;
         if (resetPos) st.NotchX = st.NotchY = st.BubbleX = st.BubbleY = null;
         st.ChatOn = FChat.IsChecked == true; st.HolderOn = FHolder.IsChecked == true; st.AskFileOn = FAsk.IsChecked == true;
         st.CalcOn = FCalc.IsChecked == true; st.TranslateOn = FTr.IsChecked == true; st.WikiOn = FWiki.IsChecked == true; st.WeatherOn = FWeather.IsChecked == true;
+        st.BeatDance = FBeat.IsChecked == true;
         st.LensOn = LensCb.IsChecked == true;
         if (Theme.TryParse(LensHex.Text) != null) st.LensColor = LensHex.Text.Trim();
         st.LensSize = LensSizeSl.Value;

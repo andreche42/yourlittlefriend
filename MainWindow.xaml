@@ -60,6 +60,15 @@
               </Canvas>
             </Viewbox>
           </Button>
+          <!-- musica nella home: questo bottone scambia la musica con il meteo (si torna alla musica anche chiudendo il notch) -->
+          <Button x:Name="BHomeToggle" DockPanel.Dock="Right" Visibility="Collapsed" Click="HomeToggle_Click">
+            <Viewbox Width="16" Height="16" Margin="0,2">
+              <Canvas Width="16" Height="16">
+                <Path x:Name="HomeToggleIcon" Stroke="{DynamicResource FgBrush}" StrokeThickness="1.4" StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                      Data="M6.1,12.3 V4.2 L12.6,2.6 V10.6 M2.7,12.3 Q2.7,10.9 4.4,10.9 Q6.1,10.9 6.1,12.3 Q6.1,13.7 4.4,13.7 Q2.7,13.7 2.7,12.3 Z M9.2,10.6 Q9.2,9.2 10.9,9.2 Q12.6,9.2 12.6,10.6 Q12.6,12 10.9,12 Q9.2,12 9.2,10.6 Z"/>
+              </Canvas>
+            </Viewbox>
+          </Button>
           <StackPanel Orientation="Horizontal">
             <Button x:Name="T0" Content="⌂" Tag="0" Click="Tab_Click" ToolTip="{local:L It=Home, En=Home}"/>
             <Button x:Name="T1" Content="💬" Tag="1" Click="Tab_Click" ToolTip="{local:L It=Chat, En=Chat}"/>
@@ -118,9 +127,30 @@
                     <TextBlock x:Name="SongText" FontSize="16" TextWrapping="Wrap"/>
                   </StackPanel>
                   <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Button x:Name="BPrev" Content="⏮" Tag="prev" Click="Ctl" ToolTip="{local:L It=Precedente, En=Previous}"/>
-                    <Button x:Name="BPlay" Content="⏯" Tag="play" Click="Ctl" ToolTip="{local:L It='Play / Pausa', En='Play / Pause'}"/>
-                    <Button x:Name="BNext" Content="⏭" Tag="next" Click="Ctl" ToolTip="{local:L It=Successivo, En=Next}"/>
+                    <Button x:Name="BPrev" Tag="prev" Click="Ctl" ToolTip="{local:L It=Precedente, En=Previous}">
+                      <Viewbox Width="16" Height="16" Margin="1,2">
+                        <Canvas Width="16" Height="16">
+                          <Path Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" StrokeThickness="1.5" StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                                Data="M4.6,2.6 V13.4 M12.9,2.6 L5.9,8 L12.9,13.4 Z"/>
+                        </Canvas>
+                      </Viewbox>
+                    </Button>
+                    <Button x:Name="BPlay" Tag="play" Click="Ctl" ToolTip="{local:L It='Play / Pausa', En='Play / Pause'}">
+                      <Viewbox Width="16" Height="16" Margin="1,2">
+                        <Canvas Width="16" Height="16">
+                          <Path x:Name="BPlayIcon" Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" StrokeThickness="1.5" StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                                Data="M5.6,2.6 L13.2,8 L5.6,13.4 Z"/>
+                        </Canvas>
+                      </Viewbox>
+                    </Button>
+                    <Button x:Name="BNext" Tag="next" Click="Ctl" ToolTip="{local:L It=Successivo, En=Next}">
+                      <Viewbox Width="16" Height="16" Margin="1,2">
+                        <Canvas Width="16" Height="16">
+                          <Path Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" StrokeThickness="1.5" StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                                Data="M11.4,2.6 V13.4 M3.1,2.6 L10.1,8 L3.1,13.4 Z"/>
+                        </Canvas>
+                      </Viewbox>
+                    </Button>
                   </StackPanel>
                 </Grid>
               </Border>

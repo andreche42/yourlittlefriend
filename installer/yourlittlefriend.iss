@@ -16,7 +16,8 @@ DisableProgramGroupPage=yes
 ; installazione per l'utente corrente, senza chiedere i permessi di amministratore
 PrivilegesRequired=lowest
 OutputDir=..\dist
-OutputBaseFilename=yourlittlefriend-setup-{#AppVersion}
+; il file dell'installer si chiama come l'app, con le maiuscole giuste
+OutputBaseFilename=YourLittleFriend-setup-{#AppVersion}
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
@@ -31,7 +32,7 @@ UsePreviousTasks=no
 CloseApplications=no
 SetupMutex=yourlittlefriend-setup
 SetupIconFile=..\icon.ico
-UninstallDisplayIcon={app}\yourlittlefriend.exe
+UninstallDisplayIcon={app}\YourLittleFriend.exe
 
 [Languages]
 Name: "italian"; MessagesFile: "compiler:Languages\Italian.isl"
@@ -57,18 +58,18 @@ Name: "desktopicon"; Description: "{cm:DesktopTask}"
 Source: "..\publish\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
-Name: "{userprograms}\yourlittlefriend"; Filename: "{app}\yourlittlefriend.exe"
-Name: "{autodesktop}\yourlittlefriend"; Filename: "{app}\yourlittlefriend.exe"; Tasks: desktopicon
+Name: "{userprograms}\yourlittlefriend"; Filename: "{app}\YourLittleFriend.exe"
+Name: "{autodesktop}\yourlittlefriend"; Filename: "{app}\YourLittleFriend.exe"; Tasks: desktopicon; Check: KeepDesktopIcon
 
 [Registry]
-Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "yourlittlefriend"; ValueData: """{app}\yourlittlefriend.exe"""; Flags: uninsdeletevalue; Tasks: startup
+Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "yourlittlefriend"; ValueData: """{app}\YourLittleFriend.exe"""; Flags: uninsdeletevalue; Tasks: startup; Check: KeepStartup
 Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueName: "yourlittlefriend"; Flags: deletevalue; Tasks: not startup
 ; la lingua scelta qui viene usata dall'app al primo avvio
 Root: HKCU; Subkey: "Software\yourlittlefriend"; ValueType: string; ValueName: "Language"; ValueData: "it"; Languages: italian; Flags: uninsdeletekey
 Root: HKCU; Subkey: "Software\yourlittlefriend"; ValueType: string; ValueName: "Language"; ValueData: "en"; Languages: english; Flags: uninsdeletekey
 
 [Run]
-Filename: "{app}\yourlittlefriend.exe"; Description: "{cm:LaunchApp}"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\YourLittleFriend.exe"; Description: "{cm:LaunchApp}"; Flags: nowait postinstall skipifsilent
 
 [UninstallDelete]
 Type: files; Name: "{userappdata}\yourlittlefriend\settings.json"
@@ -81,6 +82,7 @@ const
 
 var
   TasksAdjusted: Boolean;
+  HadStartup: Boolean;
 
 // versione già installata ('' se è la prima installazione)
 function InstalledVersion(): String;
@@ -89,13 +91,27 @@ begin
     Result := '';
 end;
 
-// chiude l'app se è aperta (aggiornamento o disinstallazione)
+// chiude l'app se è aperta (aggiornamento o disinstallazione). i due nomi: fino alla 1.1.3 l'exe era minuscolo
 procedure CloseApp();
 var
   R: Integer;
 begin
+  Exec(ExpandConstant('{sys}\taskkill.exe'), '/F /IM YourLittleFriend.exe', '', SW_HIDE, ewWaitUntilTerminated, R);
   Exec(ExpandConstant('{sys}\taskkill.exe'), '/F /IM yourlittlefriend.exe', '', SW_HIDE, ewWaitUntilTerminated, R);
   Sleep(400);
+end;
+
+// aggiornamento silenzioso (l'app che si aggiorna da sola): non si tocca quello che l'utente aveva scelto.
+// l'avvio automatico resta a chi ce l'aveva (e non si riaccende a chi l'aveva spento)
+function KeepStartup(): Boolean;
+begin
+  Result := (not WizardSilent) or HadStartup;
+end;
+
+// e l'icona sul desktop non ricompare a chi l'aveva tolta
+function KeepDesktopIcon(): Boolean;
+begin
+  Result := (not WizardSilent) or FileExists(ExpandConstant('{autodesktop}\yourlittlefriend.lnk'));
 end;
 
 // se è già installata una versione più nuova avvisa prima di tornare indietro
@@ -105,6 +121,7 @@ var
   Old: String;
 begin
   Result := True;
+  HadStartup := RegValueExists(HKCU, RunKey, 'yourlittlefriend');
   Old := InstalledVersion();
   if (Old <> '') and StrToVersion(Old, OldV) and StrToVersion('{#AppVersion}', NewV) then
     if ComparePackedVersion(OldV, NewV) > 0 then
