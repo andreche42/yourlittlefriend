@@ -24,7 +24,7 @@
             </TransformGroup>
           </Ellipse.RenderTransform>
         </Ellipse>
-        <Border Canvas.Left="79" Canvas.Top="26" Width="14" Height="6" CornerRadius="3" Background="{DynamicResource MascotBrush}" RenderTransformOrigin="0.5,0.5">
+        <Border x:Name="Arm" Canvas.Left="79" Canvas.Top="26" Width="14" Height="6" CornerRadius="3" Background="{DynamicResource MascotBrush}" RenderTransformOrigin="0.5,0.5">
           <Border.RenderTransform><RotateTransform x:Name="ArmRot" Angle="-35"/></Border.RenderTransform>
         </Border>
 

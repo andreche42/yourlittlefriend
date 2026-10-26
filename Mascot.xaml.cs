@@ -36,6 +36,7 @@ public partial class Mascot : UserControl
     readonly DispatcherTimer coolEnd = new() { Interval = TimeSpan.FromMilliseconds(3400) };
     readonly DispatcherTimer armEnd = new() { Interval = TimeSpan.FromMilliseconds(1000) };    // fine del saluto / delle mani in alto
     readonly DispatcherTimer pokeEnd = new() { Interval = TimeSpan.FromMilliseconds(700) };    // fine della reazione al clic
+    readonly DispatcherTimer dance = new() { Interval = TimeSpan.FromMilliseconds(16) };       // ballo: un fotogramma per volta, così la velocità cambia senza strappi
     readonly Random rnd = new();
     readonly ScaleTransform flip = new(1, 1);
     readonly TranslateTransform walk = new();
@@ -44,6 +45,9 @@ public partial class Mascot : UserControl
     bool cheering, walking, windy, cool;
     bool waving, celebrating, alert;
     double danceMs;                          // durata di un dondolio: 0 = quella di sempre, altrimenti segue il battito
+    double dancePhase;                       // a che punto è il dondolio (0..1)
+    double dancePeriod = 350, danceTarget = 350;   // ms di un dondolio: quello attuale e quello che chiede il battito
+    DateTime danceLast;
     DateTime walkUntil;   // rete di sicurezza: se la camminata viene interrotta, "walking" non resta bloccato
 
     public MascotMode Mode
@@ -111,6 +115,7 @@ public partial class Mascot : UserControl
         coolEnd.Tick += (_, _) => { coolEnd.Stop(); cool = false; Apply(); };
         armEnd.Tick += (_, _) => ArmDone();
         pokeEnd.Tick += (_, _) => { pokeEnd.Stop(); if (mode == MascotMode.Dance && !cheering) Apply(); };   // se stava ballando, il dondolio riparte
+        dance.Tick += (_, _) => TickDance();
         IsVisibleChanged += (_, e) =>
         {
             if ((bool)e.NewValue) idle.Start();
@@ -159,6 +164,7 @@ public partial class Mascot : UserControl
     // ferma tutto e fa partire l'animazione dello stato attuale
     void Apply()
     {
+        dance.Stop();
         Tr.BeginAnimation(TranslateTransform.YProperty, null);
         Rot.BeginAnimation(RotateTransform.AngleProperty, null);
         Sc.BeginAnimation(ScaleTransform.ScaleYProperty, null);
@@ -175,6 +181,7 @@ public partial class Mascot : UserControl
         ThumbSc.BeginAnimation(ScaleTransform.ScaleYProperty, null);
         ThumbSc.ScaleX = ThumbSc.ScaleY = cool ? 1 : 0;
         Thumb.Visibility = cool ? Visibility.Visible : Visibility.Collapsed;
+        Arm.Visibility = cool ? Visibility.Collapsed : Visibility.Visible;   // il pollice prende il posto del braccio: niente terzo arto
 
         bool scared = weather == WeatherMood.Storm && !cheering;
         Eyes.Visibility = cheering || scared ? Visibility.Collapsed : Visibility.Visible;
@@ -315,20 +322,38 @@ public partial class Mascot : UserControl
         set
         {
             double v = value <= 0 ? 0 : Math.Clamp(value, 240, 900);
-            if (Math.Abs(v - danceMs) < 15) return;   // differenze minime: non vale la pena far ripartire l'animazione
+            if (Math.Abs(v - danceMs) < 15) return;   // differenze minime: il dondolio non si tocca
             danceMs = v;
-            if (mode == MascotMode.Dance && !cheering) ApplyDance();
+            if (v > 0) danceTarget = v;               // nuovo tempo: il ballo ci arriva piano, senza ripartire da capo
+            if (v > 0 && mode == MascotMode.Dance && !cheering && !dance.IsEnabled) ApplyDance();
         }
     }
 
     void ApplyDance()
     {
-        double ms = DanceSpeed;
-        Rot.BeginAnimation(RotateTransform.AngleProperty, Swing(-8, 8, ms));
-        Tr.BeginAnimation(TranslateTransform.YProperty, Keys(true, (0, 0), (ms / 2, -6), (ms, 0)));
+        danceTarget = DanceSpeed;
+        if (dancePeriod < 120) dancePeriod = danceTarget;
+        dancePhase = 0;
+        danceLast = DateTime.UtcNow;
+        if (!dance.IsEnabled) dance.Start();
+        TickDance();
     }
 
-    // sul ritornello (l'audio "si apre"): mani in alto e pollice in su
+    // un fotogramma del ballo: il corpo oscilla da una parte all'altra e saltella, e il periodo scivola piano
+    // verso quello del battito. Prima ogni battito stimato faceva ripartire l'animazione da -8 gradi: erano gli scatti.
+    void TickDance()
+    {
+        var now = DateTime.UtcNow;
+        double dt = Math.Clamp((now - danceLast).TotalMilliseconds, 0, 80);
+        danceLast = now;
+        dancePeriod += (danceTarget - dancePeriod) * Math.Min(1, dt / 400);
+        dancePhase = (dancePhase + dt / dancePeriod) % 1;
+        double a = 2 * Math.PI * dancePhase;
+        Rot.Angle = 8 * Math.Sin(a);       // dondolio
+        Tr.Y = -3 + 3 * Math.Cos(a);       // saltello, uno per ogni dondolio
+    }
+
+    // sul ritornello (l'audio "si apre"): alza le due mani
     public void Celebrate()
     {
         if (celebrating) return;
@@ -338,10 +363,7 @@ public partial class Mascot : UserControl
         PallinoSc.BeginAnimation(ScaleTransform.ScaleXProperty, Keys(false, (0, 1), (240, 1.2), (840, 1.2), (1100, 1)));
         PallinoSc.BeginAnimation(ScaleTransform.ScaleYProperty, Keys(false, (0, 1), (240, 1.2), (840, 1.2), (1100, 1)));
         ArmRot.BeginAnimation(RotateTransform.AngleProperty, Keys(false, (0, -35), (200, -80), (520, -72), (840, -80), (1100, -35)));
-        Thumb.Visibility = Visibility.Visible;
-        var pop = new BackEase { EasingMode = EasingMode.EaseOut, Amplitude = .7 };
-        ThumbSc.BeginAnimation(ScaleTransform.ScaleXProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(320)) { EasingFunction = pop });
-        ThumbSc.BeginAnimation(ScaleTransform.ScaleYProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(320)) { EasingFunction = pop });
+        // niente pollice qui: sul ritornello alza le due mani, il pollice è solo per la calcolatrice
         armEnd.Interval = TimeSpan.FromMilliseconds(1200);
         armEnd.Stop();
         armEnd.Start();
@@ -375,6 +397,7 @@ public partial class Mascot : UserControl
     // gli hai cliccato sopra: saltella e arrossisce
     public void Poke()
     {
+        dance.Stop();   // il saltello prende il posto del ballo, poi riparte da solo
         Tr.BeginAnimation(TranslateTransform.YProperty, Keys(false, (0, 0), (140, -10), (280, 0), (400, -5), (520, 0)));
         Cheeks.BeginAnimation(OpacityProperty, Keys(false, (0, 0), (180, 1), (900, 1), (1300, 0)));
         pokeEnd.Stop();
