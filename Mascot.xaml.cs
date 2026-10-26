@@ -168,7 +168,10 @@ public partial class Mascot : UserControl
         // dove stava il corpo e se stava ballando: uscendo dal ballo ci torna piano, senza saltare al centro
         double settleAngle = Rot.Angle, settleY = Tr.Y;
         bool wasDancing = dance.IsEnabled;
-        dance.Stop();
+        // se si sta ancora ballando il dondolio non si tocca: altrimenti ogni rinfresco della finestra
+        // lo faceva ripartire dal centro (era il "reset" che si vedeva)
+        bool keepDancing = mode == MascotMode.Dance && !cheering;
+        if (!keepDancing) dance.Stop();
         Tr.BeginAnimation(TranslateTransform.YProperty, null);
         Rot.BeginAnimation(RotateTransform.AngleProperty, null);
         Sc.BeginAnimation(ScaleTransform.ScaleYProperty, null);
