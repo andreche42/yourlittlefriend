@@ -93,8 +93,8 @@ public partial class MainWindow : Window
             MiniMascot.Celebrate();
             BigMascot.Celebrate();
         });
-        // aggiornamenti: dopo qualche minuto dall'avvio si guarda se c'è una versione nuova, poi ogni tanto
-        var upd = new DispatcherTimer { Interval = TimeSpan.FromMinutes(5) };
+        // aggiornamenti: dopo un paio di minuti dall'avvio si guarda se c'è una versione nuova, poi ogni tanto
+        var upd = new DispatcherTimer { Interval = TimeSpan.FromMinutes(2) };
         upd.Tick += async (_, _) => { upd.Interval = TimeSpan.FromHours(6); await LookForUpdate(); };
         upd.Start();
         var media = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
