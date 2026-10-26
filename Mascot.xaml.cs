@@ -260,23 +260,30 @@ public partial class Mascot : UserControl
     // costumi e animazioni del meteo che non dipendono dallo stato (ombrello, gocce, sudore, zzz): partono sempre
     void ApplyWeatherLook()
     {
+        // le note del ballo sono già in volo: a ogni rinfresco non devono ripartire da capo
+        bool dancing = mode == MascotMode.Dance && !cheering;
+        bool notesFlying = dancing && Notes.Visibility == Visibility.Visible;
+
         UmbRot.BeginAnimation(RotateTransform.AngleProperty, null);
         SweatTr.BeginAnimation(TranslateTransform.YProperty, null);
         Sweat.BeginAnimation(OpacityProperty, null);
         var drops = new[] { R1, R2, R3, R4 };
         foreach (var r in drops) { r.BeginAnimation(Canvas.TopProperty, null); r.Opacity = 0; }
         foreach (var z in new[] { Z1, Z2 }) { z.BeginAnimation(OpacityProperty, null); z.BeginAnimation(Canvas.TopProperty, null); }
+        if (!notesFlying) foreach (var n in new[] { N1, N2 }) { n.BeginAnimation(OpacityProperty, null); n.BeginAnimation(Canvas.TopProperty, null); }
 
         bool rain = weather == WeatherMood.Rain, storm = weather == WeatherMood.Storm && !cheering;
-        // mentre balla l'omino è sveglio: niente palpebre abbassate e niente z, altrimenti sembra che dorma ballando
+        // con la musica l'omino è sveglio: spariscono solo palpebre del sonno e z. Tutti gli altri effetti
+        // del meteo (occhiali, ombrello, sciarpa, sudore) restano anche mentre balla
         bool night = weather == WeatherMood.Night && !cheering && mode != MascotMode.Dance;
-        bool boh = weather == WeatherMood.Cloud && !cheering && mode != MascotMode.Dance;
+        bool boh = weather == WeatherMood.Cloud && !cheering;
 
         Shades.Visibility = weather == WeatherMood.Sun || cool ? Visibility.Visible : Visibility.Collapsed;
         Umbrella.Visibility = RainDrops.Visibility = rain ? Visibility.Visible : Visibility.Collapsed;
         Scarf.Visibility = weather == WeatherMood.Snow ? Visibility.Visible : Visibility.Collapsed;
         Sweat.Visibility = storm ? Visibility.Visible : Visibility.Collapsed;
         Zzz.Visibility = night ? Visibility.Visible : Visibility.Collapsed;
+        Notes.Visibility = dancing ? Visibility.Visible : Visibility.Collapsed;
         Lids.Visibility = boh || night ? Visibility.Visible : Visibility.Collapsed;
         LidSc.ScaleY = night ? .85 : .5;
 
@@ -322,6 +329,21 @@ public partial class Mascot : UserControl
                 zs[i].BeginAnimation(Canvas.TopProperty, rise);
             }
         }
+        if (dancing && !notesFlying) AnimateNotes();
+    }
+
+    // le note salgono e svaniscono sopra la testa, come le z del sonno ma colorate
+    void AnimateNotes()
+    {
+        var notes = new[] { N1, N2 };
+        for (int i = 0; i < notes.Length; i++)
+        {
+            var delay = TimeSpan.FromMilliseconds(i * 900);
+            var fade = Keys(true, (0, 0), (550, 1), (1350, 1), (2100, 0)); fade.BeginTime = delay;
+            var rise = new DoubleAnimation(i == 0 ? 26 : 15, i == 0 ? 12 : 1, TimeSpan.FromMilliseconds(2100)) { RepeatBehavior = RepeatBehavior.Forever, BeginTime = delay };
+            notes[i].BeginAnimation(OpacityProperty, fade);
+            notes[i].BeginAnimation(Canvas.TopProperty, rise);
+        }
     }
 
     // torna al centro (quando smette di girare per lavorare o ballare)
@@ -343,7 +365,7 @@ public partial class Mascot : UserControl
         get => danceMs <= 0 ? 350 : danceMs;
         set
         {
-            double v = value <= 0 ? 0 : Math.Clamp(value, 420, 1000);   // niente dondolii frenetici, anche sui pezzi veloci
+            double v = value <= 0 ? 0 : Math.Clamp(value, 240, 900);   // il dondolio segue il battito, come all'inizio
             if (Math.Abs(v - danceMs) < 15) return;   // differenze minime: il dondolio non si tocca
             danceMs = v;
             if (v > 0) danceTarget = v;               // nuovo tempo: il ballo ci arriva piano, senza ripartire da capo
@@ -368,7 +390,7 @@ public partial class Mascot : UserControl
         TickDance();
     }
 
-    // un fotogramma del ballo: il corpo oscilla da una parte all'altra, appena, e il periodo scivola piano
+    // un fotogramma del ballo: il corpo oscilla da una parte all'altra e saltella, e il periodo scivola piano
     // verso quello del battito. L'ampiezza sale da 0, così entrare nel ballo non è uno scatto.
     void TickDance()
     {
@@ -380,8 +402,8 @@ public partial class Mascot : UserControl
         dancePhase = (dancePhase + dt / dancePeriod) % 1;
         danceAmp = Math.Min(1, danceAmp + dt / 300);
         double a = 2 * Math.PI * dancePhase;
-        Rot.Angle = 2 * danceAmp * Math.Sin(a);                 // appena un accenno di dondolio
-        Tr.Y = -.6 * danceAmp + .6 * danceAmp * Math.Cos(a);    // saltello quasi invisibile
+        Rot.Angle = 8 * danceAmp * Math.Sin(a);        // dondolio, come nella prima versione
+        Tr.Y = -3 * danceAmp + 3 * danceAmp * Math.Cos(a);   // saltello, uno per ogni dondolio
     }
 
     // sul ritornello (l'audio "si apre"): alza le due mani

@@ -91,6 +91,12 @@
           <TextBlock x:Name="Z2" Canvas.Left="76" Canvas.Top="10" Text="Z" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource FgBrush}" Opacity="0"/>
         </Canvas>
 
+        <!-- musica: le note che salgono mentre balla (come le z, ma colorate) -->
+        <Canvas x:Name="Notes" Width="100" Height="100" Visibility="Collapsed">
+          <TextBlock x:Name="N1" Canvas.Left="66" Canvas.Top="24" Text="♪" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}" Opacity="0"/>
+          <TextBlock x:Name="N2" Canvas.Left="77" Canvas.Top="12" Text="♫" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}" Opacity="0"/>
+        </Canvas>
+
         <!-- pollice in su (calcolatrice: 104, 67, 69, 420) -->
         <Canvas x:Name="Thumb" Width="100" Height="100" Visibility="Collapsed" RenderTransformOrigin="0.85,0.7">
           <Canvas.RenderTransform><ScaleTransform x:Name="ThumbSc" ScaleX="0" ScaleY="0"/></Canvas.RenderTransform>
