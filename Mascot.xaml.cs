@@ -174,6 +174,10 @@ public partial class Mascot : UserControl
         if (!keepDancing) dance.Stop();
         Tr.BeginAnimation(TranslateTransform.YProperty, null);
         Rot.BeginAnimation(RotateTransform.AngleProperty, null);
+        // il ballo scrive l'inclinazione e lo spostamento come valori veri, non come animazioni:
+        // fermandolo restavano lì e l'omino rimaneva piegato pure da fermo
+        Rot.Angle = 0;
+        Tr.Y = 0;
         Sc.BeginAnimation(ScaleTransform.ScaleYProperty, null);
         EyeTr.BeginAnimation(TranslateTransform.XProperty, null);
         PallinoTr.BeginAnimation(TranslateTransform.XProperty, null);
@@ -263,8 +267,10 @@ public partial class Mascot : UserControl
         foreach (var r in drops) { r.BeginAnimation(Canvas.TopProperty, null); r.Opacity = 0; }
         foreach (var z in new[] { Z1, Z2 }) { z.BeginAnimation(OpacityProperty, null); z.BeginAnimation(Canvas.TopProperty, null); }
 
-        bool rain = weather == WeatherMood.Rain, storm = weather == WeatherMood.Storm && !cheering, night = weather == WeatherMood.Night && !cheering;
-        bool boh = weather == WeatherMood.Cloud && !cheering;
+        bool rain = weather == WeatherMood.Rain, storm = weather == WeatherMood.Storm && !cheering;
+        // mentre balla l'omino è sveglio: niente palpebre abbassate e niente z, altrimenti sembra che dorma ballando
+        bool night = weather == WeatherMood.Night && !cheering && mode != MascotMode.Dance;
+        bool boh = weather == WeatherMood.Cloud && !cheering && mode != MascotMode.Dance;
 
         Shades.Visibility = weather == WeatherMood.Sun || cool ? Visibility.Visible : Visibility.Collapsed;
         Umbrella.Visibility = RainDrops.Visibility = rain ? Visibility.Visible : Visibility.Collapsed;
