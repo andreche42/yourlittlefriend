@@ -47,6 +47,7 @@ public partial class Mascot : UserControl
     double danceMs;                          // durata di un dondolio: 0 = quella di sempre, altrimenti segue il battito
     double dancePhase;                       // a che punto è il dondolio (0..1)
     double dancePeriod = 350, danceTarget = 350;   // ms di un dondolio: quello attuale e quello che chiede il battito
+    double danceAmp;                         // quanto è "entrato" nel ballo (0..1): sale piano, così non scatta
     DateTime danceLast;
     DateTime walkUntil;   // rete di sicurezza: se la camminata viene interrotta, "walking" non resta bloccato
 
@@ -164,6 +165,9 @@ public partial class Mascot : UserControl
     // ferma tutto e fa partire l'animazione dello stato attuale
     void Apply()
     {
+        // dove stava il corpo e se stava ballando: uscendo dal ballo ci torna piano, senza saltare al centro
+        double settleAngle = Rot.Angle, settleY = Tr.Y;
+        bool wasDancing = dance.IsEnabled;
         dance.Stop();
         Tr.BeginAnimation(TranslateTransform.YProperty, null);
         Rot.BeginAnimation(RotateTransform.AngleProperty, null);
@@ -191,6 +195,15 @@ public partial class Mascot : UserControl
         Dots.Visibility = !cheering && mode == MascotMode.Working ? Visibility.Visible : Visibility.Collapsed;
 
         if (mode != MascotMode.Idle) GoHome();
+
+        // dalla 1.1.4 uscire dal ballo (musica in pausa, fine del ballo) faceva scattare il corpo a zero:
+        // adesso ci torna in un quarto di secondo
+        if (wasDancing && mode != MascotMode.Dance && (Math.Abs(settleAngle) > .05 || Math.Abs(settleY) > .05))
+        {
+            var ease = new SineEase { EasingMode = EasingMode.EaseOut };
+            Rot.BeginAnimation(RotateTransform.AngleProperty, new DoubleAnimation(settleAngle, 0, TimeSpan.FromMilliseconds(280)) { EasingFunction = ease, FillBehavior = FillBehavior.Stop });
+            Tr.BeginAnimation(TranslateTransform.YProperty, new DoubleAnimation(settleY, 0, TimeSpan.FromMilliseconds(280)) { EasingFunction = ease, FillBehavior = FillBehavior.Stop });
+        }
 
         if (cheering)
         {
@@ -333,24 +346,33 @@ public partial class Mascot : UserControl
     {
         danceTarget = DanceSpeed;
         if (dancePeriod < 120) dancePeriod = danceTarget;
-        dancePhase = 0;
-        danceLast = DateTime.UtcNow;
-        if (!dance.IsEnabled) dance.Start();
+        // se stava già ballando il dondolio continua da dov'è invece di ripartire da capo (era l'altro scatto)
+        if (!dance.IsEnabled)
+        {
+            // via l'eventuale ritorno al centro ancora in corso: il ballo comanda lui il corpo
+            Rot.BeginAnimation(RotateTransform.AngleProperty, null);
+            Tr.BeginAnimation(TranslateTransform.YProperty, null);
+            danceAmp = 0;
+            danceLast = DateTime.UtcNow;
+            dance.Start();
+        }
         TickDance();
     }
 
-    // un fotogramma del ballo: il corpo oscilla da una parte all'altra e saltella, e il periodo scivola piano
-    // verso quello del battito. Prima ogni battito stimato faceva ripartire l'animazione da -8 gradi: erano gli scatti.
+    // un fotogramma del ballo: il corpo oscilla da una parte all'altra, appena, e il periodo scivola piano
+    // verso quello del battito. L'ampiezza sale da 0, così entrare nel ballo non è uno scatto.
     void TickDance()
     {
         var now = DateTime.UtcNow;
         double dt = Math.Clamp((now - danceLast).TotalMilliseconds, 0, 80);
         danceLast = now;
+        if (dt <= 0) return;
         dancePeriod += (danceTarget - dancePeriod) * Math.Min(1, dt / 400);
         dancePhase = (dancePhase + dt / dancePeriod) % 1;
+        danceAmp = Math.Min(1, danceAmp + dt / 300);
         double a = 2 * Math.PI * dancePhase;
-        Rot.Angle = 8 * Math.Sin(a);       // dondolio
-        Tr.Y = -3 + 3 * Math.Cos(a);       // saltello, uno per ogni dondolio
+        Rot.Angle = 4.5 * danceAmp * Math.Sin(a);            // dondolio discreto, non un dondolamento
+        Tr.Y = -2 * danceAmp + 2 * danceAmp * Math.Cos(a);   // saltello appena accennato
     }
 
     // sul ritornello (l'audio "si apre"): alza le due mani
