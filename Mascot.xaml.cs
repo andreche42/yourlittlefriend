@@ -343,7 +343,7 @@ public partial class Mascot : UserControl
         get => danceMs <= 0 ? 350 : danceMs;
         set
         {
-            double v = value <= 0 ? 0 : Math.Clamp(value, 240, 900);
+            double v = value <= 0 ? 0 : Math.Clamp(value, 420, 1000);   // niente dondolii frenetici, anche sui pezzi veloci
             if (Math.Abs(v - danceMs) < 15) return;   // differenze minime: il dondolio non si tocca
             danceMs = v;
             if (v > 0) danceTarget = v;               // nuovo tempo: il ballo ci arriva piano, senza ripartire da capo
@@ -380,8 +380,8 @@ public partial class Mascot : UserControl
         dancePhase = (dancePhase + dt / dancePeriod) % 1;
         danceAmp = Math.Min(1, danceAmp + dt / 300);
         double a = 2 * Math.PI * dancePhase;
-        Rot.Angle = 4.5 * danceAmp * Math.Sin(a);            // dondolio discreto, non un dondolamento
-        Tr.Y = -2 * danceAmp + 2 * danceAmp * Math.Cos(a);   // saltello appena accennato
+        Rot.Angle = 2 * danceAmp * Math.Sin(a);                 // appena un accenno di dondolio
+        Tr.Y = -.6 * danceAmp + .6 * danceAmp * Math.Cos(a);    // saltello quasi invisibile
     }
 
     // sul ritornello (l'audio "si apre"): alza le due mani
