@@ -29,6 +29,16 @@ English translation: [README-english.md](https://github.com/andreche42/yourlittl
 - **aggiornamenti**: qualche minuto dopo l'avvio l'app controlla da sola se c'è una versione nuova (pallino rosso sull'omino, e ti chiede se aggiornare). scarica, verifica il file e si aggiorna in silenzio, poi riparte. si può spegnere dalle impostazioni
 - tasto destro (o ⚙) per uscire
 
+## cosa può fare dalla chat
+
+- volume (imposta, alza/abbassa, muta), play/pausa/avanti/indietro
+- apre app della lista (`Apps` in `Actions.cs`), cerca su google, blocca/sospende/spegne/riavvia il pc
+
+le azioni sensibili (aprire app, browser, spegnimento ecc.) chiedono prima conferma con un popup che mostra i passaggi.
+il modello non può eseguire comandi liberi: solo le azioni scritte in `Actions.cs`.
+i file trascinati nella scheda + vengono letti ma non possono far partire azioni.
+
+
 ## installazione (consigliata)
 scarica `YourLittleFriend-setup-x.y.z.exe` dalle [release](../../releases) e avvialo. non servono permessi di amministratore e non devi installare .net.
 
@@ -71,9 +81,6 @@ hai suggerimenti o consigli? sbizzarrisciti! apri un issue su questa repo e dicc
 ### byollm
 porta la tua LLM su YourLittleFriend: l'autoinstaller di ollama c'è già (impostazioni). in arrivo: collegati alle API di qualche AI (vercel, openai, anthropic) e usa modelli premium a pagamento.
 
-### più animazioni del omino
-nuove espressioni e reazioni per rendere YourLittleFriend ancora più carino :)
-
 ### lettura immagini e OCR da llm locale
 incolla un immagine e la LLM locale leggerà l'immagine per OCR o guarderà l'immagine e i dettagli. (in sviluppo)
 
@@ -87,12 +94,3 @@ poi vai sulla notch (o bolla) > tasto destro > impostazioni > scendi tutto giù 
 
 ## llm locale (ollama)
 l'installazione di ollama e del modello è guidata dall'app (primo avvio o impostazioni). se vuoi farlo a mano: installa ollama e poi `ollama pull <modello>`; il modello si sceglie dalle impostazioni. si può anche fermare/stoppare quando non lo usate dalle impostazioni
-
-## cosa può fare dalla chat
-
-- volume (imposta, alza/abbassa, muta), play/pausa/avanti/indietro
-- apre app della lista (`Apps` in `Actions.cs`), cerca su google, blocca/sospende/spegne/riavvia il pc
-
-le azioni sensibili (aprire app, browser, spegnimento ecc.) chiedono prima conferma con un popup che mostra i passaggi.
-il modello non può eseguire comandi liberi: solo le azioni scritte in `Actions.cs`.
-i file trascinati nella scheda + vengono letti ma non possono far partire azioni.
