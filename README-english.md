@@ -25,6 +25,7 @@ YourLittleFriend is a little buddy in your pc's notch or in a bubble (windows). 
 - **web search**: if you ask for news or something it doesn't know, the ai searches the internet on its own (duckduckgo, with wikipedia as a fallback) and answers based on the results, without asking you for confirmation. google doesn't allow reading its results reliably, which is why it's not used. it can be turned off from the settings
 - **look**: from the settings you pick a theme (night, day, ocean, sunset, forest, candy), the main color, the little guy's color (even in hex), the transparency and a colored outline for the notch. everything changes on the fly and if you cancel it goes back to how it was
 - **updates**: a few minutes after start the app checks by itself whether there's a new version (red dot on the little guy, and it asks you whether to update). it downloads, verifies the file and updates silently, then comes back. it can be turned off in the settings
+- **what's new**: when the app comes back after an update it opens a little window on its own with everything that changed in this version, taken from the release notes and shown only in the language you picked
 - right click (or ⚙) to quit
 
 ## what it can do from the chat

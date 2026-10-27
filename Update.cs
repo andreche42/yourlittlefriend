@@ -25,13 +25,7 @@ public static class Update
     {
         try
         {
-            using var req = new HttpRequestMessage(HttpMethod.Get, $"https://api.github.com/repos/{Repo}/releases/latest");
-            req.Headers.UserAgent.ParseAdd("YourLittleFriend");
-            req.Headers.Accept.ParseAdd("application/vnd.github+json");
-            using var res = await Http.SendAsync(req);
-            if (!res.IsSuccessStatusCode) return null;
-            using var d = JsonDocument.Parse(await res.Content.ReadAsStringAsync());
-            var root = d.RootElement;
+            if (await Json($"https://api.github.com/repos/{Repo}/releases/latest") is not { } root) return null;
             var tag = root.TryGetProperty("tag_name", out var t) ? t.GetString() ?? "" : "";
             var page = root.TryGetProperty("html_url", out var u) ? u.GetString() ?? "" : "";
             if (!IsNewer(tag, App.Version)) return null;
@@ -50,6 +44,109 @@ public static class Update
         }
         catch { return null; }   // offline o github che non risponde: si riprova più tardi
     }
+
+    // una chiamata all'api di github con le intestazioni giuste. null = non c'è, non risponde o è lenta
+    static async Task<JsonElement?> Json(string url)
+    {
+        try
+        {
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(20));
+            using var req = new HttpRequestMessage(HttpMethod.Get, url);
+            req.Headers.UserAgent.ParseAdd("YourLittleFriend");
+            req.Headers.Accept.ParseAdd("application/vnd.github+json");
+            using var res = await Http.SendAsync(req, cts.Token);
+            if (!res.IsSuccessStatusCode) return null;
+            using var d = JsonDocument.Parse(await res.Content.ReadAsStringAsync());
+            return d.RootElement.Clone();
+        }
+        catch { return null; }
+    }
+
+    // le note (descrizione) della release di una versione: quelle che l'app mostra dopo un aggiornamento.
+    // stringa vuota = niente da mostrare (release senza note, tag con un altro nome, oppure offline)
+    public static async Task<string> Notes(string version)
+    {
+        foreach (var tag in new[] { version, "v" + version })
+        {
+            var r = await Json($"https://api.github.com/repos/{Repo}/releases/tags/{tag}");
+            if (r != null && Body(r.Value) is { } b && !string.IsNullOrWhiteSpace(b)) return b;
+        }
+        // nessun tag con quel nome (es. build fatta a mano): si guarda l'ultima release, se è proprio questa
+        var latest = await Json($"https://api.github.com/repos/{Repo}/releases/latest");
+        if (latest != null && latest.Value.TryGetProperty("tag_name", out var t) &&
+            SameTag(t.GetString() ?? "", version) && Body(latest.Value) is { } lb && !string.IsNullOrWhiteSpace(lb))
+            return lb;
+        return "";
+    }
+
+    static string? Body(JsonElement release) =>
+        release.TryGetProperty("body", out var b) ? b.GetString() : null;
+
+    static bool SameTag(string tag, string version) =>
+        string.Equals(tag.TrimStart('v', 'V'), version.TrimStart('v', 'V'), StringComparison.OrdinalIgnoreCase);
+
+    // le note di una release hanno due lingue (di solito inglese, una riga di trattini, italiano):
+    // si tiene solo quella scelta nelle impostazioni, così l'utente non se le vede tutte e due.
+    public static string Pick(string body, bool english)
+    {
+        var text = body.Replace("\r\n", "\n").Replace('\r', '\n');
+        var want = english ? "en" : "it";
+
+        // marcatori scritti a mano: <!-- it --> ... <!-- /it -->
+        var marked = Regex.Match(text, $@"<!--\s*{want}\s*-->(.*?)<!--\s*/{want}\s*-->", RegexOptions.Singleline | RegexOptions.IgnoreCase);
+        if (marked.Success) return Clean(marked.Groups[1].Value);
+
+        // altrimenti si spezza in blocchi: righe di trattini, oppure titoli che nominano una lingua ("## Italiano")
+        var blocks = new List<(string? Lang, List<string> Lines)> { (null, new()) };
+        foreach (var line in text.Split('\n'))
+        {
+            var t = line.Trim();
+            if (IsRule(t)) { blocks.Add((null, new())); continue; }
+            if (HeadingLang(t) is { } lang) { blocks.Add((lang, new())); continue; }
+            blocks[^1].Lines.Add(line);
+        }
+        var full = blocks.Where(b => b.Lines.Any(l => l.Trim().Length > 0)).ToList();
+        if (full.Count == 0) return "";
+        if (full.Count == 1) return Clean(string.Join("\n", full[0].Lines));   // una lingua sola: quella c'è
+        var mine = full.Where(b => b.Lang == want).ToList();
+        if (mine.Count > 0) return Clean(string.Join("\n", mine.SelectMany(b => b.Lines)));
+        // nessun blocco dichiarato: si sceglie quello che sembra scritto nella lingua voluta
+        return Clean(string.Join("\n", full.OrderByDescending(b => Score(string.Join("\n", b.Lines), english)).First().Lines));
+    }
+
+    // riga di divisione (---, ***, ___): separa le due lingue
+    static bool IsRule(string t) =>
+        t.Length >= 3 && (t.All(c => c == '-') || t.All(c => c == '*') || t.All(c => c == '_'));
+
+    // un titolo che è solo il nome di una lingua non si mostra: serve solo a dividere
+    static string? HeadingLang(string t)
+    {
+        if (!t.StartsWith('#')) return null;
+        var k = Regex.Replace(t.TrimStart('#').Trim().ToLowerInvariant(), @"[^a-z ]", " ");
+        k = Regex.Replace(k, @"\s+", " ").Trim();
+        return k switch
+        {
+            "it" or "ita" or "italiano" or "italian" or "versione italiana" or "descrizione in italiano" or "italian description" => "it",
+            "en" or "eng" or "inglese" or "english" or "versione inglese" or "descrizione in inglese" or "english description" => "en",
+            _ => null
+        };
+    }
+
+    // parole comuni delle due lingue: servono a capire in che lingua è scritto un blocco
+    static readonly string[] ItWords =
+        [" il ", " lo ", " la ", " le ", " gli ", " un ", " una ", " di ", " del ", " della ", " che ", " non ", " con ", " per ", " più ", " sono ", " come ", " quando ", " anche ", " solo ", " ora ", " si ", " è ", " ma ", " dal ", " nel "];
+    static readonly string[] EnWords =
+        [" the ", " and ", " with ", " when ", " of ", " to ", " is ", " are ", " it ", " its ", " this ", " that ", " while ", " not ", " no ", " also ", " only ", " now ", " back ", " from ", " on ", " as "];
+
+    static int Score(string text, bool english)
+    {
+        var low = " " + Regex.Replace(text.ToLowerInvariant(), @"\s+", " ") + " ";
+        int mine = (english ? EnWords : ItWords).Sum(w => Regex.Matches(low, w).Count);
+        int theirs = (english ? ItWords : EnWords).Sum(w => Regex.Matches(low, w).Count);
+        return mine - theirs;
+    }
+
+    static string Clean(string s) => s.Replace("\r\n", "\n").Trim('\n', ' ', '\t');
 
     // "1.2.0" è più nuova di "1.1.9"; una beta non è più nuova della stessa versione stabile
     public static bool IsNewer(string remote, string local)

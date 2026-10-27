@@ -23,11 +23,38 @@ public partial class App : Application
         YourLittleFriend.Update.CleanOldExe();   // e la copia vecchia con il nome minuscolo non resta in giro
         Theme.Apply();
 
-        if (!Settings.Current.Onboarded) new OnboardingWindow().ShowDialog();   // primo avvio
+        bool fresh = !Settings.Current.Onboarded;
+        if (fresh)
+        {
+            new OnboardingWindow().ShowDialog();   // primo avvio
+            Settings.Current.LastVersion = App.Version;   // appena installata: non c'è niente di nuovo da raccontare
+            Settings.Current.Save();
+        }
 
         var main = new MainWindow();
         MainWindow = main;
         main.Show();
+        if (!fresh) WhatsNew();   // se l'app è appena stata aggiornata: cosa c'è di nuovo
+    }
+
+    // prima apertura dopo un aggiornamento: si aprono le note della release di questa versione,
+    // solo nella lingua scelta. se la release non ha note (o si è offline) non si apre niente.
+    async void WhatsNew()
+    {
+        var st = Settings.Current;
+        var seen = st.LastVersion;
+        if (seen == App.Version) return;
+        st.LastVersion = App.Version;   // in ogni caso non si ripropone
+        st.Save();
+        if (seen != "") await Task.Delay(1500);   // l'app riparte da sola dopo l'aggiornamento: un attimo per far vedere l'omino
+        try
+        {
+            var notes = await YourLittleFriend.Update.Notes(App.Version);
+            var text = notes.Length == 0 ? "" : YourLittleFriend.Update.Pick(notes, Loc.En);
+            if (text.Length == 0) return;
+            new WhatsNewWindow(App.Version, text).ShowDialog();
+        }
+        catch { }
     }
 
     // riavvia l'app (serve dopo il cambio di lingua)

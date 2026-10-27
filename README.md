@@ -27,6 +27,7 @@ English translation: [README-english.md](https://github.com/andreche42/yourlittl
 - **ricerca sul web**: se chiedi una notizia o qualcosa che non sa, l'ia cerca da sola su internet (duckduckgo, con wikipedia come riserva) e risponde in base ai risultati, senza chiederti conferma. google non permette di leggere i suoi risultati in modo affidabile, per questo non si usa. si può spegnere dalle impostazioni
 - **aspetto**: dalle impostazioni scegli un tema (notte, giorno, oceano, tramonto, foresta, caramella), il colore principale, il colore dell'omino (anche in esadecimale), la trasparenza e un contorno colorato per il notch. cambia tutto al volo e se annulli torna com'era
 - **aggiornamenti**: qualche minuto dopo l'avvio l'app controlla da sola se c'è una versione nuova (pallino rosso sull'omino, e ti chiede se aggiornare). scarica, verifica il file e si aggiorna in silenzio, poi riparte. si può spegnere dalle impostazioni
+- **cosa c'è di nuovo**: quando l'app riparte dopo un aggiornamento si apre da sola una finestrella con tutto quello che è cambiato in questa versione, preso dalle note della release e mostrato solo nella lingua che hai scelto
 - tasto destro (o ⚙) per uscire
 
 ## cosa può fare dalla chat

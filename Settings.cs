@@ -13,6 +13,7 @@ public class Settings
     public double? Lat { get; set; }
     public double? Lon { get; set; }
     public string Language { get; set; } = "";   // "it" o "en"
+    public string LastVersion { get; set; } = ""; // versione con cui si è aperta l'ultima volta: se cambia si mostra "cosa c'è di nuovo"
     public string Model { get; set; } = Llm.DefaultModel;
     public bool Onboarded { get; set; }
     public bool WebSearch { get; set; } = true;   // l'ia può cercare su internet
