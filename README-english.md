@@ -27,6 +27,15 @@ YourLittleFriend is a little buddy in your pc's notch or in a bubble (windows). 
 - **updates**: a few minutes after start the app checks by itself whether there's a new version (red dot on the little guy, and it asks you whether to update). it downloads, verifies the file and updates silently, then comes back. it can be turned off in the settings
 - right click (or ⚙) to quit
 
+## what it can do from the chat
+
+- volume (set, raise/lower, mute), play/pause/next/previous
+- opens apps from the list (`Apps` in `Actions.cs`), searches on google, locks/suspends/shuts down/restarts the pc
+
+sensitive actions (opening apps, browser, shutdown etc.) first ask for confirmation with a popup that shows the steps.
+the model can't run free-form commands: only the actions written in `Actions.cs`.
+files dragged into the + tab are read but can't trigger actions.
+
 ## installation (recommended)
 download `YourLittleFriend-setup-x.y.z.exe` from the [releases](../../releases) and run it. you don't need administrator permissions and you don't have to install .net.
 
@@ -69,9 +78,6 @@ got suggestions or tips? go wild! open an issue on this repo and tell us everyth
 ### byollm
 bring your own LLM to yourlittlefriend: the ollama auto-installer is already there (settings). coming soon: connect to the APIs of some AIs (vercel, openai, anthropic) and use paid premium models.
 
-### more animations for the little guy
-new expressions and reactions to make yourlittlefriend even cuter :)
-
 ### Image Recognition and OCR Using a Local LLM
 Paste an image, and the local LLM will process the image for OCR or analyze the image and its details. (in development)
 
@@ -85,12 +91,3 @@ then go to the notch > right click > settings > scroll all the way down and then
 
 ## local llm (ollama)
 the installation of ollama and of the model is guided by the app (first launch or settings). if you want to do it by hand: install ollama and then `ollama pull <model>`; the model is chosen from the settings. you can also turn it off when you're not using it in settings.
-
-## what it can do from the chat
-
-- volume (set, raise/lower, mute), play/pause/next/previous
-- opens apps from the list (`Apps` in `Actions.cs`), searches on google, locks/suspends/shuts down/restarts the pc
-
-sensitive actions (opening apps, browser, shutdown etc.) first ask for confirmation with a popup that shows the steps.
-the model can't run free-form commands: only the actions written in `Actions.cs`.
-files dragged into the + tab are read but can't trigger actions.
