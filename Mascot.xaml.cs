@@ -16,15 +16,16 @@ public enum WeatherMood { None, Sun, Rain, Storm, Cloud, Snow, Night }
 public partial class Mascot : UserControl
 {
     double wander;
-    public double WanderRange   // quanto poteva camminare (px): a riposo adesso sta fermo, quindi 0 = resta al centro
+    public double WanderRange   // quanto può camminare (px). 0 = sta ferma e fa solo saltelli
     {
         get => wander;
-        set { wander = value; if (value <= 0) GoHome(); }   // torna al centro (altrimenti resterebbe dov'era, magari fuori dalla bolla)
+        set { wander = value; if (value <= 0) GoHome(); }   // se non può più passeggiare torna al centro (altrimenti resta dov'era, magari fuori dalla bolla)
     }
 
     // riporta l'omino al centro, subito
     public void Home()
     {
+        walking = false;
         flip.ScaleX = 1;
         walk.BeginAnimation(TranslateTransform.XProperty, null);
         walk.X = 0;
@@ -41,13 +42,14 @@ public partial class Mascot : UserControl
     readonly TranslateTransform walk = new();
     MascotMode mode;
     WeatherMood weather;
-    bool cheering, windy, cool;
+    bool cheering, walking, windy, cool;
     bool waving, celebrating, alert;
     double danceMs;                          // durata di un dondolio: 0 = quella di sempre, altrimenti segue il battito
     double dancePhase;                       // a che punto è il dondolio (0..1)
     double dancePeriod = 350, danceTarget = 350;   // ms di un dondolio: quello attuale e quello che chiede il battito
     double danceAmp;                         // quanto è "entrato" nel ballo (0..1): sale piano, così non scatta
     DateTime danceLast;
+    DateTime walkUntil;   // rete di sicurezza: se la camminata viene interrotta, "walking" non resta bloccato
 
     public MascotMode Mode
     {
@@ -347,6 +349,7 @@ public partial class Mascot : UserControl
     // torna al centro (quando smette di girare per lavorare o ballare)
     void GoHome()
     {
+        walking = false;
         flip.ScaleX = 1;
         double from = walk.X;
         walk.BeginAnimation(TranslateTransform.XProperty, null);
@@ -391,16 +394,6 @@ public partial class Mascot : UserControl
     // verso quello del battito. L'ampiezza sale da 0, così entrare nel ballo non è uno scatto.
     void TickDance()
     {
-        // rete di sicurezza: senza musica il ballo non deve esistere. Se per qualsiasi motivo lo stato
-        // non è più "ballo", si ferma qui e il corpo torna dritto e al centro
-        if (mode != MascotMode.Dance || cheering)
-        {
-            dance.Stop();
-            danceAmp = 0;
-            Rot.Angle = 0;
-            Tr.Y = 0;
-            return;
-        }
         var now = DateTime.UtcNow;
         double dt = Math.Clamp((now - danceLast).TotalMilliseconds, 0, 80);
         danceLast = now;
@@ -465,15 +458,23 @@ public partial class Mascot : UserControl
     }
 
     // ---- vita da mascotte: ogni tanto fa qualcosa da sola ----
-    // senza musica sta fermo: il corpo non salta e non va in giro, si muovono solo gli occhi.
-    // a muovere il corpo ci pensano solo il lavoro, il ballo (che vuole la musica) e il meteo.
     void IdleTick()
     {
-        if (mode != MascotMode.Idle || cheering) return;
+        if (walking && DateTime.UtcNow > walkUntil) walking = false;
+        if (mode != MascotMode.Idle || cheering || walking) return;
         // con la paura, il freddo, il sonno o il volo sta fermo: ci pensano già le animazioni del tempo
         if (weather is WeatherMood.Storm or WeatherMood.Snow or WeatherMood.Night || (weather == WeatherMood.Rain && windy)) return;
-        if (rnd.Next(2) == 0) Look(); else Peek();
+        switch (rnd.Next(4))
+        {
+            case 0: if (WanderRange > 0) Wander(); else Hop(); break;
+            case 1: Look(); break;
+            case 2: Peek(); break;
+            default: Hop(); break;
+        }
     }
+
+    void Hop() =>
+        Tr.BeginAnimation(TranslateTransform.YProperty, Keys(false, (0, 0), (160, -12), (320, 0), (480, -8), (640, 0)));
 
     void Look() =>
         EyeTr.BeginAnimation(TranslateTransform.XProperty, Keys(false, (0, 0), (250, -5), (1000, -5), (1250, 5), (1900, 5), (2150, 0)));
@@ -482,4 +483,21 @@ public partial class Mascot : UserControl
     void Peek() =>
         EyeTr.BeginAnimation(TranslateTransform.XProperty, Keys(false, (0, 0), (450, -9), (1500, -9), (1800, 9), (2800, 9), (3100, 0)));
 
+    // va a spasso fino a un punto a caso, saltellando
+    void Wander()
+    {
+        double from = walk.X, target = (rnd.NextDouble() * 2 - 1) * WanderRange, dx = target - from;
+        if (Math.Abs(dx) < 20) return;
+        walking = true;
+        walkUntil = DateTime.UtcNow.AddMilliseconds(Math.Abs(dx) / 45 * 1000 + 1500);
+        flip.ScaleX = dx > 0 ? 1 : -1;
+        double ms = Math.Abs(dx) / 45 * 1000;   // 45 px al secondo
+        walk.X = target;
+        var go = new DoubleAnimation(from, target, TimeSpan.FromMilliseconds(ms))
+        { EasingFunction = new SineEase { EasingMode = EasingMode.EaseInOut } };
+        go.Completed += (_, _) => walking = false;
+        walk.BeginAnimation(TranslateTransform.XProperty, go);
+        Tr.BeginAnimation(TranslateTransform.YProperty, new DoubleAnimation(0, -8, TimeSpan.FromMilliseconds(170))
+        { AutoReverse = true, RepeatBehavior = new RepeatBehavior(TimeSpan.FromMilliseconds(ms)) });
+    }
 }

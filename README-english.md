@@ -75,15 +75,6 @@ new expressions and reactions to make yourlittlefriend even cuter :)
 ### Image Recognition and OCR Using a Local LLM
 Paste an image, and the local LLM will process the image for OCR or analyze the image and its details. (in development)
 
-### NEW: He dances to the beat of the song!
-If you're playing something (preferably a song), the little guy dances to the beat, and who knows, maybe when the audio hits its peak (like during the chorus), he'll make a hand gesture!
-
-### new music icons
-the music control icons are currently buggy emojis: we're replacing them with proper icons, with tactile feedback when you press them.
-
-### weather and music together on the home
-the home will show both the weather (and the other stuff) and the music, without removing the music.
-
 ------
 
 ### guides

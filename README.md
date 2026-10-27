@@ -77,15 +77,6 @@ nuove espressioni e reazioni per rendere YourLittleFriend ancora più carino :)
 ### lettura immagini e OCR da llm locale
 incolla un immagine e la LLM locale leggerà l'immagine per OCR o guarderà l'immagine e i dettagli. (in sviluppo)
 
-### NUOVO: balla a ritmo della canzone!
-se stai riproducendo qualcosa (preferibilmente una canzone), l'omino balla a ritmo, e boh, magari quando l'audio raggiunge il peak (tipo nel ritornello) fa un gesto con le mani!
-
-### icone della musica nuove
-le icone dei controlli musica sono emoji buggate: verranno sostituite con vere icone, con feedback tattile quando vevngono premuti.
-
-### meteo e musica insieme nella home
-nella home potrai vedere sia il meteo (e le altre cose) sia la musica, senza togliere la musica.
-
 ---
 
 ### guide
