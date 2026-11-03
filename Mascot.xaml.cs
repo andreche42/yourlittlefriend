@@ -92,6 +92,12 @@ public partial class Mascot : UserControl
         set { if (sleepAtNight == value) return; sleepAtNight = value; Apply(); }
     }
 
+    // il sonno vale solo a tarda sera: dalle 21:30 alle 6, prima non dorme nemmeno se fuori è buio
+    static readonly TimeSpan SleepFrom = new(21, 30, 0);
+    static readonly TimeSpan SleepTo = new(6, 0, 0);
+    static bool IsSleepTime => DateTime.Now.TimeOfDay >= SleepFrom || DateTime.Now.TimeOfDay < SleepTo;
+    bool napTime = IsSleepTime;   // se ora è ora del sonno: si aggiorna da solo mentre la mascotte è visibile
+
     public WeatherMood Weather
     {
         get => weather;
@@ -201,6 +207,7 @@ public partial class Mascot : UserControl
     // ferma tutto e fa partire l'animazione dello stato attuale
     void Apply()
     {
+        napTime = IsSleepTime;   // alle 21:30 si addormenta, alle 6 si sveglia, anche se nessuno tocca niente
         // dove stava il corpo e se stava ballando: uscendo dal ballo ci torna piano, senza saltare al centro
         double settleAngle = Rot.Angle, settleY = Tr.Y;
         bool wasDancing = dance.IsEnabled;
@@ -301,8 +308,8 @@ public partial class Mascot : UserControl
                         Rot.BeginAnimation(RotateTransform.AngleProperty, Keys(true, (0, 0), (900, 4), (2400, 4), (3300, 0), (5200, 0)));
                         Tr.BeginAnimation(TranslateTransform.YProperty, Keys(true, (0, 0), (900, -2.5), (2400, -2.5), (3300, 0), (5200, 0)));
                         break;
-                    case WeatherMood.Night:   // respira piano, dorme (se il sonno è acceso)
-                        if (!sleepAtNight) { Sc.BeginAnimation(ScaleTransform.ScaleYProperty, null); Sc.ScaleY = 1; break; }
+                    case WeatherMood.Night:   // respira piano, dorme (se il sonno è acceso e è tarda sera)
+                        if (!sleepAtNight || !napTime) { Sc.BeginAnimation(ScaleTransform.ScaleYProperty, null); Sc.ScaleY = 1; break; }
                         Sc.BeginAnimation(ScaleTransform.ScaleYProperty, Swing(1, .97, 1700));
                         break;
                     case WeatherMood.Rain when windy:   // vola con l'ombrello
@@ -340,7 +347,7 @@ public partial class Mascot : UserControl
         bool rain = weather == WeatherMood.Rain, storm = weather == WeatherMood.Storm && !cheering;
         // con la musica l'omino è sveglio: spariscono solo palpebre del sonno e z. Tutti gli altri effetti
         // del meteo (occhiali, ombrello, sciarpa, sudore) restano anche mentre balla
-        bool night = weather == WeatherMood.Night && sleepAtNight && !cheering && mode != MascotMode.Dance;
+        bool night = weather == WeatherMood.Night && sleepAtNight && napTime && !cheering && mode != MascotMode.Dance;
         bool boh = weather == WeatherMood.Cloud && !cheering;
 
         Shades.Visibility = weather == WeatherMood.Sun || cool ? Visibility.Visible : Visibility.Collapsed;
@@ -562,10 +569,11 @@ public partial class Mascot : UserControl
     // ---- vita da mascotte: ogni tanto fa qualcosa da sola ----
     void IdleTick()
     {
+        if (napTime != IsSleepTime) Apply();   // è scattata l'ora del sonno (o è finita): si addormenta o si sveglia subito
         if (walking && DateTime.UtcNow > walkUntil) walking = false;
         if (mode != MascotMode.Idle || cheering || walking || quiet || reaction != MascotReaction.None) return;
         // con la paura, il freddo, il sonno o il volo sta fermo: ci pensano già le animazioni del tempo
-        if (weather is WeatherMood.Storm or WeatherMood.Snow || (weather == WeatherMood.Night && sleepAtNight) || (weather == WeatherMood.Rain && windy)) return;
+        if (weather is WeatherMood.Storm or WeatherMood.Snow || (weather == WeatherMood.Night && sleepAtNight && napTime) || (weather == WeatherMood.Rain && windy)) return;
         switch (rnd.Next(4))
         {
             case 0: if (WanderRange > 0) Wander(); else Hop(); break;
