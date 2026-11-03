@@ -85,6 +85,15 @@ porta la tua LLM su YourLittleFriend: l'autoinstaller di ollama c'è già (impos
 ### lettura immagini e OCR da llm locale
 incolla un immagine e la LLM locale leggerà l'immagine per OCR o guarderà l'immagine e i dettagli. (in sviluppo)
 
+### voce
+parli al microfono e la chat ti risponde, senza scrivere. (in arrivo)
+
+### cronologia appunti
+accanto al portafile, la cronologia di quello che copi: testo e immagini recenti, da ricopiare con un clic. (in arrivo)
+
+### reazioni di sistema
+l'omino reagisce a quello che succede nel pc: batteria scarica, download finito, cpu alta... ognuna si accende e si spegne dalle impostazioni, e non disturba mentre lavori o c'è musica. (in arrivo)
+
 ---
 
 ### guide

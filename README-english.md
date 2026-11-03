@@ -82,6 +82,15 @@ bring your own LLM to yourlittlefriend: the ollama auto-installer is already the
 ### Image Recognition and OCR Using a Local LLM
 Paste an image, and the local LLM will process the image for OCR or analyze the image and its details. (in development)
 
+### voice
+talk into the microphone and the chat answers you, no typing needed. (coming soon)
+
+### clipboard history
+next to the file holder, a history of what you copy: recent text and images, one click to copy them again. (coming soon)
+
+### system reactions
+the mascot reacts to what happens on your pc: low battery, finished download, high cpu... each one can be turned on and off in settings, and they stay quiet while you work or music is playing. (coming soon)
+
 ------
 
 ### guides
