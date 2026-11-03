@@ -214,6 +214,10 @@ public static class Llm
             >= 500 => Loc.L("il servizio dell'IA è in difficoltà, riprova tra poco", "the AI service is having trouble, try again in a moment"),
             _ => $"HTTP {(int)res.StatusCode}"
         };
+        // capita con un'immagine allegata a un modello che non le legge: l'errore del servizio non lo dice
+        if ((int)res.StatusCode == 400 && raw.Contains("must be a string", StringComparison.OrdinalIgnoreCase))
+            head = Loc.L("questo modello non legge le immagini: scegline uno che le legge (un'immagine non si può mandare come testo)",
+                         "this model doesn't read images: pick one that does (an image can't be sent as text)");
         return string.IsNullOrWhiteSpace(detail) ? head : $"{head}\n{detail}";
     }
 
@@ -237,7 +241,9 @@ public static class Llm
                 outp.Add(o);
                 continue;
             }
-            o["content"] = m["content"] is JsonArray ? m["content"]!.DeepClone() : JsonValue.Create(m["content"]?.ToString() ?? "");
+            // il contenuto a blocchi si tiene solo se c'è davvero un'immagine da allegare: per un file di testo
+            // i servizi online vogliono una stringa, e con un array rispondono "messages[0].content must be a string"
+            o["content"] = m["content"] is JsonArray blocks && HasImage(blocks) ? blocks.DeepClone() : Flatten(m["content"]);
             if (m["tool_calls"] is JsonArray tcs && tcs.Count > 0)
             {
                 var arr = new JsonArray();
@@ -264,6 +270,26 @@ public static class Llm
             outp.Add(o);
         }
         return outp;
+    }
+
+    // il contenuto a blocchi contiene un'immagine? (solo allora ha senso mandarlo come array)
+    static bool HasImage(JsonArray blocks)
+    {
+        foreach (var b in blocks) if (b?["type"]?.ToString() == "image_url") return true;
+        return false;
+    }
+
+    // blocchi di solo testo (un file allegato, per esempio) tornano una stringa unica, come la vogliono tutti
+    static string Flatten(JsonNode? content)
+    {
+        if (content is not JsonArray blocks) return content?.ToString() ?? "";
+        var parts = new List<string>();
+        foreach (var b in blocks)
+        {
+            if (b?["type"]?.ToString() == "text") parts.Add(b["text"]?.ToString() ?? "");
+            else if (b is JsonValue v) parts.Add(v.ToString());
+        }
+        return string.Join("\n\n", parts).Trim();
     }
 
     // una chiamata allo strumento nella forma interna (come la manda ollama): nome e argomenti già oggetto
