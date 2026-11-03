@@ -3,25 +3,96 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
   <!-- porta la tua llm: qualunque servizio con la chiave dell'utente, tutti parlano la lingua di openai -->
   <UserControl.Resources>
-    <Style TargetType="ComboBoxItem">
-      <Setter Property="Background" Value="{DynamicResource CardBrush}"/>
+    <!-- la tendina di windows è bianca su bianco nei temi scuri: qui si disegna coi colori del tema -->
+    <Style x:Key="DropItem" TargetType="ComboBoxItem">
       <Setter Property="Foreground" Value="{DynamicResource FgBrush}"/>
-      <Setter Property="Padding" Value="8,5"/>
+      <Setter Property="Padding" Value="9,5"/>
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="ComboBoxItem">
+            <Border x:Name="Bd" Background="Transparent" Padding="{TemplateBinding Padding}" CornerRadius="6">
+              <ContentPresenter/>
+            </Border>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsHighlighted" Value="True">
+                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource PanelHoverBrush}"/>
+              </Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+
+    <Style TargetType="ComboBox">
+      <Setter Property="Foreground" Value="{DynamicResource FgBrush}"/>
+      <Setter Property="Background" Value="{DynamicResource PanelBrush}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource FgDimBrush}"/>
+      <Setter Property="ItemContainerStyle" Value="{StaticResource DropItem}"/>
+      <Setter Property="SnapsToDevicePixels" Value="True"/>
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="ComboBox">
+            <Grid>
+              <ToggleButton x:Name="Toggle" Focusable="False" ClickMode="Press"
+                            IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}">
+                <ToggleButton.Template>
+                  <ControlTemplate TargetType="ToggleButton">
+                    <Border x:Name="Bd" Background="{DynamicResource PanelBrush}" BorderBrush="{DynamicResource FgDimBrush}"
+                            BorderThickness="1" CornerRadius="6">
+                      <Path HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,11,0"
+                            Data="M0,0 L9,0 L4.5,5 Z" Fill="{DynamicResource FgBrush}"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                      <Trigger Property="IsMouseOver" Value="True">
+                        <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                      </Trigger>
+                      <Trigger Property="IsChecked" Value="True">
+                        <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                      </Trigger>
+                    </ControlTemplate.Triggers>
+                  </ControlTemplate>
+                </ToggleButton.Template>
+              </ToggleButton>
+              <ContentPresenter x:Name="Content" Margin="10,0,30,0" VerticalAlignment="Center" IsHitTestVisible="False"
+                                Content="{TemplateBinding SelectionBoxItem}"
+                                ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"/>
+              <TextBox x:Name="PART_EditableTextBox" Visibility="Collapsed" Margin="8,0,30,0" VerticalAlignment="Center"
+                       Background="Transparent" BorderThickness="0" Foreground="{DynamicResource FgBrush}"
+                       CaretBrush="{DynamicResource FgBrush}" FontSize="14"/>
+              <Popup x:Name="PART_Popup" IsOpen="{TemplateBinding IsDropDownOpen}" Placement="Bottom"
+                     AllowsTransparency="True" Focusable="False" PopupAnimation="Slide">
+                <Border Background="{DynamicResource CardBrush}" BorderBrush="{DynamicResource FgDimBrush}" BorderThickness="1"
+                        CornerRadius="8" Margin="0,4,0,0" MinWidth="{TemplateBinding ActualWidth}"
+                        MaxHeight="{TemplateBinding MaxDropDownHeight}">
+                  <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Contained"/>
+                  </ScrollViewer>
+                </Border>
+              </Popup>
+            </Grid>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsEditable" Value="True">
+                <Setter TargetName="PART_EditableTextBox" Property="Visibility" Value="Visible"/>
+                <Setter TargetName="Content" Property="Visibility" Value="Collapsed"/>
+              </Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
     </Style>
   </UserControl.Resources>
+
   <StackPanel>
     <TextBlock x:Name="Intro" TextWrapping="Wrap" Margin="0,0,0,10"/>
     <TextBlock x:Name="LProvider" Margin="0,0,0,4"/>
-    <ComboBox x:Name="ProviderCb" Height="30" Background="{DynamicResource PanelBrush}" Foreground="{DynamicResource FgBrush}"
-              BorderBrush="{DynamicResource FgDimBrush}" SelectionChanged="Provider_Changed"/>
+    <ComboBox x:Name="ProviderCb" Height="32" SelectionChanged="Provider_Changed"/>
     <TextBlock x:Name="LKey" Margin="0,10,0,4"/>
     <PasswordBox x:Name="KeyIn" Height="32" Padding="8,6" Background="{DynamicResource PanelBrush}"
                  Foreground="{DynamicResource FgBrush}" BorderBrush="{DynamicResource FgDimBrush}"/>
     <TextBlock x:Name="LBase" Margin="0,10,0,4"/>
     <TextBox x:Name="BaseIn" Style="{StaticResource Field}"/>
     <TextBlock x:Name="LModel" Margin="0,10,0,4"/>
-    <ComboBox x:Name="ModelCb" IsEditable="True" Height="30" Background="{DynamicResource PanelBrush}" Foreground="{DynamicResource FgBrush}"
-              BorderBrush="{DynamicResource FgDimBrush}"/>
+    <ComboBox x:Name="ModelCb" IsEditable="True" Height="32"/>
     <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
       <Button x:Name="BLoad" Style="{StaticResource Pill}" Click="Load_Click"/>
       <Button x:Name="BTest" Style="{StaticResource Pill}" Click="Test_Click"/>
