@@ -5,6 +5,8 @@
 
 YourLittleFriend is a little buddy in your pc's notch or in a bubble (windows). it opens when you hover over it with the mouse.
 
+Italian version: [README.md](https://github.com/andreche42/yourlittlefriend/blob/main/README.md)
+
 - **home**: greeting + weather; if a song starts playing it shows the cover, title and controls, and the colors follow the cover
 - **chat**: you talk to an llm on your PC (ollama) or to the service you want, using your own api key (openai, gemini, claude, nvidia, groq...): it can also control the PC
 - **+**: drag in a file, write what to do with it and it answers you
@@ -63,10 +65,12 @@ in the settings there's also the **Ollama** section: you see whether it's on, yo
 
 everything is changed from the **settings** (⚙ → settings): name, city, language, model, autostart and the button to **uninstall**. the data lives in `%APPDATA%\yourlittlefriend\settings.json`.
 
-## running from source
-you need the [.net 8 sdk](https://dotnet.microsoft.com/download) on windows 10/11.
+## running from source (experts only)
+download the full zip from github, extract it into a folder of your choice. open powershell in that folder. then run:
 
     dotnet run
+
+*you need the [.net 8 sdk](https://dotnet.microsoft.com/download) on windows 10/11.*
 
 ## creating a release (for whoever maintains the project)
 the installer is built with github actions (`.github/workflows/build.yml`, it uses [inno setup](https://jrsoftware.org/isinfo.php) with `installer/yourlittlefriend.iss`).
