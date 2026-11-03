@@ -28,6 +28,11 @@ English translation: [README-english.md](https://github.com/andreche42/yourlittl
 - **aspetto**: dalle impostazioni scegli un tema (notte, giorno, oceano, tramonto, foresta, caramella), il colore principale, il colore dell'omino (anche in esadecimale), la trasparenza e un contorno colorato per il notch. cambia tutto al volo e se annulli torna com'era
 - **aggiornamenti**: qualche minuto dopo l'avvio l'app controlla da sola se c'è una versione nuova (pallino rosso sull'omino, e ti chiede se aggiornare). scarica, verifica il file e si aggiorna in silenzio, poi riparte. si può spegnere dalle impostazioni
 - **cosa c'è di nuovo**: quando l'app riparte dopo un aggiornamento si apre da sola una finestrella con tutto quello che è cambiato in questa versione, preso dalle note della release e mostrato solo nella lingua che hai scelto
+- **non disturbare**: dal menu del tasto destro (o dal ⚙) attivi “non disturbare”: niente ballo, niente emozioni del meteo, niente reazioni e niente ascolto della musica. l'omino resta fermo e sbatte solo le palpebre; quando lo togli torna tutto come prima
+- **reazioni di sistema**: l'omino si accorge se la cpu scalda troppo o se la batteria è scarica. col notch chiuso vedi solo un simbollino (🔥 o 🔋); quando lo apri fa l'animazione per un paio di secondi e poi torna normale. la temperatura arriva dai sensori del pc (librehardwaremonitor): se il pc non li espone si usa il carico della cpu
+- **microfono**: accanto alle caselle di scrittura (chat, +, wikipedia, traduttore) c'è un microfonino: premi, parla, il testo compare nel campo. usa il riconoscimento vocale di windows (serve la lingua installata) e non resta mai in ascolto da solo
+- **clipboard nel portafile**: quello che copi finisce nel portafile come una casella: il testo così com'è, le immagini come miniatura. doppio clic la ricopia. le copie che i gestori di password chiedono di non registrare restano fuori
+- **scadenza del portafile**: dalle impostazioni scegli se portafile e clipboard si svuotano dopo 24 ore, 7 giorni o 30 giorni
 - tasto destro (o ⚙) per uscire
 
 ## cosa può fare dalla chat
@@ -84,15 +89,6 @@ porta la tua LLM su YourLittleFriend: l'autoinstaller di ollama c'è già (impos
 
 ### lettura immagini e OCR da llm locale
 incolla un immagine e la LLM locale leggerà l'immagine per OCR o guarderà l'immagine e i dettagli. (in sviluppo)
-
-### voce
-parli al microfono e la chat ti risponde, senza scrivere. (in arrivo)
-
-### cronologia appunti
-accanto al portafile, la cronologia di quello che copi: testo e immagini recenti, da ricopiare con un clic. (in arrivo)
-
-### reazioni di sistema
-l'omino reagisce a quello che succede nel pc: batteria scarica, download finito, cpu alta... ognuna si accende e si spegne dalle impostazioni, e non disturba mentre lavori o c'è musica. (in arrivo)
 
 ---
 

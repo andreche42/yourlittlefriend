@@ -26,6 +26,11 @@ YourLittleFriend is a little buddy in your pc's notch or in a bubble (windows). 
 - **look**: from the settings you pick a theme (night, day, ocean, sunset, forest, candy), the main color, the little guy's color (even in hex), the transparency and a colored outline for the notch. everything changes on the fly and if you cancel it goes back to how it was
 - **updates**: a few minutes after start the app checks by itself whether there's a new version (red dot on the little guy, and it asks you whether to update). it downloads, verifies the file and updates silently, then comes back. it can be turned off in the settings
 - **what's new**: when the app comes back after an update it opens a little window on its own with everything that changed in this version, taken from the release notes and shown only in the language you picked
+- **do not disturb**: from the right click menu (or the ⚙) you turn on "do not disturb": no dance, no weather feelings, no reactions and it stops listening to the music. the little guy stands still and only blinks; turn it off and everything goes back to how it was
+- **system reactions**: the little guy notices when the cpu gets too hot or the battery runs low. with the notch closed you only see a tiny badge (🔥 or 🔋); when you open it he plays the animation for a couple of seconds and then goes back to normal. the temperature comes from the pc sensors (librehardwaremonitor): if the pc doesn't expose them the cpu load is used instead
+- **microphone**: next to the text boxes (chat, +, wikipedia, translator) there's a little mic: press it, talk, and the text appears in the field. it uses Windows speech recognition (the language package is needed) and never listens on its own
+- **clipboard in the file holder**: whatever you copy ends up in the file holder as a slot: text as it is, images as a thumbnail. double click copies it again. copies that password managers ask not to record are left out
+- **file holder expiry**: from the settings you choose whether the file holder and the clipboard clear after 24 hours, 7 days or 30 days
 - right click (or ⚙) to quit
 
 ## what it can do from the chat
@@ -81,15 +86,6 @@ bring your own LLM to yourlittlefriend: the ollama auto-installer is already the
 
 ### Image Recognition and OCR Using a Local LLM
 Paste an image, and the local LLM will process the image for OCR or analyze the image and its details. (in development)
-
-### voice
-talk into the microphone and the chat answers you, no typing needed. (coming soon)
-
-### clipboard history
-next to the file holder, a history of what you copy: recent text and images, one click to copy them again. (coming soon)
-
-### system reactions
-the mascot reacts to what happens on your pc: low battery, finished download, high cpu... each one can be turned on and off in settings, and they stay quiet while you work or music is playing. (coming soon)
 
 ------
 
