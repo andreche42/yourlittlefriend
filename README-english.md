@@ -8,6 +8,7 @@ YourLittleFriend is a little buddy in your pc's notch or in a bubble (windows). 
 - **home**: greeting + weather; if a song starts playing it shows the cover, title and controls, and the colors follow the cover
 - **chat**: you talk to an llm on your PC (ollama) or to the service you want, using your own api key (openai, gemini, claude, nvidia, groq...): it can also control the PC
 - **+**: drag in a file, write what to do with it and it answers you
+- **attached text files**: in the **+** tab you attach a text file, write what you want to know and the ai answers you by reading it. for now it works with the **online ai** (your api key); support for the model on your pc is coming
 - **file holder** (the "cup holder", the tab with the little tray): drag files or text onto the notch and they stay there, sorted into slots (icon or thumbnail for files, a snippet for text). you can drag them around wherever you want, even after restarting the pc. double click opens the file or copies the text, ✕ removes one item, 🗑 clears everything. files are not copied: the file holder only remembers where they are
 - answers arrive in real time, word by word, with a "smoke" effect that fades away (imessage style)
 - the little guy is animated: he blinks, wanders around the notch, works (dots and reading eyes) while the ai answers, smiles when it's done (or when you open the notch) and dances if there's music
@@ -36,7 +37,7 @@ YourLittleFriend is a little buddy in your pc's notch or in a bubble (windows). 
 ## what it can do from the chat
 
 - volume (set, raise/lower, mute), play/pause/next/previous
-- opens apps from the list (`Apps` in `Actions.cs`), searches on google, locks/suspends/shuts down/restarts the pc
+- opens apps from the list (`Apps` in `Actions.cs`), searches on google, locks/suspends/hibernates/shuts down/restarts the pc
 
 sensitive actions (opening apps, browser, shutdown etc.) first ask for confirmation with a popup that shows the steps.
 the model can't run free-form commands: only the actions written in `Actions.cs`.
@@ -86,6 +87,9 @@ got suggestions or tips? go wild! open an issue on this repo and tell us everyth
 
 ### Image Recognition and OCR Using a Local LLM
 Paste an image, and the local LLM will process the image for OCR or analyze the image and its details. (in development)
+
+### Attached text files with a local LLM
+read a text file with the model running on your pc, without going through an online service. (in development, for now it only works with the online ai)
 
 ------
 
