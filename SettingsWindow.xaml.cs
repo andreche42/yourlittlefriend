@@ -11,6 +11,7 @@ public partial class SettingsWindow : Window
     public bool LanguageChanged { get; private set; }
 
     readonly (string Theme, string Accent, string Mascot, double Opacity, bool Outline) snap;   // per tornare indietro se annulli
+    readonly string snapApi;                                                                   // idem per l'ia scelta
     readonly List<(Preset P, Border Tile)> presetTiles = new();
     bool syncing;
 
@@ -32,6 +33,7 @@ public partial class SettingsWindow : Window
         BSave.Content = Loc.L("Salva", "Save");
 
         snap = (st.Theme, st.Accent, st.MascotColor, st.Opacity, st.Outline);
+        snapApi = st.ApiProvider;
         LLook.Text = Loc.L("Aspetto", "Look");
         LAccent.Text = Loc.L("Colore principale", "Accent color");
         LMascot.Text = Loc.L("Colore dell'omino", "Mascot color");
@@ -114,8 +116,24 @@ public partial class SettingsWindow : Window
         RIt.IsChecked = st.Language == "it";
         REn.IsChecked = st.Language == "en";
         AutoStart.IsChecked = Startup.Enabled;
-        ModelText.Text = Loc.L($"Modello attuale: {st.Model}", $"Current model: {st.Model}");
+        ModelText.Text = Loc.L($"Modello attuale: {(Llm.OnApi ? st.ApiModel : st.Model)}", $"Current model: {(Llm.OnApi ? st.ApiModel : st.Model)}");
         Ai.Finished += m => ModelText.Text = Loc.L($"Modello attuale: {m}", $"Current model: {m}");
+
+        // due strade per l'ia: il modello sul pc oppure un servizio online con la chiave dell'utente
+        RLocalAi.Content = Loc.L("IA sul mio PC (Ollama)", "AI on my PC (Ollama)");
+        RApiAi.Content = Loc.L("IA online con la mia chiave (OpenAI, Gemini, Claude…)", "Online AI with my key (OpenAI, Gemini, Claude…)");
+        RLocalAi.IsChecked = !Llm.OnApi;
+        RApiAi.IsChecked = Llm.OnApi;
+        void ShowAi()
+        {
+            bool api = RApiAi.IsChecked == true;
+            ApiBox.Visibility = api ? Visibility.Visible : Visibility.Collapsed;
+            OllamaBox.Visibility = BChange.Visibility = ModelText.Visibility = api ? Visibility.Collapsed : Visibility.Visible;
+            if (api) AiBox.Visibility = Visibility.Collapsed;
+        }
+        RLocalAi.Checked += (_, _) => ShowAi();
+        RApiAi.Checked += (_, _) => ShowAi();
+        ShowAi();
     }
 
     // ---- aspetto: ogni scelta si vede subito, e se annulli torna tutto com'era ----
@@ -262,6 +280,9 @@ public partial class SettingsWindow : Window
         if (Theme.TryParse(LensHex.Text) != null) st.LensColor = LensHex.Text.Trim();
         st.LensSize = LensSizeSl.Value;
         st.LensZoom = LensZoomSl.Value;
+        // l'ia: sul pc oppure online con la chiave (l'indirizzo e il modello vengono dal pannello)
+        st.ApiProvider = RApiAi.IsChecked == true ? Api.SelectedId : Providers.Local;
+        Api.Apply();
         st.DeepLKey = DeepLIn.Text.Trim();
         st.LibreUrl = LibreUrlIn.Text.Trim();
         st.LibreKey = LibreKeyIn.Text.Trim();
@@ -288,7 +309,7 @@ public partial class SettingsWindow : Window
     protected override void OnClosing(CancelEventArgs e)
     {
         Ai.Abort();
-        if (DialogResult != true) RestoreLook();   // chiuso senza salvare: l'aspetto torna quello di prima
+        if (DialogResult != true) { RestoreLook(); Settings.Current.ApiProvider = snapApi; }   // chiuso senza salvare: torna tutto com'era
         base.OnClosing(e);
     }
 }

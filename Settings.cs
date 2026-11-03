@@ -15,6 +15,11 @@ public class Settings
     public string Language { get; set; } = "";   // "it" o "en"
     public string LastVersion { get; set; } = ""; // versione con cui si è aperta l'ultima volta: se cambia si mostra "cosa c'è di nuovo"
     public string Model { get; set; } = Llm.DefaultModel;
+    // "porta la tua llm": ollama sul pc oppure un servizio online con la chiave dell'utente
+    public string ApiProvider { get; set; } = Providers.Local;
+    public string ApiKey { get; set; } = "";
+    public string ApiBase { get; set; } = "";     // vuoto = quello del servizio scelto; si può scrivere a mano
+    public string ApiModel { get; set; } = "";
     public bool Onboarded { get; set; }
     public bool WebSearch { get; set; } = true;   // l'ia può cercare su internet
     public bool AutoUpdate { get; set; } = true;  // controlla da solo se ci sono aggiornamenti
@@ -82,6 +87,7 @@ public class Settings
             s.Language = l is "it" or "en" ? l : CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "it" ? "it" : "en";
         }
         if (string.IsNullOrWhiteSpace(s.Model)) s.Model = Llm.DefaultModel;
+        if (!Providers.Known(s.ApiProvider)) s.ApiProvider = Providers.Local;
         return s;
     }
 

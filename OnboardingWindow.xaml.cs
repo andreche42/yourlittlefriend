@@ -14,8 +14,21 @@ public partial class OnboardingWindow : Window
         T0.Text = Loc.L("Ciao! Sono il tuo piccolo amico che vive nel notch del PC. Come ti chiami?", "Hi! I'm your little friend living in your PC's notch. What's your name?");
         T1.Text = Loc.L("Dove vivi? Mi serve per dirti che tempo fa. Puoi anche saltare questo passaggio.", "Where do you live? I need it to tell you the weather. You can skip this step.");
         Ai.Finished += _ => GoTo(3);
+        Api.Ready += () => GoTo(3);
+        RLocal.Content = Loc.L("IA sul mio PC (Ollama)", "AI on my PC (Ollama)");
+        RApi.Content = Loc.L("IA online con la mia chiave", "Online AI with my key");
+        RLocal.Checked += (_, _) => Mode(false);
+        RApi.Checked += (_, _) => Mode(true);
+        Mode(false);
         GoTo(0);
         Loaded += (_, _) => NameIn.Focus();
+    }
+
+    // due strade per l'ia: il modello che gira sul pc oppure un servizio online con la chiave dell'utente
+    void Mode(bool api)
+    {
+        Ai.Visibility = api ? Visibility.Collapsed : Visibility.Visible;
+        Api.Visibility = api ? Visibility.Visible : Visibility.Collapsed;
     }
 
     void GoTo(int p)
@@ -64,6 +77,7 @@ public partial class OnboardingWindow : Window
                 GoTo(2);
                 break;
             case 3:
+                if (RApi.IsChecked == true) { st.ApiProvider = Api.SelectedId; Api.Apply(); }
                 st.Onboarded = true;
                 st.Save();
                 DialogResult = true;

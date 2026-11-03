@@ -24,6 +24,10 @@
         </StackPanel>
 
         <TextBlock x:Name="LModel" Margin="0,18,0,4"/>
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+          <RadioButton x:Name="RLocalAi" GroupName="ai" Foreground="{DynamicResource FgBrush}" Margin="0,0,18,0"/>
+          <RadioButton x:Name="RApiAi" GroupName="ai" Foreground="{DynamicResource FgBrush}"/>
+        </StackPanel>
         <TextBlock x:Name="ModelText" Foreground="{DynamicResource FgDimBrush}"/>
         <Button x:Name="BChange" Style="{StaticResource Pill}" HorizontalAlignment="Left" Margin="0,8,0,0" Click="Change_Click"/>
         <Border x:Name="AiBox" Visibility="Collapsed" Background="{DynamicResource CardBrush}" CornerRadius="12" Padding="16" Margin="0,10,0,0">
@@ -31,6 +35,11 @@
         </Border>
 
         <local:OllamaStatusPanel x:Name="OllamaBox" Margin="0,12,0,0"/>
+
+        <!-- oppure: la tua chiave api, per qualunque servizio -->
+        <Border x:Name="ApiBox" Visibility="Collapsed" Background="{DynamicResource CardBrush}" CornerRadius="12" Padding="16" Margin="0,12,0,0">
+          <local:ApiPanel x:Name="Api"/>
+        </Border>
 
         <TextBlock x:Name="LLook" FontSize="18" FontWeight="Bold" Margin="0,26,0,8"/>
         <WrapPanel x:Name="PresetBox"/>

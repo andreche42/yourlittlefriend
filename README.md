@@ -8,7 +8,7 @@ YourLittleFriend è un piccolo amico nel notch del pc o in una bolla (windows). 
 English translation: [README-english.md](https://github.com/andreche42/yourlittlefriend/blob/main/README-english.md)
 
 - **home**: saluto + meteo; se parte una canzone mostra copertina, titolo, controlli e i colori seguono la copertina
-- **chat**: parli con un llm locale (ollama) che può anche controllare il pc
+- **chat**: parli con un llm sul tuo pc (ollama) oppure con il servizio che vuoi, usando la tua chiave api (openai, gemini, claude, nvidia, groq...): può anche controllare il pc
 - **+**: trascina un file, scrivi cosa farne e ti risponde
 - **portafile** (il "portabicchieri", la scheda con la vaschetta): trascina sul notch file o testo e restano lì, ordinati in caselle (icona o miniatura per i file, un pezzo di testo per il testo). li puoi ritrascinare dove vuoi, anche dopo aver riavviato il pc. doppio click apre il file o copia il testo, ✕ toglie un elemento, 🗑 svuota tutto. i file non vengono copiati: il portafile ricorda solo dove stanno
 - le risposte arrivano in tempo reale, parola per parola, con un effetto "fumo" che si dirada (stile imessage)
@@ -85,7 +85,7 @@ hai suggerimenti o consigli? sbizzarrisciti! apri un issue su questa repo e dicc
 
 ## roadmap
 ### byollm
-porta la tua LLM su YourLittleFriend: l'autoinstaller di ollama c'è già (impostazioni). in arrivo: collegati alle API di qualche AI (vercel, openai, anthropic) e usa modelli premium a pagamento.
+**porta la tua ia**: dalle impostazioni c'è già l'autoinstaller di ollama e, sotto, la sezione per la chiave api di qualunque servizio compatibile con openai (openai, claude, gemini, nvidia, groq, openrouter, lm studio). l'elenco dei modelli lo chiede al servizio: non devi indovinare i nomi.
 
 ### lettura immagini e OCR da llm locale
 incolla un immagine e la LLM locale leggerà l'immagine per OCR o guarderà l'immagine e i dettagli. (in sviluppo)
@@ -100,3 +100,6 @@ poi vai sulla notch (o bolla) > tasto destro > impostazioni > scendi tutto giù 
 
 ## llm locale (ollama)
 l'installazione di ollama e del modello è guidata dall'app (primo avvio o impostazioni). se vuoi farlo a mano: installa ollama e poi `ollama pull <modello>`; il modello si sceglie dalle impostazioni. si può anche fermare/stoppare quando non lo usate dalle impostazioni
+
+## la tua ia con la tua chiave (byollm)
+dalle impostazioni → **intelligenza artificiale** scegli *ia online con la mia chiave* e incolli la chiave del servizio che usi: openai, claude, gemini, nvidia, groq, mistral, deepseek, grok, openrouter, together, cerebras, fireworks. con **altro** metti l'indirizzo di qualunque servizio che parli la lingua di openai (va bene anche un altro programma sul tuo pc, tipo lm studio). **carica i modelli** chiede al servizio quali ci sono con la tua chiave, **prova** fa una domanda piccolissima e ti dice subito se funziona. la chiave resta nel file delle impostazioni sul tuo pc e la usa solo l'app, per parlare con il servizio che hai scelto.

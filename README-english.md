@@ -6,7 +6,7 @@
 YourLittleFriend is a little buddy in your pc's notch or in a bubble (windows). it opens when you hover over it with the mouse.
 
 - **home**: greeting + weather; if a song starts playing it shows the cover, title and controls, and the colors follow the cover
-- **chat**: you talk to a local llm (ollama) that can also control the pc
+- **chat**: you talk to an llm on your PC (ollama) or to the service you want, using your own api key (openai, gemini, claude, nvidia, groq...): it can also control the PC
 - **+**: drag in a file, write what to do with it and it answers you
 - **file holder** (the "cup holder", the tab with the little tray): drag files or text onto the notch and they stay there, sorted into slots (icon or thumbnail for files, a snippet for text). you can drag them around wherever you want, even after restarting the pc. double click opens the file or copies the text, ✕ removes one item, 🗑 clears everything. files are not copied: the file holder only remembers where they are
 - answers arrive in real time, word by word, with a "smoke" effect that fades away (imessage style)
@@ -82,7 +82,7 @@ got suggestions or tips? go wild! open an issue on this repo and tell us everyth
 
 ## roadmap
 ### byollm
-bring your own LLM to yourlittlefriend: the ollama auto-installer is already there (settings). coming soon: connect to the APIs of some AIs (vercel, openai, anthropic) and use paid premium models.
+**bring your own ai**: the settings already have the ollama auto-installer and, below it, the section for the api key of any OpenAI-compatible service (openai, claude, gemini, nvidia, groq, openrouter, lm studio). it asks the service for the model list, so you don't have to guess the names.
 
 ### Image Recognition and OCR Using a Local LLM
 Paste an image, and the local LLM will process the image for OCR or analyze the image and its details. (in development)
@@ -97,3 +97,6 @@ then go to the notch > right click > settings > scroll all the way down and then
 
 ## local llm (ollama)
 the installation of ollama and of the model is guided by the app (first launch or settings). if you want to do it by hand: install ollama and then `ollama pull <model>`; the model is chosen from the settings. you can also turn it off when you're not using it in settings.
+
+## your own ai with your own key (byollm)
+from the settings → **artificial intelligence** pick *online ai with my key* and paste the key of the service you use: openai, claude, gemini, nvidia, groq, mistral, deepseek, grok, openrouter, together, cerebras, fireworks. with **other** you enter the address of any service speaking OpenAI's language (works with another program on your PC too, like LM Studio). **load the models** asks the service which ones your key can use, **test** asks something tiny and tells you right away whether it works. the key stays in the settings file on your PC and only the app uses it, to talk to the service you picked.

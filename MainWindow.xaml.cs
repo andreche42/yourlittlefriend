@@ -22,9 +22,6 @@ namespace YourLittleFriend;
 public partial class MainWindow : Window
 {
     // ---- impostazioni ----
-    const string Model = "claude-haiku-5-5";                // ia veloce
-    static string SystemPrompt => Loc.L("sei un piccolo assistente nel notch del pc. rispondi in italiano, molto breve.",
-                                        "you are a tiny assistant living in the PC's notch. answer in English, very briefly.");
     const double WOpen = 640, HOpen = 170, WClosed = 230, HClosed = 34;
     // icone dei controlli musica (path a linea, come le altre icone dell'app)
     const string IconPlay = "M5.6,2.6 L13.2,8 L5.6,13.4 Z";
@@ -1014,32 +1011,6 @@ public partial class MainWindow : Window
     }
 
     // ---- ia ----
-    // streaming sse dell'api anthropic: ogni pezzo di testo va a push
-    static async Task CallApi(List<object> messages, Action<string> push)
-    {
-        var key = Environment.GetEnvironmentVariable("ANTHROPIC_API_KEY");
-        if (string.IsNullOrEmpty(key)) throw new Exception("manca la variabile ANTHROPIC_API_KEY");
-        var req = new HttpRequestMessage(HttpMethod.Post, "https://api.anthropic.com/v1/messages");
-        req.Headers.Add("x-api-key", key);
-        req.Headers.Add("anthropic-version", "2023-06-01");
-        req.Content = new StringContent(
-            JsonSerializer.Serialize(new { model = Model, max_tokens = 500, system = SystemPrompt, messages, stream = true }),
-            Encoding.UTF8, "application/json");
-        var res = await Http.SendAsync(req, HttpCompletionOption.ResponseHeadersRead);
-        if (!res.IsSuccessStatusCode) throw new Exception(await res.Content.ReadAsStringAsync());
-        using var sr = new StreamReader(await res.Content.ReadAsStreamAsync());
-        string? line;
-        while ((line = await sr.ReadLineAsync()) != null)
-        {
-            if (!line.StartsWith("data:")) continue;
-            using var d = JsonDocument.Parse(line[5..]);
-            var r = d.RootElement;
-            var type = r.GetProperty("type").GetString();
-            if (type == "error") throw new Exception(r.GetProperty("error").GetRawText());
-            if (type == "content_block_delta" && r.GetProperty("delta").TryGetProperty("text", out var t)) push(t.GetString() ?? "");
-        }
-    }
-
     // esegue una richiesta all'ia: la mascotte lavora, la risposta compare man mano, alla fine sorride
     async Task Stream(SmokeText box, Func<Task> work)
     {
@@ -1054,20 +1025,29 @@ public partial class MainWindow : Window
         if (ok) Cheer();
     }
 
-    static List<object> FileBlocks(string path, string q)
+    // immagine: va all'ia scelta (sul pc o online), senza strumenti, così un'immagine non può far partire azioni
+    static Task AskImage(string path, string q, Action<string> push) =>
+        Llm.Chat(new JsonArray { new JsonObject { ["role"] = "user", ["content"] = FileBlocks(path, q) } }, null, push);
+
+    // blocchi di contenuto in stile openai; per ollama l'immagine viene spostata in "images" dal client
+    static JsonArray FileBlocks(string path, string q)
     {
         var img = new Dictionary<string, string>
         { [".png"] = "image/png", [".jpg"] = "image/jpeg", [".jpeg"] = "image/jpeg", [".webp"] = "image/webp", [".gif"] = "image/gif" };
-        var blocks = new List<object>();
+        var blocks = new JsonArray();
         if (img.TryGetValue(Path.GetExtension(path).ToLowerInvariant(), out var mt))
-            blocks.Add(new { type = "image", source = new { type = "base64", media_type = mt, data = Convert.ToBase64String(File.ReadAllBytes(path)) } });
+            blocks.Add(new JsonObject
+            {
+                ["type"] = "image_url",
+                ["image_url"] = new JsonObject { ["url"] = $"data:{mt};base64,{Convert.ToBase64String(File.ReadAllBytes(path))}" }
+            });
         else
         {
             string t;
             try { t = File.ReadAllText(path); if (t.Length > 20000) t = t[..20000]; } catch { t = ""; }
-            blocks.Add(new { type = "text", text = $"file {Path.GetFileName(path)}:\n{t}" });
+            blocks.Add(new JsonObject { ["type"] = "text", ["text"] = $"file {Path.GetFileName(path)}:\n{t}" });
         }
-        blocks.Add(new { type = "text", text = q });
+        blocks.Add(new JsonObject { ["type"] = "text", ["text"] = q });
         return blocks;
     }
 
@@ -1138,7 +1118,7 @@ public partial class MainWindow : Window
         var path = file;
         bool isImg = Path.GetExtension(path).ToLowerInvariant() is ".png" or ".jpg" or ".jpeg" or ".webp" or ".gif";
         await Stream(Bubble, () => isImg
-            ? CallApi(new List<object> { new { role = "user", content = FileBlocks(path, q) } }, Bubble.Append)
+            ? AskImage(path, q, Bubble.Append)
             : LocalFile(path, q, Bubble.Append));
     }
 

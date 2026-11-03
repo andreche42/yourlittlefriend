@@ -26,9 +26,16 @@
         <TextBox x:Name="CityIn" Style="{StaticResource Field}"/>
         <TextBlock x:Name="CityStatus" TextWrapping="Wrap" Margin="0,8,0,0" Foreground="#FF9B9B"/>
       </StackPanel>
-      <!-- 2: ollama + modello -->
+      <!-- 2: ia sul pc (ollama + modello) oppure online con la tua chiave -->
       <ScrollViewer x:Name="P2" Visibility="Collapsed" VerticalScrollBarVisibility="Auto">
-        <local:AiSetupPanel x:Name="Ai"/>
+        <StackPanel>
+          <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
+            <RadioButton x:Name="RLocal" GroupName="aimode" Foreground="{DynamicResource FgBrush}" Margin="0,0,18,0" IsChecked="True"/>
+            <RadioButton x:Name="RApi" GroupName="aimode" Foreground="{DynamicResource FgBrush}"/>
+          </StackPanel>
+          <local:AiSetupPanel x:Name="Ai"/>
+          <local:ApiPanel x:Name="Api" Visibility="Collapsed"/>
+        </StackPanel>
       </ScrollViewer>
       <!-- 3: fine -->
       <StackPanel x:Name="P3" Visibility="Collapsed">
