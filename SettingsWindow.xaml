@@ -95,6 +95,7 @@
         <CheckBox x:Name="FWiki" Foreground="{DynamicResource FgBrush}" Margin="0,3"/>
         <CheckBox x:Name="FWeather" Foreground="{DynamicResource FgBrush}" Margin="0,3"/>
         <CheckBox x:Name="FBeat" Foreground="{DynamicResource FgBrush}" Margin="0,3"/>
+        <CheckBox x:Name="FSleep" Foreground="{DynamicResource FgBrush}" Margin="0,3"/>
 
         <!-- portafile e clipboard: quanto restano le cose -->
         <TextBlock x:Name="LKeep" Margin="0,20,0,6"/>

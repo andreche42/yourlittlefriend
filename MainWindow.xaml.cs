@@ -134,6 +134,7 @@ public partial class MainWindow : Window
         quietItem.Click += (_, _) => ApplyQuiet(quietItem.IsChecked);
         ((ContextMenu)Resources["Menu"]).Items.Insert(1, quietItem);
         MiniMascot.Quiet = BigMascot.Quiet = Settings.Current.Quiet;
+        MiniMascot.SleepAtNight = BigMascot.SleepAtNight = Settings.Current.NightSleep;
         Closed += (_, _) => { beat.Dispose(); Application.Current.Shutdown(); };
     }
 
@@ -805,6 +806,7 @@ public partial class MainWindow : Window
             ApplyStyle();    // notch o bolla, e dimensione della bolla
             _ = LoadWeather();
             ApplyBeat();     // se hai appena spento il ballo a tempo, smette subito di ascoltare
+            MiniMascot.SleepAtNight = BigMascot.SleepAtNight = Settings.Current.NightSleep;   // se hai spento il sonno, si sveglia subito
         }
         hold.Start();
     }
