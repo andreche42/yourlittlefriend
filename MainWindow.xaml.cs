@@ -323,11 +323,16 @@ public partial class MainWindow : Window
     }
 
     // ---- reazioni di sistema: batteria scarica e cpu che scalda ----
-    void CheckSystem()
+    bool checking;
+    async void CheckSystem()
     {
-        if (Settings.Current.Quiet) return;
-        var r = SystemWatch.Next();
-        if (r == MascotReaction.None) return;
+        if (Settings.Current.Quiet || checking) return;
+        checking = true;
+        MascotReaction r;
+        try { r = await Task.Run(SystemWatch.Next); }   // i sensori si leggono fuori dal thread della finestra: l'animazione non si ferma
+        catch { r = MascotReaction.None; }
+        finally { checking = false; }
+        if (r == MascotReaction.None || Settings.Current.Quiet) return;
         if (isOpen) { MiniMascot.React(r); BigMascot.React(r); return; }   // notch aperto: la fa subito
         pendingReaction = r;   // chiuso: per ora basta il simbollino
         UpdateBadge();

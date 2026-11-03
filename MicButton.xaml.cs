@@ -30,13 +30,10 @@ public partial class MicButton : UserControl
             return;
         }
         // se il riconoscimento di windows non c'è (manca il pacchetto lingua o il microfono)
-        B.ToolTip = (Loc.L("Il riconoscimento vocale di Windows non è disponibile: ", "Windows speech recognition isn't available: ") + (Voice.Error ?? ""))
+        B.ToolTip = Loc.L("Il riconoscimento vocale di Windows non è disponibile: ", "Windows speech recognition isn't available: ")
+                    + (Voice.Error ?? "")
                     + Loc.L("\nProva a installare la lingua dalla sezione Lingua di Windows.", "\nTry installing the language from the Language section of Windows.");
         ToolTipService.SetShowDuration(B, 12000);
-        var tip = B.ToolTip;
-        B.ToolTip = tip;
-        B.ToolTip = null;
-        B.ToolTip = tip;   // forza il tooltip a ricomparire con il nuovo testo
     }
 
     // il testo riconosciuto si aggiunge a quello che c'è già
