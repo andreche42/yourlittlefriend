@@ -10,6 +10,7 @@ English translation: [README-english.md](https://github.com/andreche42/yourlittl
 - **home**: saluto + meteo; se parte una canzone mostra copertina, titolo, controlli e i colori seguono la copertina
 - **chat**: parli con un llm sul tuo pc (ollama) oppure con il servizio che vuoi, usando la tua chiave api (openai, gemini, claude, nvidia, groq...): può anche controllare il pc
 - **+**: trascina un file, scrivi cosa farne e ti risponde
+- **file di testo allegati**: nella scheda **+** alleghi un file di testo, scrivi cosa vuoi sapere e l'ia risponde leggendolo. per ora funziona con l'**ia online** (la tua chiave api); con il modello sul tuo pc sta arrivando
 - **portafile** (il "portabicchieri", la scheda con la vaschetta): trascina sul notch file o testo e restano lì, ordinati in caselle (icona o miniatura per i file, un pezzo di testo per il testo). li puoi ritrascinare dove vuoi, anche dopo aver riavviato il pc. doppio click apre il file o copia il testo, ✕ toglie un elemento, 🗑 svuota tutto. i file non vengono copiati: il portafile ricorda solo dove stanno
 - le risposte arrivano in tempo reale, parola per parola, con un effetto "fumo" che si dirada (stile imessage)
 - l'omino è animato: sbatte gli occhi, va a spasso nel notch, lavora (puntini e occhi che leggono) mentre l'ia risponde, sorride quando ha finito (o quando apri il notch) e balla se c'è musica
@@ -89,6 +90,9 @@ hai suggerimenti o consigli? sbizzarrisciti! apri un issue su questa repo e dicc
 
 ### lettura immagini e OCR da llm locale
 incolla un immagine e la LLM locale leggerà l'immagine per OCR o guarderà l'immagine e i dettagli. (in sviluppo)
+
+### file di testo allegati con llm locale
+leggere un file di testo con il modello che gira sul tuo pc, senza passare da un servizio online. (in sviluppo, per ora funziona solo con l'ia online)
 
 ---
 
