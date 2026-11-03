@@ -9,6 +9,9 @@ namespace YourLittleFriend;
 
 public enum MascotMode { Idle, Working, Dance }
 
+// reazioni di sistema: la cpu che scalda troppo e la batteria scarica
+public enum MascotReaction { None, Hot, Battery }
+
 // come reagisce al tempo: sole = occhiali da sole, pioggia = ombrello, temporale = paura, nuvoloso = "boh", freddo/neve = sciarpa, notte = sonno
 public enum WeatherMood { None, Sun, Rain, Storm, Cloud, Snow, Night }
 
@@ -55,6 +58,30 @@ public partial class Mascot : UserControl
     {
         get => mode;
         set { if (mode == value) return; mode = value; Apply(); }
+    }
+
+    // non disturbare: l'omino sta fermo (si muovono solo gli occhi), niente ballo né meteo
+    bool quiet;
+    public bool Quiet
+    {
+        get => quiet;
+        set
+        {
+            if (quiet == value) return;
+            quiet = value;
+            if (value)
+            {
+                walking = false;
+                dance.Stop();
+                Rot.BeginAnimation(RotateTransform.AngleProperty, null);
+                Tr.BeginAnimation(TranslateTransform.YProperty, null);
+                Rot.Angle = 0;
+                Tr.Y = 0;
+                reaction = MascotReaction.None;
+                reactionEnd.Stop();
+            }
+            Apply();
+        }
     }
 
     public WeatherMood Weather
@@ -117,6 +144,7 @@ public partial class Mascot : UserControl
         armEnd.Tick += (_, _) => ArmDone();
         pokeEnd.Tick += (_, _) => { pokeEnd.Stop(); if (mode == MascotMode.Dance && !cheering) Apply(); };   // se stava ballando, il dondolio riparte
         dance.Tick += (_, _) => TickDance();
+        reactionEnd.Tick += (_, _) => { reactionEnd.Stop(); reaction = MascotReaction.None; Apply(); };
         IsVisibleChanged += (_, e) =>
         {
             if ((bool)e.NewValue) idle.Start();
@@ -170,7 +198,7 @@ public partial class Mascot : UserControl
         bool wasDancing = dance.IsEnabled;
         // se si sta ancora ballando il dondolio non si tocca: altrimenti ogni rinfresco della finestra
         // lo faceva ripartire dal centro (era il "reset" che si vedeva)
-        bool keepDancing = mode == MascotMode.Dance && !cheering;
+        bool keepDancing = mode == MascotMode.Dance && !cheering && !quiet && reaction == MascotReaction.None;
         if (!keepDancing) dance.Stop();
         Tr.BeginAnimation(TranslateTransform.YProperty, null);
         Rot.BeginAnimation(RotateTransform.AngleProperty, null);
@@ -194,12 +222,25 @@ public partial class Mascot : UserControl
         Thumb.Visibility = cool ? Visibility.Visible : Visibility.Collapsed;
         Arm.Visibility = cool ? Visibility.Collapsed : Visibility.Visible;   // il pollice prende il posto del braccio: niente terzo arto
 
-        bool scared = weather == WeatherMood.Storm && !cheering;
+        bool scared = weather == WeatherMood.Storm && !cheering && !quiet && reaction == MascotReaction.None;
         Eyes.Visibility = cheering || scared ? Visibility.Collapsed : Visibility.Visible;
         HappyEyes.Visibility = cheering ? Visibility.Visible : Visibility.Collapsed;
         ScaredEyes.Visibility = scared ? Visibility.Visible : Visibility.Collapsed;
         Cheeks.Opacity = cheering ? 1 : 0;
         Dots.Visibility = !cheering && mode == MascotMode.Working ? Visibility.Visible : Visibility.Collapsed;
+
+        // reazione di sistema (cpu calda, batteria scarica): un momento e poi torna com'era
+        if (reaction != MascotReaction.None && !quiet)
+        {
+            GoHome();
+            Eyes.Visibility = Visibility.Collapsed;
+            HappyEyes.Visibility = ScaredEyes.Visibility = Visibility.Collapsed;
+            Cheeks.Opacity = 0;
+            Dots.Visibility = Visibility.Collapsed;
+            Mouth.Visibility = Visibility.Collapsed;
+            if (reaction == MascotReaction.Hot) PlayHot(); else PlayTired();
+            return;
+        }
 
         if (mode != MascotMode.Idle) GoHome();
 
@@ -210,6 +251,13 @@ public partial class Mascot : UserControl
             var ease = new SineEase { EasingMode = EasingMode.EaseOut };
             Rot.BeginAnimation(RotateTransform.AngleProperty, new DoubleAnimation(settleAngle, 0, TimeSpan.FromMilliseconds(280)) { EasingFunction = ease, FillBehavior = FillBehavior.Stop });
             Tr.BeginAnimation(TranslateTransform.YProperty, new DoubleAnimation(settleY, 0, TimeSpan.FromMilliseconds(280)) { EasingFunction = ease, FillBehavior = FillBehavior.Stop });
+        }
+
+        // non disturbare: fermo del tutto, si muovono solo le palpebre
+        if (quiet)
+        {
+            GoHome();
+            return;
         }
 
         if (cheering)
@@ -271,6 +319,14 @@ public partial class Mascot : UserControl
         foreach (var r in drops) { r.BeginAnimation(Canvas.TopProperty, null); r.Opacity = 0; }
         foreach (var z in new[] { Z1, Z2 }) { z.BeginAnimation(OpacityProperty, null); z.BeginAnimation(Canvas.TopProperty, null); }
         if (!notesFlying) foreach (var n in new[] { N1, N2 }) { n.BeginAnimation(OpacityProperty, null); n.BeginAnimation(Canvas.TopProperty, null); }
+
+        // non disturbare: niente costumi né emozioni del meteo
+        if (quiet)
+        {
+            foreach (var el in new FrameworkElement[] { Shades, Umbrella, RainDrops, Scarf, Sweat, Zzz, Notes, Lids, ScaredEyes, Mouth })
+                el.Visibility = Visibility.Collapsed;
+            return;
+        }
 
         bool rain = weather == WeatherMood.Rain, storm = weather == WeatherMood.Storm && !cheering;
         // con la musica l'omino è sveglio: spariscono solo palpebre del sonno e z. Tutti gli altri effetti
@@ -450,6 +506,7 @@ public partial class Mascot : UserControl
     // gli hai cliccato sopra: saltella e arrossisce
     public void Poke()
     {
+        if (quiet) return;   // non disturbare: niente saltelli, nemmeno se ci clicchi
         dance.Stop();   // il saltello prende il posto del ballo, poi riparte da solo
         Tr.BeginAnimation(TranslateTransform.YProperty, Keys(false, (0, 0), (140, -10), (280, 0), (400, -5), (520, 0)));
         Cheeks.BeginAnimation(OpacityProperty, Keys(false, (0, 0), (180, 1), (900, 1), (1300, 0)));
@@ -457,11 +514,47 @@ public partial class Mascot : UserControl
         pokeEnd.Start();
     }
 
+    // ---- reazioni di sistema ----
+    readonly DispatcherTimer reactionEnd = new() { Interval = TimeSpan.FromMilliseconds(2000) };
+    MascotReaction reaction;
+
+    // mostra una reazione per un paio di secondi, poi torna com'era
+    public void React(MascotReaction r)
+    {
+        if (quiet || r == MascotReaction.None) return;
+        reaction = r;
+        reactionEnd.Stop();
+        reactionEnd.Start();
+        Apply();
+    }
+
+    // la cpu scalda troppo: suda e si lamenta
+    void PlayHot()
+    {
+        Sweat.Visibility = Visibility.Visible;
+        Sweat.BeginAnimation(OpacityProperty, Keys(false, (0, 0), (180, 1), (1500, 1), (2000, 0)));
+        SweatTr.BeginAnimation(TranslateTransform.YProperty, Keys(false, (0, 0), (260, 7), (900, 13), (1500, 8), (2000, 2)));
+        Rot.BeginAnimation(RotateTransform.AngleProperty, Keys(false, (0, 0), (150, -3), (330, 3), (510, -2), (700, 2), (900, 0), (2000, 0)));
+        Sc.BeginAnimation(ScaleTransform.ScaleYProperty, Keys(false, (0, 1), (400, .97), (900, 1), (2000, 1)));
+    }
+
+    // batteria scarica: occhi assonnati e testa che ciondola
+    void PlayTired()
+    {
+        Lids.Visibility = Visibility.Visible;
+        LidSc.ScaleY = .8;
+        Mouth.Visibility = Visibility.Visible;
+        Mouth.Data = Geometry.Parse("M44,61 Q50,59 56,61");
+        Mouth.Fill = null;
+        Rot.BeginAnimation(RotateTransform.AngleProperty, Keys(false, (0, 0), (500, -2.5), (1300, -2.5), (2000, 0)));
+        Sc.BeginAnimation(ScaleTransform.ScaleYProperty, Keys(false, (0, 1), (700, .96), (1400, .99), (2000, 1)));
+    }
+
     // ---- vita da mascotte: ogni tanto fa qualcosa da sola ----
     void IdleTick()
     {
         if (walking && DateTime.UtcNow > walkUntil) walking = false;
-        if (mode != MascotMode.Idle || cheering || walking) return;
+        if (mode != MascotMode.Idle || cheering || walking || quiet || reaction != MascotReaction.None) return;
         // con la paura, il freddo, il sonno o il volo sta fermo: ci pensano già le animazioni del tempo
         if (weather is WeatherMood.Storm or WeatherMood.Snow or WeatherMood.Night || (weather == WeatherMood.Rain && windy)) return;
         switch (rnd.Next(4))

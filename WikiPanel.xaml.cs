@@ -15,6 +15,7 @@ public partial class WikiPanel : UserControl
     public WikiPanel()
     {
         InitializeComponent();
+        Mic.Target = Input;   // il microfonino detta nel campo della ricerca
         Hint.Text = Loc.L("Cerca su Wikipedia…", "Search Wikipedia…");
         BOpen.Content = Loc.L("Apri su Wikipedia ↗", "Open on Wikipedia ↗");
         Status.Text = Loc.L("Scrivi cosa cercare e premi Invio. Scorri in basso per leggere l'articolo intero.", "Type what to look up and press Enter. Scroll down to read the whole article.");

@@ -7,14 +7,16 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>YourLittleFriend</RootNamespace>
     <AssemblyName>YourLittleFriend</AssemblyName>
-    <Version>1.1.5.1</Version>
+    <Version>1.1.6</Version>
     <ApplicationIcon>icon.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
     <Resource Include="icon.ico" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="LibreHardwareMonitorLib" Version="0.9.6" />
     <PackageReference Include="NAudio.Wasapi" Version="2.2.1" />
     <PackageReference Include="System.Drawing.Common" Version="8.0.0" />
+    <PackageReference Include="System.Speech" Version="10.0.14" />
   </ItemGroup>
 </Project>

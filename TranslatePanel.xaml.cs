@@ -12,6 +12,7 @@ public partial class TranslatePanel : UserControl
     public TranslatePanel()
     {
         InitializeComponent();
+        Mic.Target = Input;   // il microfonino detta nel campo da tradurre
         var s = Settings.Current;
         srcLang = string.IsNullOrEmpty(s.TrFrom) ? "auto" : s.TrFrom;
         dstLang = string.IsNullOrEmpty(s.TrTo) ? (Loc.En ? "it" : "en") : s.TrTo;

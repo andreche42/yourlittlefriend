@@ -87,6 +87,15 @@
         <CheckBox x:Name="FWeather" Foreground="{DynamicResource FgBrush}" Margin="0,3"/>
         <CheckBox x:Name="FBeat" Foreground="{DynamicResource FgBrush}" Margin="0,3"/>
 
+        <!-- portafile e clipboard: quanto restano le cose -->
+        <TextBlock x:Name="LKeep" Margin="0,20,0,6"/>
+        <StackPanel Orientation="Horizontal">
+          <RadioButton x:Name="K24" GroupName="keep" Foreground="{DynamicResource FgBrush}" Margin="0,0,18,0"/>
+          <RadioButton x:Name="K7" GroupName="keep" Foreground="{DynamicResource FgBrush}" Margin="0,0,18,0"/>
+          <RadioButton x:Name="K30" GroupName="keep" Foreground="{DynamicResource FgBrush}"/>
+        </StackPanel>
+        <TextBlock x:Name="LKeepNote" TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource FgDimBrush}" Margin="0,6,0,0"/>
+
         <!-- traduttore -->
         <TextBlock x:Name="LTr" FontSize="18" FontWeight="Bold" Margin="0,28,0,4"/>
         <TextBlock x:Name="TrNote" TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource FgDimBrush}" Margin="0,0,0,8"/>

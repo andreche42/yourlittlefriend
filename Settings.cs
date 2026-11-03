@@ -34,6 +34,9 @@ public class Settings
     public bool WeatherOn { get; set; } = true;
     public bool BeatDance { get; set; } = true;   // l'omino balla a tempo, ascoltando quello che esce dalle casse
 
+    public bool Quiet { get; set; }                 // non disturbare: niente ballo, meteo o reazioni, e l'omino sta fermo
+    public int HolderKeepDays { get; set; } = 30;   // dopo quanti giorni spariscono le cose nel portafile (0 = 24 ore)
+
     // calcolatrice
     public bool CalcDeg { get; set; } = true;       // gradi (true) o radianti
 

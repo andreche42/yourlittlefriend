@@ -9,6 +9,7 @@ using System.Text.Json.Nodes;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
@@ -56,6 +57,8 @@ public partial class MainWindow : Window
     long dragSeen;   // ultimo momento in cui un file è stato trascinato sopra la finestra
     int busy;   // quante richieste all'ia sono in corso
     readonly Beat beat = new();   // ascolta il battito della musica (per ballare a tempo)
+    readonly DispatcherTimer watch = new() { Interval = TimeSpan.FromSeconds(30) };   // batteria e cpu: si guardano ogni tanto
+    MascotReaction pendingReaction;   // reazione trovata col notch chiuso: si mostra appena lo apri
 
     public MainWindow()
     {
@@ -104,6 +107,9 @@ public partial class MainWindow : Window
         weather.Tick += async (_, _) => await LoadWeather();
         weather.Start();
         _ = LoadWeather();
+        // reazioni di sistema: batteria scarica e cpu che scalda
+        watch.Tick += (_, _) => CheckSystem();
+        watch.Start();
         Width = WinW;    // la misura della finestra deve sempre essere quella delle costanti: tutte le posizioni sono calcolate su di lei
         Height = WinH;
         try { ApplyStyle(); }
@@ -120,6 +126,17 @@ public partial class MainWindow : Window
         Bubble.Show(Loc.L("Cosa faccio con questo?", "What shall I do with this?"));
         GreetTitle.Text = Loc.L($"Ciao {Settings.Current.Name}!", $"Hi {Settings.Current.Name}!");
         Holder.InternalDrag += on => { internalDrag = on; dragSeen = Environment.TickCount64; };
+        // microfonino: ogni casella di scrittura detta nel proprio campo
+        ChatMic.Target = ChatIn;
+        FileMic.Target = FileIn;
+        // "non disturbare" nel menu del tasto destro
+        var quietItem = new MenuItem
+        {
+            IsCheckable = true, IsChecked = Settings.Current.Quiet, Header = Loc.L("Non disturbare", "Do not disturb")
+        };
+        quietItem.Click += (_, _) => ApplyQuiet(quietItem.IsChecked);
+        ((ContextMenu)Resources["Menu"]).Items.Insert(1, quietItem);
+        MiniMascot.Quiet = BigMascot.Quiet = Settings.Current.Quiet;
         Closed += (_, _) => { beat.Dispose(); Application.Current.Shutdown(); };
     }
 
@@ -263,9 +280,25 @@ public partial class MainWindow : Window
             lastOpen = DateTime.UtcNow;
             if (UpdatePending && !updateAsked) Dispatcher.BeginInvoke(new Action(AskUpdate));   // c'è un aggiornamento: te lo chiede appena apri il notch
             Jelly(1, 150, false);
+            if (pendingReaction != MascotReaction.None)
+            {
+                // c'era una reazione (batteria, cpu): la fa vedere un secondo, poi torna com'era
+                var t = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(420) };
+                t.Tick += (_, _) =>
+                {
+                    t.Stop();
+                    var r = pendingReaction;
+                    pendingReaction = MascotReaction.None;
+                    UpdateBadge();
+                    MiniMascot.React(r);
+                    BigMascot.React(r);
+                };
+                t.Start();
+            }
         }
         else
         {
+            Voice.Stop();   // il microfono non resta acceso quando il notch si chiude
             expandOverride = null;
             wikiSearched = false;   // la prossima volta si riapre normale
             homeWeather = false;    // e la home torna a mostrare la musica
@@ -275,6 +308,79 @@ public partial class MainWindow : Window
         UpdateRipple();
         UpdateExpand();
         StartSpring();
+    }
+
+    // ---- non disturbare ----
+    // toglie ballo, emozioni del meteo e reazioni: l'omino sta fermo, si muovono solo gli occhi
+    void ApplyQuiet(bool on)
+    {
+        Settings.Current.Quiet = on;
+        Settings.Current.Save();
+        MiniMascot.Quiet = BigMascot.Quiet = on;
+        if (on) { pendingReaction = MascotReaction.None; UpdateBadge(); }
+        ApplyBeat();   // senza ballo non serve stare ad ascoltare la musica
+        UpdateMood();
+    }
+
+    // ---- reazioni di sistema: batteria scarica e cpu che scalda ----
+    void CheckSystem()
+    {
+        if (Settings.Current.Quiet) return;
+        var r = SystemWatch.Next();
+        if (r == MascotReaction.None) return;
+        if (isOpen) { MiniMascot.React(r); BigMascot.React(r); return; }   // notch aperto: la fa subito
+        pendingReaction = r;   // chiuso: per ora basta il simbollino
+        UpdateBadge();
+    }
+
+    void UpdateBadge()
+    {
+        if (pendingReaction == MascotReaction.None || isOpen) { ReactBadge.Visibility = Visibility.Collapsed; return; }
+        ReactBadge.Text = pendingReaction == MascotReaction.Hot ? "🔥" : "🔋";
+        ReactBadge.ToolTip = pendingReaction == MascotReaction.Hot
+            ? Loc.L("La CPU scalda troppo", "The CPU is getting too hot")
+            : Loc.L("Batteria scarica", "Low battery");
+        ReactBadge.Visibility = Visibility.Visible;
+    }
+
+    // ---- clipboard → portafile ----
+    const int WM_CLIPBOARDUPDATE = 0x031D;
+    [DllImport("user32.dll")] static extern bool AddClipboardFormatListener(IntPtr hwnd);
+
+    protected override void OnSourceInitialized(EventArgs e)
+    {
+        base.OnSourceInitialized(e);
+        var h = new WindowInteropHelper(this).Handle;
+        AddClipboardFormatListener(h);
+        HwndSource.FromHwnd(h)?.AddHook(ClipMessage);
+    }
+
+    IntPtr ClipMessage(IntPtr hwnd, int msg, IntPtr w, IntPtr l, ref bool handled)
+    {
+        if (msg == WM_CLIPBOARDUPDATE) Dispatcher.BeginInvoke(new Action(GrabClipboard));
+        return IntPtr.Zero;
+    }
+
+    // quello che copi finisce nel portafile: testo, oppure l'immagine salvata come file
+    void GrabClipboard()
+    {
+        try
+        {
+            // le copie che i gestori di password chiedono di non registrare restano fuori
+            if (Clipboard.ContainsData("Clipboard Viewer Ignore") ||
+                Clipboard.ContainsData("ExcludeClipboardContentFromMonitorProcessing")) return;
+            if (Clipboard.ContainsImage())
+            {
+                if (Clipboard.GetImage() is { } img) Holder.AddClipImage(img);
+                return;
+            }
+            if (Clipboard.ContainsText())
+            {
+                var text = Clipboard.GetText();
+                if (!string.IsNullOrWhiteSpace(text)) Holder.AddText(text);
+            }
+        }
+        catch { }   // la clipboard era occupata da un altro programma: quella copia si perde
     }
 
     void StartSpring()
@@ -631,7 +737,8 @@ public partial class MainWindow : Window
     // lavora mentre l'ia risponde, balla se c'è musica, altrimenti gira per conto suo
     void UpdateMood()
     {
-        var m = busy > 0 ? MascotMode.Working : playing ? MascotMode.Dance : MascotMode.Idle;
+        // con "non disturbare" non balla: resta fermo
+        var m = Settings.Current.Quiet ? MascotMode.Idle : busy > 0 ? MascotMode.Working : playing ? MascotMode.Dance : MascotMode.Idle;
         MiniMascot.Mode = BigMascot.Mode = m;
         UpdateRipple();
     }
@@ -691,6 +798,7 @@ public partial class MainWindow : Window
             GreetTitle.Text = Loc.L($"Ciao {Settings.Current.Name}!", $"Hi {Settings.Current.Name}!");
             local.Clear();   // il prompt di sistema contiene il nome
             ApplyFeatures();
+            Holder.PurgeNow();   // se hai cambiato la scadenza del portafile, quello che è scaduto sparisce subito
             Theme.Apply();   // il contorno dipende dalla forma (la bolla ha sempre il suo)
             ApplyStyle();    // notch o bolla, e dimensione della bolla
             _ = LoadWeather();
@@ -734,7 +842,7 @@ public partial class MainWindow : Window
     // l'ascolto del battito va solo con la musica accesa e il ballo a tempo acceso
     void ApplyBeat()
     {
-        if (playing && Settings.Current.BeatDance) beat.Start();
+        if (playing && Settings.Current.BeatDance && !Settings.Current.Quiet) beat.Start();
         else { beat.Stop(); SetDanceTempo(0); }
     }
 

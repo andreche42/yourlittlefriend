@@ -40,6 +40,10 @@
       </Border>
       <local:Mascot x:Name="MiniMascot" WanderRange="80" Width="28" Height="28" VerticalAlignment="Top" Margin="0,3,0,0"/>
 
+      <!-- simbollino della reazione di sistema, si vede solo col notch chiuso (poi l'omino la fa quando apri) -->
+      <TextBlock x:Name="ReactBadge" Visibility="Collapsed" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Top"
+                 Margin="44,8,0,0" IsHitTestVisible="False"/>
+
       <Grid x:Name="Full" Visibility="Collapsed" Opacity="0" Width="612" Height="154" Margin="0,6,0,0"
             HorizontalAlignment="Center" VerticalAlignment="Top" RenderTransformOrigin="0.5,0">
         <Grid.RenderTransform>
@@ -165,7 +169,8 @@
               <Grid Grid.Row="1" Height="36">
                 <Rectangle Fill="{DynamicResource PanelBrush}" Stroke="{DynamicResource FgBrush}" StrokeThickness="2" StrokeDashArray="3 2" RadiusX="12" RadiusY="12"/>
                 <TextBox x:Name="ChatIn" Background="Transparent" BorderThickness="0" Foreground="{DynamicResource FgBrush}" CaretBrush="{DynamicResource FgBrush}"
-                         FontSize="16" VerticalContentAlignment="Center" Margin="12,0" AllowDrop="False" KeyDown="ChatKey"/>
+                         FontSize="16" VerticalContentAlignment="Center" Margin="12,0,38,0" AllowDrop="False" KeyDown="ChatKey"/>
+                <local:MicButton x:Name="ChatMic" Width="28" Height="28" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,4,0"/>
                 <TextBlock Text="{local:L It='scrivi qua', En='type here'}" Foreground="{DynamicResource FgDimBrush}" FontSize="16" Margin="14,0" VerticalAlignment="Center" IsHitTestVisible="False">
                   <TextBlock.Style>
                     <Style TargetType="TextBlock">
@@ -213,7 +218,8 @@
                   <Grid Grid.Row="1" Height="36">
                     <Rectangle Fill="{DynamicResource PanelBrush}" Stroke="{DynamicResource FgBrush}" StrokeThickness="2" StrokeDashArray="3 2" RadiusX="12" RadiusY="12"/>
                     <TextBox x:Name="FileIn" Background="Transparent" BorderThickness="0" Foreground="{DynamicResource FgBrush}" CaretBrush="{DynamicResource FgBrush}"
-                             FontSize="16" VerticalContentAlignment="Center" Margin="12,0" AllowDrop="False" KeyDown="FileKey"/>
+                             FontSize="16" VerticalContentAlignment="Center" Margin="12,0,38,0" AllowDrop="False" KeyDown="FileKey"/>
+                    <local:MicButton x:Name="FileMic" Width="28" Height="28" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,4,0"/>
                     <TextBlock Text="{local:L It='scrivi qua', En='type here'}" Foreground="{DynamicResource FgDimBrush}" FontSize="16" Margin="14,0" VerticalAlignment="Center" IsHitTestVisible="False">
                       <TextBlock.Style>
                         <Style TargetType="TextBlock">

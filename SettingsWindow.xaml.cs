@@ -88,6 +88,15 @@ public partial class SettingsWindow : Window
         FChat.IsChecked = st.ChatOn; FHolder.IsChecked = st.HolderOn; FAsk.IsChecked = st.AskFileOn;
         FCalc.IsChecked = st.CalcOn; FTr.IsChecked = st.TranslateOn; FWiki.IsChecked = st.WikiOn; FWeather.IsChecked = st.WeatherOn;
         FBeat.IsChecked = st.BeatDance;
+        LKeep.Text = Loc.L("Portafile e clipboard: cancella dopo", "File holder and clipboard: clear after");
+        K24.Content = Loc.L("24 ore", "24 hours");
+        K7.Content = Loc.L("7 giorni", "7 days");
+        K30.Content = Loc.L("30 giorni", "30 days");
+        K24.IsChecked = st.HolderKeepDays <= 0;
+        K7.IsChecked = st.HolderKeepDays == 7;
+        K30.IsChecked = K24.IsChecked != true && K7.IsChecked != true;
+        LKeepNote.Text = Loc.L("Vale per tutto quello che finisce nel portafile, compreso quello che copi. Le immagini copiate vengono cancellate anche dal disco.",
+                               "Applies to everything that goes into the file holder, including what you copy. Copied images are deleted from disk too.");
 
         // traduttore
         LTr.Text = Loc.L("Traduttore", "Translator");
@@ -247,6 +256,7 @@ public partial class SettingsWindow : Window
         if (resetPos) st.NotchX = st.NotchY = st.BubbleX = st.BubbleY = null;
         st.ChatOn = FChat.IsChecked == true; st.HolderOn = FHolder.IsChecked == true; st.AskFileOn = FAsk.IsChecked == true;
         st.CalcOn = FCalc.IsChecked == true; st.TranslateOn = FTr.IsChecked == true; st.WikiOn = FWiki.IsChecked == true; st.WeatherOn = FWeather.IsChecked == true;
+        st.HolderKeepDays = K24.IsChecked == true ? 0 : K7.IsChecked == true ? 7 : 30;
         st.BeatDance = FBeat.IsChecked == true;
         st.LensOn = LensCb.IsChecked == true;
         if (Theme.TryParse(LensHex.Text) != null) st.LensColor = LensHex.Text.Trim();

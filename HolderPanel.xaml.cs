@@ -11,7 +11,7 @@ using System.Windows.Threading;
 
 namespace YourLittleFriend;
 
-public record HolderItem(string Kind, string Value);   // Kind: "file" oppure "text"
+public record HolderItem(string Kind, string Value, DateTime? At = null);   // Kind: "file" oppure "text"; At = quando è arrivato
 
 // holder: ci trascini file o testo, restano qui (anche dopo il riavvio) e li puoi ritrascinare dove vuoi.
 // i file sono solo riferimenti al percorso, non vengono copiati.
@@ -30,7 +30,9 @@ public partial class HolderPanel : UserControl
         Empty.Text = Loc.L("Trascina qui file o testo", "Drop files or text here");
         ClearBtn.ToolTip = Loc.L("Svuota", "Clear all");
         try { items = JsonSerializer.Deserialize<List<HolderItem>>(File.ReadAllText(FilePath)) ?? new(); } catch { }
+        items = items.Select(i => i with { At = i.At ?? DateTime.Now }).ToList();   // le cose salvate prima non avevano la data
         items.RemoveAll(i => i.Kind == "file" && !File.Exists(i.Value) && !Directory.Exists(i.Value));   // file spariti nel frattempo
+        if (Purge()) Save();   // quello che è scaduto mentre l'app era chiusa se ne va
         Render();
     }
 
@@ -40,7 +42,7 @@ public partial class HolderPanel : UserControl
         foreach (var p in paths)
         {
             items.RemoveAll(i => i.Kind == "file" && string.Equals(i.Value, p, StringComparison.OrdinalIgnoreCase));
-            items.Insert(0, new HolderItem("file", p));
+            items.Insert(0, new HolderItem("file", p, DateTime.Now));
         }
         Commit();
     }
@@ -51,8 +53,26 @@ public partial class HolderPanel : UserControl
         if (text == "") return;
         if (text.Length > 20000) text = text[..20000];
         items.RemoveAll(i => i.Kind == "text" && i.Value == text);
-        items.Insert(0, new HolderItem("text", text));
+        items.Insert(0, new HolderItem("text", text, DateTime.Now));
         Commit();
+    }
+
+    // un'immagine copiata: si salva come file e diventa una casella con la miniatura
+    public void AddClipImage(BitmapSource img)
+    {
+        try
+        {
+            var dir = Path.Combine(Settings.Dir, "clips");
+            Directory.CreateDirectory(dir);
+            var f = Path.Combine(dir, $"clip-{DateTime.Now:yyyyMMdd-HHmmss-fff}.png");
+            var enc = new PngBitmapEncoder();
+            enc.Frames.Add(BitmapFrame.Create(img));
+            using (var s = File.Create(f)) enc.Save(s);
+            items.RemoveAll(i => i.Kind == "file" && string.Equals(i.Value, f, StringComparison.OrdinalIgnoreCase));
+            items.Insert(0, new HolderItem("file", f, DateTime.Now));
+            Commit();
+        }
+        catch { }
     }
 
     void Remove(HolderItem it) { items.Remove(it); Commit(false); }
@@ -67,16 +87,41 @@ public partial class HolderPanel : UserControl
 
     void Commit(bool toStart = true)
     {
+        Purge();
         if (items.Count > Max) items.RemoveRange(Max, items.Count - Max);
+        Save();
+        Render();
+        if (toStart) Scroll.ScrollToHorizontalOffset(0);
+    }
+
+    void Save()
+    {
         try
         {
             Directory.CreateDirectory(Settings.Dir);
             File.WriteAllText(FilePath, JsonSerializer.Serialize(items));
         }
         catch { }
-        Render();
-        if (toStart) Scroll.ScrollToHorizontalOffset(0);
     }
+
+    // toglie le cose scadute (24 ore, 7 o 30 giorni, si sceglie dalle impostazioni). true se ha tolto qualcosa
+    bool Purge()
+    {
+        int days = Settings.Current.HolderKeepDays <= 0 ? 1 : Settings.Current.HolderKeepDays;
+        var cut = DateTime.Now.AddDays(-days);
+        int before = items.Count;
+        foreach (var i in items.Where(i => (i.At ?? DateTime.Now) < cut && i.Kind == "file" && IsClip(i.Value)).ToList())
+            try { File.Delete(i.Value); } catch { }
+        items.RemoveAll(i => (i.At ?? DateTime.Now) < cut);
+        return items.Count != before;
+    }
+
+    // le immagini della clipboard stanno nella nostra cartella: quando scadono si cancellano anche dal disco
+    static bool IsClip(string path) =>
+        path.Replace('/', '\\').Contains(@"\yourlittlefriend\clips\", StringComparison.OrdinalIgnoreCase);
+
+    // svuota subito quello che è scaduto (dopo aver cambiato la scadenza dalle impostazioni)
+    public void PurgeNow() => Commit(false);
 
     // ---- disegno ----
     void Render()
