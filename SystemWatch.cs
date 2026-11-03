@@ -17,7 +17,7 @@ public static class SystemWatch
         public int LifeTime, FullLifeTime;
     }
 
-    const double HotC = 85;          // gradi oltre i quali la cpu "scalda troppo"
+    const double HotC = 80;          // gradi oltre i quali la cpu "scalda troppo"
     const double HotLoad = .90;      // se la temperatura non si riesce a leggere si guarda il carico
     const double LowBattery = 20;    // percento sotto il quale la batteria è "scarica"
 
