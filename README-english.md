@@ -8,7 +8,7 @@ YourLittleFriend is a little buddy in your pc's notch or in a bubble (windows). 
 - **home**: greeting + weather; if a song starts playing it shows the cover, title and controls, and the colors follow the cover
 - **chat**: you talk to an llm on your PC (ollama) or to the service you want, using your own api key (openai, gemini, claude, nvidia, groq...): it can also control the PC
 - **+**: drag in a file, write what to do with it and it answers you
-- **attached text files**: in the **+** tab you attach a text file, write what you want to know and the ai answers you by reading it. for now it works with the **online ai** (your api key); support for the model on your pc is coming
+- **attached text files**: in the **+** tab you attach a text file, write what you want to know and the ai answers you by reading it. (only works with online ai for now)
 - **file holder** (the "cup holder", the tab with the little tray): drag files or text onto the notch and they stay there, sorted into slots (icon or thumbnail for files, a snippet for text). you can drag them around wherever you want, even after restarting the pc. double click opens the file or copies the text, ✕ removes one item, 🗑 clears everything. files are not copied: the file holder only remembers where they are
 - answers arrive in real time, word by word, with a "smoke" effect that fades away (imessage style)
 - the little guy is animated: he blinks, wanders around the notch, works (dots and reading eyes) while the ai answers, smiles when it's done (or when you open the notch) and dances if there's music
@@ -86,10 +86,7 @@ got suggestions or tips? go wild! open an issue on this repo and tell us everyth
 **bring your own ai**: the settings already have the ollama auto-installer and, below it, the section for the api key of any OpenAI-compatible service (openai, claude, gemini, nvidia, groq, openrouter, lm studio). it asks the service for the model list, so you don't have to guess the names.
 
 ### Image Recognition and OCR Using a Local LLM
-Paste an image, and the local LLM will process the image for OCR or analyze the image and its details. (in development)
-
-### Attached text files with a local LLM
-read a text file with the model running on your pc, without going through an online service. (in development, for now it only works with the online ai)
+Paste an image, and the local LLM will process the image for OCR or analyze the image and its details. (in development) (for now it only works with the online ai)
 
 ------
 
