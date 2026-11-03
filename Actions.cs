@@ -1,6 +1,8 @@
 using System.Diagnostics;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Text.Json.Nodes;
+using Microsoft.Win32;
 using NAudio.CoreAudioApi;
 
 namespace YourLittleFriend;
@@ -19,7 +21,7 @@ public static class Actions
      {"type":"function","function":{"name":"toggle_mute","description":"muta o riattiva l'audio","parameters":{"type":"object","properties":{}}}},
      {"type":"function","function":{"name":"media_control","description":"play/pausa, brano successivo o precedente","parameters":{"type":"object","properties":{"action":{"type":"string","enum":["play_pause","next","previous"]}},"required":["action"]}}},
      {"type":"function","function":{"name":"play_on_spotify","description":"cerca una canzone su spotify e la mette in riproduzione","parameters":{"type":"object","properties":{"query":{"type":"string","description":"titolo e artista"}},"required":["query"]}}},
-     {"type":"function","function":{"name":"open_app","description":"apre un'app: calcolatrice, blocco note, esplora file, impostazioni, spotify","parameters":{"type":"object","properties":{"name":{"type":"string"}},"required":["name"]}}},
+     {"type":"function","function":{"name":"open_app","description":"apre un'app installata sul pc, anche una che non conosci: basta il nome che ha nel menu start (es. calcolatrice, blocco note, esplora file, impostazioni, spotify, steam, visual studio code, whatsapp)","parameters":{"type":"object","properties":{"name":{"type":"string","description":"nome dell'app come compare nel menu start"}},"required":["name"]}}},
      {"type":"function","function":{"name":"search_web","description":"apre il browser con una ricerca google. usalo SOLO se l'utente chiede esplicitamente di aprire il browser","parameters":{"type":"object","properties":{"query":{"type":"string"}},"required":["query"]}}},
      {"type":"function","function":{"name":"web_search","description":"cerca su internet e restituisce i primi risultati. usalo per notizie, fatti recenti o cose che non sai","parameters":{"type":"object","properties":{"query":{"type":"string"}},"required":["query"]}}},
      {"type":"function","function":{"name":"pc_power","description":"blocca, sospende, iberna, spegne o riavvia il pc. sospendere e ibernare sono cose diverse: usa sleep per la sospensione, hibernate per l'ibernazione","parameters":{"type":"object","properties":{"action":{"type":"string","enum":["lock","sleep","hibernate","shutdown","restart"]}},"required":["action"]}}}
@@ -35,6 +37,7 @@ public static class Actions
     public static void Open(string target, string? args = null) =>
         Process.Start(new ProcessStartInfo(target, args ?? "") { UseShellExecute = true });
 
+    // le app che si aprono al volo, senza cercare: le altre si trovano nel menu start
     static readonly Dictionary<string, string> Apps = new(StringComparer.OrdinalIgnoreCase)
     {
         ["calcolatrice"] = "calc.exe", ["calculator"] = "calc.exe",
@@ -43,6 +46,51 @@ public static class Actions
         ["impostazioni"] = "ms-settings:", ["settings"] = "ms-settings:",
         ["spotify"] = "spotify:"
     };
+
+    // dove stanno i collegamenti di tutte le app installate (anche quelle dello store, quando ne hanno uno)
+    static IEnumerable<string> StartMenus()
+    {
+        yield return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonStartMenu), "Programs");
+        yield return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.StartMenu), "Programs");
+    }
+
+    // cerca un'app per nome: prima le note, poi i collegamenti del menu start, poi il registro di windows.
+    // se non la trova torna null e si lascia provare a windows (percorso, comando nel path, protocollo)
+    static string? FindApp(string name)
+    {
+        if (Apps.TryGetValue(name, out var known)) return known;
+        var key = name.Trim();
+        if (key.Length == 0) return null;
+
+        // 1. collegamenti del menu start: prima il nome identico, poi uno che lo contiene
+        string? partial = null;
+        foreach (var root in StartMenus())
+        {
+            IEnumerable<string> files;
+            try { if (!Directory.Exists(root)) continue; files = Directory.EnumerateFiles(root, "*.lnk", SearchOption.AllDirectories); }
+            catch { continue; }
+            foreach (var f in files)
+            {
+                var n = Path.GetFileNameWithoutExtension(f);
+                if (string.Equals(n, key, StringComparison.OrdinalIgnoreCase)) return f;
+                if (partial == null && n.Contains(key, StringComparison.OrdinalIgnoreCase)) partial = f;
+            }
+        }
+        if (partial != null) return partial;
+
+        // 2. registro: le app registrate come eseguibile (chrome, msedge, code...)
+        var exe = key.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) ? key : key + ".exe";
+        foreach (var hive in new[] { Registry.LocalMachine, Registry.CurrentUser })
+        {
+            try
+            {
+                using var k = hive.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\" + exe);
+                if (k?.GetValue(null) is string path && path.Trim().Length > 0) return path.Trim().Trim('"');
+            }
+            catch { }
+        }
+        return null;
+    }
 
     // sospensione e ibernazione: chiamata diretta alla funzione di windows. con rundll32 non si può, perché
     // passa una stringa al posto dei tre parametri booleani: il flag "iberna" risultava sempre acceso e il pc
@@ -107,11 +155,21 @@ public static class Actions
             case "open_app":
             {
                 var n = S("name").Trim();
-                if (!Apps.TryGetValue(n, out var target))
-                    return new(Loc.L($"aprire «{n}»", $"open «{n}»"), Array.Empty<string>(), false,
-                        () => Task.FromResult(Loc.L("app non in lista, posso aprire: ", "app not in the list, I can open: ") + string.Join(", ", Apps.Keys)));
-                return new(Loc.L($"aprire «{n}»", $"open «{n}»"), new[] { Loc.L($"avvio «{target}»", $"I launch «{target}»") }, true,
-                    Sync(() => { Open(target); return Loc.L($"aperto {n}", $"opened {n}"); }));
+                if (n.Length == 0) return null;
+                var target = FindApp(n);   // null = non trovata: ci prova windows col nome così com'è
+                var step = target == null
+                    ? Loc.L($"provo ad aprirla come la conosce windows", $"I try to open it the way windows knows it")
+                    : Loc.L($"avvio «{Path.GetFileName(target)}» ({target})", $"I launch «{Path.GetFileName(target)}» ({target})");
+                return new(Loc.L($"aprire «{n}»", $"open «{n}»"), new[] { step }, true,
+                    Sync(() =>
+                    {
+                        try { Open(target ?? n); return Loc.L($"aperto {n}", $"opened {n}"); }
+                        catch (Exception ex)
+                        {
+                            return Loc.L($"non riesco ad aprire «{n}»: controlla il nome nel menu start. {ex.Message}",
+                                          $"I can't open «{n}»: check its name in the start menu. {ex.Message}");
+                        }
+                    }));
             }
             case "web_search":
             {

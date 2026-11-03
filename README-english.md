@@ -39,7 +39,7 @@ Italian version: [README.md](https://github.com/andreche42/yourlittlefriend/blob
 ## what it can do from the chat
 
 - volume (set, raise/lower, mute), play/pause/next/previous
-- opens apps from the list (`Apps` in `Actions.cs`), searches on google, locks/suspends/hibernates/shuts down/restarts the pc
+- opens **any installed app**: just the name it has in the start menu (calculator, steam, visual studio code, whatsapp...); it looks it up in the shortcuts and in the windows registry. it also searches on google, locks/suspends/hibernates/shuts down/restarts the pc
 
 sensitive actions (opening apps, browser, shutdown etc.) first ask for confirmation with a popup that shows the steps.
 the model can't run free-form commands: only the actions written in `Actions.cs`.
