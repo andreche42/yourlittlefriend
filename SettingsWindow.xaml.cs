@@ -90,7 +90,7 @@ public partial class SettingsWindow : Window
         FChat.IsChecked = st.ChatOn; FHolder.IsChecked = st.HolderOn; FAsk.IsChecked = st.AskFileOn;
         FCalc.IsChecked = st.CalcOn; FTr.IsChecked = st.TranslateOn; FWiki.IsChecked = st.WikiOn; FWeather.IsChecked = st.WeatherOn;
         FBeat.IsChecked = st.BeatDance;
-        FSleep.Content = Loc.L("L'omino dorme di notte, dalle 21:30 in poi (palpebre abbassate e z z z)", "The little guy sleeps at night, from 21:30 on (closed lids and z z z)");
+        FSleep.Content = Loc.L("L'omino dorme di notte, dalle 21:30 alle 6 (palpebre abbassate e z z z)", "The little guy sleeps at night, from 21:30 to 6 (closed lids and z z z)");
         FSleep.IsChecked = st.NightSleep;
         LKeep.Text = Loc.L("Portafile e clipboard: cancella dopo", "File holder and clipboard: clear after");
         K24.Content = Loc.L("24 ore", "24 hours");

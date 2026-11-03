@@ -97,6 +97,7 @@ public partial class Mascot : UserControl
     static readonly TimeSpan SleepTo = new(6, 0, 0);
     static bool IsSleepTime => DateTime.Now.TimeOfDay >= SleepFrom || DateTime.Now.TimeOfDay < SleepTo;
     bool napTime = IsSleepTime;   // se ora è ora del sonno: si aggiorna da solo mentre la mascotte è visibile
+    readonly DispatcherTimer sleepEdge = new();   // scatta alle 21:30 e alle 6 in punto: alle 6 deve essere già sveglio
 
     public WeatherMood Weather
     {
@@ -151,6 +152,8 @@ public partial class Mascot : UserControl
         RenderTransform = new TransformGroup { Children = { flip, walk } };
 
         StartBlink();
+        sleepEdge.Tick += (_, _) => { sleepEdge.Stop(); napTime = IsSleepTime; Apply(); ScheduleEdge(); };
+        ScheduleEdge();
 
         idle.Tick += (_, _) => { idle.Interval = TimeSpan.FromSeconds(rnd.Next(4, 10)); IdleTick(); };
         cheerEnd.Tick += (_, _) => { cheerEnd.Stop(); cheering = false; Apply(); };
@@ -164,6 +167,22 @@ public partial class Mascot : UserControl
             if ((bool)e.NewValue) idle.Start();
             else idle.Stop();
         };
+    }
+
+    // sveglia puntuale: aspetta il prossimo cambio d'ora (21:30 o 6) e scatta in quell'istante,
+    // così alle 6 non è ancora addormentato in attesa del prossimo giro del timer
+    void ScheduleEdge()
+    {
+        var now = DateTime.Now;
+        var tod = now.TimeOfDay;
+        DateTime next = tod < SleepTo ? now.Date + SleepTo              // notte fonda: si sveglia stamattina alle 6
+                       : tod < SleepFrom ? now.Date + SleepFrom          // giorno: si addormenta stasera alle 21:30
+                       : now.Date.AddDays(1) + SleepTo;                  // già sera: si sveglia domani alle 6
+        var wait = next - now;
+        if (wait < TimeSpan.FromSeconds(1)) wait = TimeSpan.FromSeconds(1);
+        sleepEdge.Stop();
+        sleepEdge.Interval = wait + TimeSpan.FromMilliseconds(250);
+        sleepEdge.Start();
     }
 
     // ---- utilità per le animazioni ----
