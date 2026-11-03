@@ -22,7 +22,7 @@ public static class Actions
      {"type":"function","function":{"name":"open_app","description":"apre un'app: calcolatrice, blocco note, esplora file, impostazioni, spotify","parameters":{"type":"object","properties":{"name":{"type":"string"}},"required":["name"]}}},
      {"type":"function","function":{"name":"search_web","description":"apre il browser con una ricerca google. usalo SOLO se l'utente chiede esplicitamente di aprire il browser","parameters":{"type":"object","properties":{"query":{"type":"string"}},"required":["query"]}}},
      {"type":"function","function":{"name":"web_search","description":"cerca su internet e restituisce i primi risultati. usalo per notizie, fatti recenti o cose che non sai","parameters":{"type":"object","properties":{"query":{"type":"string"}},"required":["query"]}}},
-     {"type":"function","function":{"name":"pc_power","description":"blocca, sospende, spegne o riavvia il pc","parameters":{"type":"object","properties":{"action":{"type":"string","enum":["lock","sleep","shutdown","restart"]}},"required":["action"]}}}
+     {"type":"function","function":{"name":"pc_power","description":"blocca, sospende, iberna, spegne o riavvia il pc. sospendere e ibernare sono cose diverse: usa sleep per la sospensione, hibernate per l'ibernazione","parameters":{"type":"object","properties":{"action":{"type":"string","enum":["lock","sleep","hibernate","shutdown","restart"]}},"required":["action"]}}}
     ]
     """;
 
@@ -44,13 +44,19 @@ public static class Actions
         ["spotify"] = "spotify:"
     };
 
-    static readonly Dictionary<string, (string Cmd, string Args, string Desc)> Power = new()
+    // sospensione e ibernazione: chiamata diretta alla funzione di windows. con rundll32 non si può, perché
+    // passa una stringa al posto dei tre parametri booleani: il flag "iberna" risultava sempre acceso e il pc
+    // finiva in ibernazione anche quando chiedevi la sospensione.
+    [DllImport("powrprof.dll", SetLastError = true)]
+    static extern bool SetSuspendState(bool hibernate, bool forceCritical, bool disableWakeEvent);
+
+    static void Suspend(bool hibernate)
     {
-        ["lock"] = ("rundll32.exe", "user32.dll,LockWorkStation", Loc.L("bloccare il pc", "lock the PC")),
-        ["sleep"] = ("rundll32.exe", "powrprof.dll,SetSuspendState 0,1,0", Loc.L("mettere il pc in sospensione", "put the PC to sleep")),
-        ["shutdown"] = ("shutdown", "/s /t 30", Loc.L("spegnere il pc tra 30 secondi", "shut down the PC in 30 seconds")),
-        ["restart"] = ("shutdown", "/r /t 30", Loc.L("riavviare il pc tra 30 secondi", "restart the PC in 30 seconds"))
-    };
+        if (SetSuspendState(hibernate, false, false)) return;
+        // se windows rifiuta la chiamata (permessi o criteri di gruppo) si passa dai comandi di sistema
+        if (hibernate) Open("shutdown", "/h");
+        else Open("rundll32.exe", "powrprof.dll,SetSuspendState Sleep");
+    }
 
     static Func<Task<string>> Sync(Func<string> f) => () => Task.FromResult(f());
 
@@ -125,10 +131,40 @@ public static class Actions
             case "pc_power":
             {
                 var act = S("action");
-                if (!Power.TryGetValue(act, out var p)) return null;
-                var steps = new List<string> { Loc.L($"eseguo: {p.Cmd} {p.Args}", $"I run: {p.Cmd} {p.Args}") };
-                if (act is "shutdown" or "restart") steps.Add(Loc.L("puoi annullare entro 30 secondi con: shutdown /a", "you can cancel within 30 seconds with: shutdown /a"));
-                return new(p.Desc, steps.ToArray(), true, Sync(() => { Open(p.Cmd, p.Args); return Loc.L("fatto", "done"); }));
+                switch (act)
+                {
+                    case "lock":
+                        return new(Loc.L("bloccare il pc", "lock the PC"),
+                            new[] { Loc.L("blocco la sessione", "I lock the session") }, true,
+                            Sync(() => { Open("rundll32.exe", "user32.dll,LockWorkStation"); return Loc.L("fatto", "done"); }));
+
+                    case "sleep":
+                    case "hibernate":
+                    {
+                        bool hib = act == "hibernate";
+                        var title = hib ? Loc.L("ibernare il pc", "hibernate the PC") : Loc.L("mettere il pc in sospensione", "put the PC to sleep");
+                        var step = hib
+                            ? Loc.L("iberno: il pc salva tutto su disco e si spegne, poi riprende dallo stesso punto", "I hibernate: the PC saves everything to disk and turns off, then resumes where it left off")
+                            : Loc.L("sospendo: il pc va in pausa e riprende in un attimo, il lavoro resta in memoria", "I suspend: the PC pauses and wakes in a moment, the work stays in memory");
+                        var done = hib ? Loc.L("ibernazione avviata", "hibernation started") : Loc.L("sospensione avviata", "sleep started");
+                        return new(title, new[] { step }, true, Sync(() => { Suspend(hib); return done; }));
+                    }
+
+                    case "shutdown":
+                    case "restart":
+                    {
+                        bool off = act == "shutdown";
+                        var args = off ? "/s /t 30" : "/r /t 30";
+                        var desc = off ? Loc.L("spegnere il pc tra 30 secondi", "shut down the PC in 30 seconds")
+                                       : Loc.L("riavviare il pc tra 30 secondi", "restart the PC in 30 seconds");
+                        return new(desc, new[]
+                        {
+                            Loc.L($"eseguo: shutdown {args}", $"I run: shutdown {args}"),
+                            Loc.L("puoi annullare entro 30 secondi con: shutdown /a", "you can cancel within 30 seconds with: shutdown /a")
+                        }, true, Sync(() => { Open("shutdown", args); return Loc.L("fatto", "done"); }));
+                    }
+                }
+                return null;
             }
         }
         return null;

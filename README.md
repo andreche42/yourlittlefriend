@@ -38,7 +38,7 @@ English translation: [README-english.md](https://github.com/andreche42/yourlittl
 ## cosa può fare dalla chat
 
 - volume (imposta, alza/abbassa, muta), play/pausa/avanti/indietro
-- apre app della lista (`Apps` in `Actions.cs`), cerca su google, blocca/sospende/spegne/riavvia il pc
+- apre app della lista (`Apps` in `Actions.cs`), cerca su google, blocca/sospende/iberna/spegne/riavvia il pc
 
 le azioni sensibili (aprire app, browser, spegnimento ecc.) chiedono prima conferma con un popup che mostra i passaggi.
 il modello non può eseguire comandi liberi: solo le azioni scritte in `Actions.cs`.
