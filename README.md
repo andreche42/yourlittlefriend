@@ -41,7 +41,6 @@ English translation: [README-english.md](https://github.com/andreche42/yourlittl
 - apre **qualsiasi app installata**: basta il nome che ha nel menu start (calcolatrice, steam, visual studio code, whatsapp...), la cerca nei collegamenti e nel registro di windows. cerca anche su google, blocca/sospende/iberna/spegne/riavvia il pc
 
 le azioni sensibili (aprire app, browser, spegnimento ecc.) chiedono prima conferma con un popup che mostra i passaggi.
-il modello non può eseguire comandi liberi: solo le azioni scritte in `Actions.cs`.
 i file trascinati nella scheda + vengono letti ma non possono far partire azioni.
 
 
