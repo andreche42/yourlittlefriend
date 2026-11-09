@@ -83,10 +83,9 @@ hai suggerimenti o consigli? sbizzarrisciti! apri un issue su questa repo e dicc
 
 
 ## roadmap
-### byollm
-**porta la tua ia**: dalle impostazioni c'è già l'autoinstaller di ollama e, sotto, la sezione per la chiave api di qualunque servizio compatibile con openai (openai, claude, gemini, nvidia, groq, openrouter, lm studio). l'elenco dei modelli lo chiede al servizio: non devi indovinare i nomi.
 
 ### lettura immagini e OCR da llm locale
+
 incolla un immagine e la LLM locale leggerà l'immagine per OCR o guarderà l'immagine e i dettagli. (in sviluppo) (per ora funziona solo con ia online)
 ---
 
