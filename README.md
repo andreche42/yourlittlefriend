@@ -85,8 +85,8 @@ hai suggerimenti o consigli? sbizzarrisciti! apri un issue su questa repo e dicc
 ## roadmap
 
 ### lettura immagini e OCR da llm locale
-
 incolla un immagine e la LLM locale leggerà l'immagine per OCR o guarderà l'immagine e i dettagli. (in sviluppo) (per ora funziona solo con ia online)
+
 ---
 
 ### guide
