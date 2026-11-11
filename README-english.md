@@ -104,13 +104,13 @@ when a windows timer is running the little guy shows it and lets you know when i
 ---
 
 ## guide
-## deepl api key
+### deepl api key
 follow this guide: [deepl api key guide](https://support.deepl.com/hc/en-us/articles/360020695820-API-key-for-DeepL-API),
 when it asks for the plan, press the free one, it will ask for name, surname and address but you can also enter fake information,
 then go to the notch (or bubble) > right click > settings > scroll all the way down and then find "DeepL key", put it there, then restart the app.
 
-## local llm (ollama)
+### local llm (ollama)
 the installation of ollama and of the model is guided by the app (first launch or settings). if you want to do it by hand: install ollama and then `ollama pull <model>`; the model is chosen from the settings. you can also stop it when you're not using it from the settings
 
-## your own ai with your own key (byollm)
+### your own ai with your own key (byollm)
 from the settings → **artificial intelligence** choose *online ai with my key* and paste the key of the service you use: openai, claude, gemini, nvidia, groq, mistral, deepseek, grok, openrouter, together, cerebras, fireworks. with **other** you enter the address of any service that speaks openai's language (another program on your pc also works, like lm studio). **load models** asks the service which ones are available with your key, **test** asks a tiny question and immediately tells you whether it works. the key stays in the settings file on your pc and only the app uses it, to talk to the service you chose.

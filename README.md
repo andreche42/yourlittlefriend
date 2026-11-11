@@ -104,13 +104,13 @@ quando c'è un timer di windows in corso l'omino lo mostra e ti avvisa quando sc
 ---
 
 ## guide
-## chiave api deepl
+### chiave api deepl
 seguite questa guida: [guida api key deepl](https://support.deepl.com/hc/en-us/articles/360020695820-API-key-for-DeepL-API),
 quando vi chiede per il piano premete su quello free, vi chiederà nome cognome e indirizzo ma potete anche mettere informazioni fittizie,
 poi vai sulla notch (o bolla) > tasto destro > impostazioni > scendi tutto giù e poi trova "Chiave DeepL" mettila là, poi riavvia l'app.
 
-## llm locale (ollama)
+### llm locale (ollama)
 l'installazione di ollama e del modello è guidata dall'app (primo avvio o impostazioni). se vuoi farlo a mano: installa ollama e poi `ollama pull <modello>`; il modello si sceglie dalle impostazioni. si può anche fermare/stoppare quando non lo usate dalle impostazioni
 
-## la tua ia con la tua chiave (byollm)
+### la tua ia con la tua chiave (byollm)
 dalle impostazioni → **intelligenza artificiale** scegli *ia online con la mia chiave* e incolli la chiave del servizio che usi: openai, claude, gemini, nvidia, groq, mistral, deepseek, grok, openrouter, together, cerebras, fireworks. con **altro** metti l'indirizzo di qualunque servizio che parli la lingua di openai (va bene anche un altro programma sul tuo pc, tipo lm studio). **carica i modelli** chiede al servizio quali ci sono con la tua chiave, **prova** fa una domanda piccolissima e ti dice subito se funziona. la chiave resta nel file delle impostazioni sul tuo pc e la usa solo l'app, per parlare con il servizio che hai scelto.
