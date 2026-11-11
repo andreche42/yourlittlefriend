@@ -26,7 +26,6 @@ public static class Actions
      {"type":"function","function":{"name":"web_search","description":"cerca su internet e restituisce i primi risultati. usalo per notizie, fatti recenti o cose che non sai","parameters":{"type":"object","properties":{"query":{"type":"string"}},"required":["query"]}}},
      {"type":"function","function":{"name":"pc_power","description":"blocca, sospende, iberna, spegne o riavvia il pc. sospendere e ibernare sono cose diverse: usa sleep per la sospensione, hibernate per l'ibernazione","parameters":{"type":"object","properties":{"action":{"type":"string","enum":["lock","sleep","hibernate","shutdown","restart"]}},"required":["action"]}}},
      {"type":"function","function":{"name":"remind","description":"crea un promemoria: l'omino te lo ricorda all'ora stabilita. scrivi quanti minuti mancano da adesso (per le 18, se ora sono le 17, sono 60)","parameters":{"type":"object","properties":{"what":{"type":"string","description":"cosa ricordare, in poche parole"},"minutes":{"type":"integer","description":"fra quanti minuti"}},"required":["what","minutes"]}}},
-     {"type":"function","function":{"name":"set_brightness","description":"imposta la luminosità dello schermo da 0 a 100","parameters":{"type":"object","properties":{"level":{"type":"integer"}},"required":["level"]}}},
      {"type":"function","function":{"name":"screenshot","description":"fa uno screenshot dello schermo e lo mette nel portafile","parameters":{"type":"object","properties":{}}}},
      {"type":"function","function":{"name":"open_path","description":"apre una cartella o un file: va bene anche solo il nome (per esempio 'download', 'documenti', 'la bolletta'). se non è un percorso lo cerca fra i file recenti","parameters":{"type":"object","properties":{"name":{"type":"string"}},"required":["name"]}}},
      {"type":"function","function":{"name":"system_switch","description":"wifi (stato, accendi, spegni), bluetooth e modalità aereo","parameters":{"type":"object","properties":{"action":{"type":"string","enum":["wifi_status","wifi_on","wifi_off","bluetooth","airplane"]}},"required":["action"]}}}
@@ -230,15 +229,6 @@ public static class Actions
                         Reminders.Add(what, at);
                         return Loc.L($"ok, te lo ricordo {Reminders.When(at)}", $"ok, I'll remind you {Reminders.When(at)}");
                     }));
-            }
-            case "set_brightness":
-            {
-                int l = Math.Clamp(I("level"), 0, 100);
-                return new(Loc.L($"mettere la luminosità al {l}%", $"set the brightness to {l}%"),
-                    new[] { Loc.L($"imposto la luminosità dello schermo al {l}%", $"I set the screen brightness to {l}%") }, false,
-                    Sync(() => Screen.SetBrightness((uint)l)
-                        ? Loc.L($"luminosità al {l}%", $"brightness at {l}%")
-                        : Loc.L("questo schermo non si regola da qui: sui fissi si usa il menu del monitor", "this screen can't be adjusted from here: on desktops use the monitor menu")));
             }
             case "screenshot":
                 return new(Loc.L("fare uno screenshot", "take a screenshot"),

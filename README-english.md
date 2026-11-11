@@ -34,7 +34,7 @@ Italian version: [README.md](https://github.com/andreche42/yourlittlefriend/blob
 - **clipboard in the file holder**: whatever you copy ends up in the file holder as a slot: text as it is, images as a thumbnail. double click copies it again. copies that password managers ask not to record are left out
 - **file holder expiry**: from the settings you choose whether the file holder and clipboard are emptied after 24 hours, 7 days or 30 days
 - **reminders**: write "remind me at 6 pm to call mom" and at the right time the little guy gets all excited, opens himself on the chat and tells you with the windows sound. they stay even if you close and reopen the app
-- **more actions from the chat**: screen brightness, wifi (status, on, off), bluetooth and airplane mode, a screenshot that ends up in the file holder, opening a folder or a file even just by name (it looks among the recent ones)
+- **more actions from the chat**: wifi (status, on, off), bluetooth and airplane mode, a screenshot that ends up in the file holder, opening a folder or a file even just by name (it looks among the recent ones)
 - right click (or ⚙) to quit
 
 ## what it can do from the chat
@@ -42,7 +42,7 @@ Italian version: [README.md](https://github.com/andreche42/yourlittlefriend/blob
 - volume (set, raise/lower, mute), play/pause/next/previous
 - opens **any installed app**: the name it has in the start menu is enough (calculator, steam, visual studio code, whatsapp...), it looks for it in the shortcuts and in the windows registry. it also searches on google, locks/suspends/hibernates/shuts down/restarts the pc
 - reminders: "remind me at 6 pm to call mom"
-- screen brightness, wifi (status, on, off), bluetooth and airplane mode
+- wifi (status, on, off), bluetooth and airplane mode
 - a screenshot (goes in the file holder) and opening a folder or a file, even just by name: it looks among the recent ones
 
 sensitive actions (opening apps, browser, shutdown etc.) first ask for confirmation with a popup that shows the steps.

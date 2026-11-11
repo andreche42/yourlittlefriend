@@ -34,7 +34,7 @@ English translation: [README-english.md](https://github.com/andreche42/yourlittl
 - **clipboard nel portafile**: quello che copi finisce nel portafile come una casella: il testo così com'è, le immagini come miniatura. doppio clic la ricopia. le copie che i gestori di password chiedono di non registrare restano fuori
 - **scadenza del portafile**: dalle impostazioni scegli se portafile e clipboard si svuotano dopo 24 ore, 7 giorni o 30 giorni
 - **promemoria**: scrivi "ricordami alle 18 di chiamare mamma" e all'ora giusta l'omino si agita, si apre da solo sulla chat e te lo dice con il suono di windows. restano anche se chiudi e riapri l'app
-- **altre azioni dalla chat**: luminosità dello schermo, wifi (stato, accendi, spegni), bluetooth e modalità aereo, uno screenshot che finisce nel portafile, aprire una cartella o un file anche solo col nome (li cerca fra quelli recenti)
+- **altre azioni dalla chat**: wifi (stato, accendi, spegni), bluetooth e modalità aereo, uno screenshot che finisce nel portafile, aprire una cartella o un file anche solo col nome (li cerca fra quelli recenti)
 - tasto destro (o ⚙) per uscire
 
 ## cosa può fare dalla chat
@@ -42,7 +42,7 @@ English translation: [README-english.md](https://github.com/andreche42/yourlittl
 - volume (imposta, alza/abbassa, muta), play/pausa/avanti/indietro
 - apre **qualsiasi app installata**: basta il nome che ha nel menu start (calcolatrice, steam, visual studio code, whatsapp...), la cerca nei collegamenti e nel registro di windows. cerca anche su google, blocca/sospende/iberna/spegne/riavvia il pc
 - promemoria: "ricordami alle 18 di chiamare mamma"
-- luminosità dello schermo, wifi (stato, accendi, spegni), bluetooth e modalità aereo
+- wifi (stato, accendi, spegni), bluetooth e modalità aereo
 - screenshot (finisce nel portafile) e apertura di una cartella o di un file, anche solo col nome: li cerca fra i file recenti
 
 le azioni sensibili (aprire app, browser, spegnimento ecc.) chiedono prima conferma con un popup che mostra i passaggi.
