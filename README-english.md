@@ -103,7 +103,7 @@ when a windows timer is running the little guy shows it and lets you know when i
 
 ---
 
-### guide
+## guide
 ## deepl api key
 follow this guide: [deepl api key guide](https://support.deepl.com/hc/en-us/articles/360020695820-API-key-for-DeepL-API),
 when it asks for the plan, press the free one, it will ask for name, surname and address but you can also enter fake information,
