@@ -90,7 +90,7 @@ public partial class SettingsWindow : Window
         FChat.IsChecked = st.ChatOn; FHolder.IsChecked = st.HolderOn; FAsk.IsChecked = st.AskFileOn;
         FCalc.IsChecked = st.CalcOn; FTr.IsChecked = st.TranslateOn; FWiki.IsChecked = st.WikiOn; FWeather.IsChecked = st.WeatherOn;
         FBeat.IsChecked = st.BeatDance;
-        FRemind.Content = Loc.L("⏰ Promemoria e timer (l'omino te li ricorda)", "⏰ Reminders and timers (the little guy reminds you)");
+        FRemind.Content = Loc.L("⏰ Promemoria (l'omino te li ricorda)", "⏰ Reminders (the little guy reminds you)");
         FRemind.IsChecked = st.RemindOn;
         FSleep.Content = Loc.L("L'omino dorme di notte, dalle 21:30 alle 6 (palpebre abbassate e z z z)", "The little guy sleeps at night, from 21:30 to 6 (closed lids and z z z)");
         FSleep.IsChecked = st.NightSleep;

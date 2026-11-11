@@ -38,7 +38,7 @@ public class Settings
     public bool WikiOn { get; set; } = true;
     public bool WeatherOn { get; set; } = true;
     public bool BeatDance { get; set; } = true;   // l'omino balla a tempo, ascoltando quello che esce dalle casse
-    public bool RemindOn { get; set; } = true;    // promemoria e timer: l'omino te li ricorda
+    public bool RemindOn { get; set; } = true;    // promemoria: l'omino te li ricorda
 
     public bool Quiet { get; set; }                 // non disturbare: niente ballo, meteo o reazioni, e l'omino sta fermo
     public bool NightSleep { get; set; } = true;    // di notte l'omino dorme (palpebre, z z z, respiro lento): si può spegnere

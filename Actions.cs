@@ -26,7 +26,6 @@ public static class Actions
      {"type":"function","function":{"name":"web_search","description":"cerca su internet e restituisce i primi risultati. usalo per notizie, fatti recenti o cose che non sai","parameters":{"type":"object","properties":{"query":{"type":"string"}},"required":["query"]}}},
      {"type":"function","function":{"name":"pc_power","description":"blocca, sospende, iberna, spegne o riavvia il pc. sospendere e ibernare sono cose diverse: usa sleep per la sospensione, hibernate per l'ibernazione","parameters":{"type":"object","properties":{"action":{"type":"string","enum":["lock","sleep","hibernate","shutdown","restart"]}},"required":["action"]}}},
      {"type":"function","function":{"name":"remind","description":"crea un promemoria: l'omino te lo ricorda all'ora stabilita. scrivi quanti minuti mancano da adesso (per le 18, se ora sono le 17, sono 60)","parameters":{"type":"object","properties":{"what":{"type":"string","description":"cosa ricordare, in poche parole"},"minutes":{"type":"integer","description":"fra quanti minuti"}},"required":["what","minutes"]}}},
-     {"type":"function","function":{"name":"timer","description":"avvia un timer che conta alla rovescia: quando scade l'omino si agita e avvisa con il suono di windows","parameters":{"type":"object","properties":{"minutes":{"type":"integer","description":"quanti minuti"},"label":{"type":"string","description":"per cosa è il timer"}},"required":["minutes"]}}},
      {"type":"function","function":{"name":"set_brightness","description":"imposta la luminosità dello schermo da 0 a 100","parameters":{"type":"object","properties":{"level":{"type":"integer"}},"required":["level"]}}},
      {"type":"function","function":{"name":"screenshot","description":"fa uno screenshot dello schermo e lo mette nel portafile","parameters":{"type":"object","properties":{}}}},
      {"type":"function","function":{"name":"open_path","description":"apre una cartella o un file: va bene anche solo il nome (per esempio 'download', 'documenti', 'la bolletta'). se non è un percorso lo cerca fra i file recenti","parameters":{"type":"object","properties":{"name":{"type":"string"}},"required":["name"]}}},
@@ -228,26 +227,8 @@ public static class Actions
                     new[] { Loc.L($"metto il promemoria per le {at:HH:mm}", $"I set the reminder for {at:HH:mm}") }, false,
                     Sync(() =>
                     {
-                        Reminders.Add(what, at, false);
+                        Reminders.Add(what, at);
                         return Loc.L($"ok, te lo ricordo {Reminders.When(at)}", $"ok, I'll remind you {Reminders.When(at)}");
-                    }));
-            }
-            case "timer":
-            {
-                int min = Math.Clamp(I("minutes"), 1, 60 * 24);
-                var label = S("label").Trim();
-                if (label.Length == 0) label = Loc.L("timer", "timer");
-                if (!Settings.Current.RemindOn)
-                    return new(Loc.L("avviare un timer", "start a timer"),
-                        new[] { Loc.L("i timer sono spenti nelle impostazioni", "timers are turned off in the settings") }, false,
-                        Sync(() => Loc.L("i timer sono spenti nelle impostazioni", "timers are turned off in the settings")));
-                var at = DateTime.Now.AddMinutes(min);
-                return new(Loc.L($"avviare un timer di {min} minuti", $"start a {min}-minute timer"),
-                    new[] { Loc.L($"conto alla rovescia fino alle {at:HH:mm}", $"I count down until {at:HH:mm}") }, false,
-                    Sync(() =>
-                    {
-                        Reminders.Add(label, at, true);
-                        return Loc.L($"timer avviato: {min} minuti", $"timer started: {min} minutes");
                     }));
             }
             case "set_brightness":

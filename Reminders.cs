@@ -3,10 +3,10 @@ using System.Text.Json;
 
 namespace YourLittleFriend;
 
-// un promemoria o un timer: At è l'ora in cui deve scattare, Alarm = è un timer (conta alla rovescia)
-public record Reminder(string Text, DateTime At, bool Alarm = false);
+// un promemoria: At è l'ora in cui deve scattare
+public record Reminder(string Text, DateTime At);
 
-// promemoria e timer dell'app. stanno in %APPDATA%\yourlittlefriend\reminders.json, così restano anche dopo il riavvio.
+// promemoria dell'app. stanno in %APPDATA%\yourlittlefriend\reminders.json, così restano anche dopo il riavvio.
 // il controllo lo fa la finestra ogni pochi secondi: quello che è scaduto mentre l'app era chiusa scatta al primo giro.
 public static class Reminders
 {
@@ -41,9 +41,9 @@ public static class Reminders
         catch { }
     }
 
-    public static Reminder Add(string text, DateTime at, bool alarm)
+    public static Reminder Add(string text, DateTime at)
     {
-        var r = new Reminder(text.Trim(), at, alarm);
+        var r = new Reminder(text.Trim(), at);
         lock (Sync) All.Add(r);
         Save();
         return r;
@@ -90,17 +90,5 @@ public static class Reminders
         if (at.Date == DateTime.Today) return Loc.L($"oggi alle {time}", $"today at {time}");
         if (at.Date == DateTime.Today.AddDays(1)) return Loc.L($"domani alle {time}", $"tomorrow at {time}");
         return Loc.L($"il {at:dd/MM} alle {time}", $"on {at:dd/MM} at {time}");
-    }
-
-    // "fra 9 minuti", "fra 1 ora e 20 minuti"
-    public static string Left(TimeSpan left)
-    {
-        int min = (int)Math.Ceiling(left.TotalMinutes);
-        if (min <= 1) return Loc.L("meno di un minuto", "less than a minute");
-        if (min < 60) return Loc.L($"{min} minuti", $"{min} minutes");
-        int h = min / 60, m = min % 60;
-        return m == 0
-            ? Loc.L($"{h} {(h == 1 ? "ora" : "ore")}", $"{h} {(h == 1 ? "hour" : "hours")}")
-            : Loc.L($"{h} {(h == 1 ? "ora" : "ore")} e {m} minuti", $"{h} {(h == 1 ? "hour" : "hours")} and {m} minutes");
     }
 }
