@@ -25,7 +25,7 @@ public static class Actions
      {"type":"function","function":{"name":"search_web","description":"apre il browser con una ricerca google. usalo SOLO se l'utente chiede esplicitamente di aprire il browser","parameters":{"type":"object","properties":{"query":{"type":"string"}},"required":["query"]}}},
      {"type":"function","function":{"name":"web_search","description":"cerca su internet e restituisce i primi risultati. usalo per notizie, fatti recenti o cose che non sai","parameters":{"type":"object","properties":{"query":{"type":"string"}},"required":["query"]}}},
      {"type":"function","function":{"name":"pc_power","description":"blocca, sospende, iberna, spegne o riavvia il pc. sospendere e ibernare sono cose diverse: usa sleep per la sospensione, hibernate per l'ibernazione","parameters":{"type":"object","properties":{"action":{"type":"string","enum":["lock","sleep","hibernate","shutdown","restart"]}},"required":["action"]}}},
-     {"type":"function","function":{"name":"remind","description":"crea un promemoria: l'omino te lo ricorda all'ora stabilita. scrivi quanti minuti mancano da adesso (per le 18, se ora sono le 17, sono 60)","parameters":{"type":"object","properties":{"what":{"type":"string","description":"cosa ricordare, in poche parole"},"minutes":{"type":"integer","description":"fra quanti minuti"}},"required":["what","minutes"]}}},
+     {"type":"function","function":{"name":"remind","description":"crea un promemoria per QUALSIASI cosa: una telefonata, una medicina, una mail, la lavatrice, buttare la spazzatura, una partita, una scadenza. se l'utente dice un'ora passala in time come HH:mm, se dice fra quanto passa minutes","parameters":{"type":"object","properties":{"what":{"type":"string","description":"cosa deve ricordare, con le parole dell'utente"},"time":{"type":"string","description":"l'ora, in formato HH:mm (24 ore)"},"minutes":{"type":"integer","description":"fra quanti minuti, se non ha detto un'ora"}},"required":["what"]}}},
      {"type":"function","function":{"name":"screenshot","description":"fa uno screenshot dello schermo e lo mette nel portafile","parameters":{"type":"object","properties":{}}}},
      {"type":"function","function":{"name":"open_path","description":"apre una cartella o un file: va bene anche solo il nome (per esempio 'download', 'documenti', 'la bolletta'). se non è un percorso lo cerca fra i file recenti","parameters":{"type":"object","properties":{"name":{"type":"string"}},"required":["name"]}}},
      {"type":"function","function":{"name":"system_switch","description":"wifi (stato, accendi, spegni), bluetooth e modalità aereo","parameters":{"type":"object","properties":{"action":{"type":"string","enum":["wifi_status","wifi_on","wifi_off","bluetooth","airplane"]}},"required":["action"]}}}
@@ -54,6 +54,17 @@ public static class Actions
             return o.Trim();
         }
         catch (Exception ex) { return ex.Message; }
+    }
+
+    // "18:30" oppure "18" (24 ore). TimeSpan da solo leggerebbe "18" come 18 giorni, quindi si controlla a mano
+    static bool TryClock(string s, out TimeSpan clock)
+    {
+        clock = default;
+        s = s.Trim().Replace('.', ':');
+        if (s.Length == 0) return false;
+        if (s.Contains(':') && TimeSpan.TryParse(s, out var t) && t >= TimeSpan.Zero && t < TimeSpan.FromHours(24)) { clock = t; return true; }
+        if (int.TryParse(s, out var h) && h is >= 0 and < 24) { clock = TimeSpan.FromHours(h); return true; }
+        return false;
     }
 
     // il nome della scheda wifi, per accenderla o spegnerla con netsh
@@ -216,18 +227,33 @@ public static class Actions
             {
                 var what = S("what").Trim();
                 if (what.Length == 0) return null;
-                int min = Math.Clamp(I("minutes"), 1, 60 * 24 * 30);
                 if (!Settings.Current.RemindOn)
                     return new(Loc.L("creare un promemoria", "set a reminder"),
                         new[] { Loc.L("i promemoria sono spenti nelle impostazioni", "reminders are turned off in the settings") }, false,
                         Sync(() => Loc.L("i promemoria sono spenti nelle impostazioni", "reminders are turned off in the settings")));
-                var at = DateTime.Now.AddMinutes(min);
-                return new(Loc.L($"ricordarti «{what}» {Reminders.When(at)}", $"remind you to «{what}» {Reminders.When(at)}"),
-                    new[] { Loc.L($"metto il promemoria per le {at:HH:mm}", $"I set the reminder for {at:HH:mm}") }, false,
+
+                // l'ora arriva come "18:30" oppure come "fra 20 minuti": si accetta tutto
+                DateTime? at = null;
+                if (TryClock(S("time"), out var clock))
+                {
+                    at = DateTime.Today + clock;
+                    if (at <= DateTime.Now) at = at.Value.AddDays(1);   // quell'ora oggi è già passata: vale domani
+                }
+                else if (S("minutes").Length > 0)
+                    at = DateTime.Now.AddMinutes(Math.Clamp(I("minutes"), 1, 60 * 24 * 30));
+
+                if (at == null)
+                    return new(Loc.L("creare un promemoria", "set a reminder"),
+                        new[] { Loc.L("manca l'ora", "the time is missing") }, false,
+                        Sync(() => Loc.L("a che ora te lo ricordo?", "what time should I remind you?")));
+
+                var when = at.Value;
+                return new(Loc.L($"ricordarti «{what}» {Reminders.When(when)}", $"remind you to «{what}» {Reminders.When(when)}"),
+                    new[] { Loc.L($"metto il promemoria per le {when:HH:mm}", $"I set the reminder for {when:HH:mm}") }, false,
                     Sync(() =>
                     {
-                        Reminders.Add(what, at);
-                        return Loc.L($"ok, te lo ricordo {Reminders.When(at)}", $"ok, I'll remind you {Reminders.When(at)}");
+                        Reminders.Add(what, when);
+                        return Loc.L($"ok, te lo ricordo {Reminders.When(when)}", $"ok, I'll remind you {Reminders.When(when)}");
                     }));
             }
             case "screenshot":

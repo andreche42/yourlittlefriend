@@ -33,7 +33,7 @@ English translation: [README-english.md](https://github.com/andreche42/yourlittl
 - **microfono**: accanto alle caselle di scrittura (chat, +, wikipedia, traduttore) c'è un microfonino: premi, parla, il testo compare nel campo. usa il riconoscimento vocale di windows (serve la lingua installata) e non resta mai in ascolto da solo
 - **clipboard nel portafile**: quello che copi finisce nel portafile come una casella: il testo così com'è, le immagini come miniatura. doppio clic la ricopia. le copie che i gestori di password chiedono di non registrare restano fuori
 - **scadenza del portafile**: dalle impostazioni scegli se portafile e clipboard si svuotano dopo 24 ore, 7 giorni o 30 giorni
-- **promemoria**: scrivi "ricordami alle 18 di chiamare mamma" e all'ora giusta l'omino si agita, si apre da solo sulla chat e te lo dice con il suono di windows. restano anche se chiudi e riapri l'app
+- **promemoria**: vale per qualsiasi cosa, non solo per le chiamate: "ricordami alle 18 di chiamare mamma", "ricordami di prendere le medicine alle 8", "ricordami fra 20 minuti di buttare la spazzatura". all'ora giusta l'omino si agita, si apre da solo sulla chat e te lo dice con il suono di windows; se l'ora di oggi è già passata lo mette per domani. restano anche se chiudi e riapri l'app
 - **altre azioni dalla chat**: wifi (stato, accendi, spegni), bluetooth e modalità aereo, uno screenshot che finisce nel portafile, aprire una cartella o un file anche solo col nome (li cerca fra quelli recenti)
 - tasto destro (o ⚙) per uscire
 
@@ -41,7 +41,7 @@ English translation: [README-english.md](https://github.com/andreche42/yourlittl
 
 - volume (imposta, alza/abbassa, muta), play/pausa/avanti/indietro
 - apre **qualsiasi app installata**: basta il nome che ha nel menu start (calcolatrice, steam, visual studio code, whatsapp...), la cerca nei collegamenti e nel registro di windows. cerca anche su google, blocca/sospende/iberna/spegne/riavvia il pc
-- promemoria: "ricordami alle 18 di chiamare mamma"
+- promemoria per qualunque cosa: "ricordami alle 18 di chiamare mamma", "ricordami di prendere le medicine alle 8", "ricordami fra 20 minuti di buttare la spazzatura"
 - wifi (stato, accendi, spegni), bluetooth e modalità aereo
 - screenshot (finisce nel portafile) e apertura di una cartella o di un file, anche solo col nome: li cerca fra i file recenti
 

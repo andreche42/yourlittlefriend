@@ -33,7 +33,7 @@ Italian version: [README.md](https://github.com/andreche42/yourlittlefriend/blob
 - **microphone**: next to the writing boxes (chat, +, wikipedia, translator) there's a little microphone: press it, speak, the text appears in the field. it uses windows speech recognition (the language must be installed) and it never keeps listening on its own
 - **clipboard in the file holder**: whatever you copy ends up in the file holder as a slot: text as it is, images as a thumbnail. double click copies it again. copies that password managers ask not to record are left out
 - **file holder expiry**: from the settings you choose whether the file holder and clipboard are emptied after 24 hours, 7 days or 30 days
-- **reminders**: write "remind me at 6 pm to call mom" and at the right time the little guy gets all excited, opens himself on the chat and tells you with the windows sound. they stay even if you close and reopen the app
+- **reminders**: for anything at all, not just phone calls: "remind me at 6 pm to call mom", "remind me to take my medicine at 8", "remind me in 20 minutes to take out the trash". at the right time the little guy gets all excited, opens himself on the chat and tells you with the windows sound; if that time already passed today he sets it for tomorrow. they stay even if you close and reopen the app
 - **more actions from the chat**: wifi (status, on, off), bluetooth and airplane mode, a screenshot that ends up in the file holder, opening a folder or a file even just by name (it looks among the recent ones)
 - right click (or ⚙) to quit
 
@@ -41,7 +41,7 @@ Italian version: [README.md](https://github.com/andreche42/yourlittlefriend/blob
 
 - volume (set, raise/lower, mute), play/pause/next/previous
 - opens **any installed app**: the name it has in the start menu is enough (calculator, steam, visual studio code, whatsapp...), it looks for it in the shortcuts and in the windows registry. it also searches on google, locks/suspends/hibernates/shuts down/restarts the pc
-- reminders: "remind me at 6 pm to call mom"
+- reminders for anything: "remind me at 6 pm to call mom", "remind me to take my medicine at 8", "remind me in 20 minutes to take out the trash"
 - wifi (status, on, off), bluetooth and airplane mode
 - a screenshot (goes in the file holder) and opening a folder or a file, even just by name: it looks among the recent ones
 
