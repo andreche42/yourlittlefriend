@@ -90,6 +90,8 @@ public partial class SettingsWindow : Window
         FChat.IsChecked = st.ChatOn; FHolder.IsChecked = st.HolderOn; FAsk.IsChecked = st.AskFileOn;
         FCalc.IsChecked = st.CalcOn; FTr.IsChecked = st.TranslateOn; FWiki.IsChecked = st.WikiOn; FWeather.IsChecked = st.WeatherOn;
         FBeat.IsChecked = st.BeatDance;
+        FRemind.Content = Loc.L("⏰ Promemoria e timer (l'omino te li ricorda)", "⏰ Reminders and timers (the little guy reminds you)");
+        FRemind.IsChecked = st.RemindOn;
         FSleep.Content = Loc.L("L'omino dorme di notte, dalle 21:30 alle 6 (palpebre abbassate e z z z)", "The little guy sleeps at night, from 21:30 to 6 (closed lids and z z z)");
         FSleep.IsChecked = st.NightSleep;
         LKeep.Text = Loc.L("Portafile e clipboard: cancella dopo", "File holder and clipboard: clear after");
@@ -278,6 +280,7 @@ public partial class SettingsWindow : Window
         st.CalcOn = FCalc.IsChecked == true; st.TranslateOn = FTr.IsChecked == true; st.WikiOn = FWiki.IsChecked == true; st.WeatherOn = FWeather.IsChecked == true;
         st.HolderKeepDays = K24.IsChecked == true ? 0 : K7.IsChecked == true ? 7 : 30;
         st.BeatDance = FBeat.IsChecked == true;
+        st.RemindOn = FRemind.IsChecked == true;
         st.NightSleep = FSleep.IsChecked == true;
         st.LensOn = LensCb.IsChecked == true;
         if (Theme.TryParse(LensHex.Text) != null) st.LensColor = LensHex.Text.Trim();

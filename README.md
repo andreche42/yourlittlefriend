@@ -33,12 +33,17 @@ English translation: [README-english.md](https://github.com/andreche42/yourlittl
 - **microfono**: accanto alle caselle di scrittura (chat, +, wikipedia, traduttore) c'è un microfonino: premi, parla, il testo compare nel campo. usa il riconoscimento vocale di windows (serve la lingua installata) e non resta mai in ascolto da solo
 - **clipboard nel portafile**: quello che copi finisce nel portafile come una casella: il testo così com'è, le immagini come miniatura. doppio clic la ricopia. le copie che i gestori di password chiedono di non registrare restano fuori
 - **scadenza del portafile**: dalle impostazioni scegli se portafile e clipboard si svuotano dopo 24 ore, 7 giorni o 30 giorni
+- **promemoria e timer**: scrivi "ricordami alle 18 di chiamare mamma" oppure "timer di 10 minuti" e all'ora giusta l'omino si agita, si apre da solo sulla chat e te lo dice con il suono di windows. restano anche se chiudi e riapri l'app
+- **altre azioni dalla chat**: luminosità dello schermo, wifi (stato, accendi, spegni), bluetooth e modalità aereo, uno screenshot che finisce nel portafile, aprire una cartella o un file anche solo col nome (li cerca fra quelli recenti)
 - tasto destro (o ⚙) per uscire
 
 ## cosa può fare dalla chat
 
 - volume (imposta, alza/abbassa, muta), play/pausa/avanti/indietro
 - apre **qualsiasi app installata**: basta il nome che ha nel menu start (calcolatrice, steam, visual studio code, whatsapp...), la cerca nei collegamenti e nel registro di windows. cerca anche su google, blocca/sospende/iberna/spegne/riavvia il pc
+- promemoria e timer: "ricordami alle 18 di chiamare mamma", "timer di 10 minuti"
+- luminosità dello schermo, wifi (stato, accendi, spegni), bluetooth e modalità aereo
+- screenshot (finisce nel portafile) e apertura di una cartella o di un file, anche solo col nome: li cerca fra i file recenti
 
 le azioni sensibili (aprire app, browser, spegnimento ecc.) chiedono prima conferma con un popup che mostra i passaggi.
 i file trascinati nella scheda + vengono letti ma non possono far partire azioni.
@@ -92,14 +97,8 @@ l'omino potrà indossare cappellini e costumini (anche a tema, tipo natale o hal
 
 come funziona: aggiungi un articolo al carrello e parte una animazione veloce, con il carrello che attraversa la finestra con l'articolo dentro. quando "compri", la busta vola nella sezione **camerino** (sempre nella stessa finestra). nel camerino c'è l'omino, con una luce che scende dal basso: gli metti i vestiti, fa un "puf!" e lui reagisce.
 
-### promemoria
-dalla chat scrivi "ricordami alle 18 di chiamare mamma" e all'ora giusta l'omino si agita e te lo ricorda.
-
-### più azioni dalla chat
-luminosità dello schermo, wifi, bluetooth, modalità aereo, screenshot salvato nel portafile, aprire una cartella o un file recente.
-
-### timer di windows
-quando c'è un timer di windows in corso l'omino lo mostra e ti avvisa quando scade, oltre al suono di windows.
+### timer
+timer e promemoria sono la stessa cosa: scrivi "timer di 10 minuti" e l'omino conta alla rovescia, poi si agita e ti avvisa con il suono di windows. il timer dell'app **Orologio** di windows non si può leggere (windows non lo espone), quindi l'app ha il suo.
 
 ---
 
