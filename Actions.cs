@@ -156,18 +156,21 @@ public static class Actions
             {
                 var n = S("name").Trim();
                 if (n.Length == 0) return null;
-                var target = FindApp(n);   // null = non trovata: ci prova windows col nome così com'è
-                var step = target == null
-                    ? Loc.L($"provo ad aprirla come la conosce windows", $"I try to open it the way windows knows it")
-                    : Loc.L($"avvio «{Path.GetFileName(target)}» ({target})", $"I launch «{Path.GetFileName(target)}» ({target})");
-                return new(Loc.L($"aprire «{n}»", $"open «{n}»"), new[] { step }, true,
+                var target = FindApp(n);
+                // non trovata: non parte niente. il nome scritto dal modello non arriva a windows così com'è,
+                // altrimenti basterebbe una frase qualsiasi per lanciare un comando o un percorso
+                if (target == null)
+                    return new(Loc.L($"aprire «{n}»", $"open «{n}»"), new[] { Loc.L("cerco l'app sul pc", $"I look for the app on the PC") }, false,
+                        Sync(() => Loc.L($"non trovo «{n}»: dimmi il nome che ha nel menu start", $"I can't find «{n}»: tell me its name in the start menu")));
+                // nel popup c'è il testo esatto che parte, non il nome che ha detto il modello
+                return new(Loc.L($"aprire «{n}»", $"open «{n}»"),
+                    new[] { Loc.L($"avvio: {target}", $"I launch: {target}") }, true,
                     Sync(() =>
                     {
-                        try { Open(target ?? n); return Loc.L($"aperto {n}", $"opened {n}"); }
+                        try { Open(target); return Loc.L($"aperto {n}", $"opened {n}"); }
                         catch (Exception ex)
                         {
-                            return Loc.L($"non riesco ad aprire «{n}»: controlla il nome nel menu start. {ex.Message}",
-                                          $"I can't open «{n}»: check its name in the start menu. {ex.Message}");
+                            return Loc.L($"non riesco ad aprire «{n}»: {ex.Message}", $"I can't open «{n}»: {ex.Message}");
                         }
                     }));
             }
