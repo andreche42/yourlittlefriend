@@ -42,7 +42,8 @@ English translation: [README-english.md](https://github.com/andreche42/yourlittl
 - volume (imposta, alza/abbassa, muta), play/pausa/avanti/indietro
 - apre **qualsiasi app installata**: basta il nome che ha nel menu start (calcolatrice, steam, visual studio code, whatsapp...), la cerca nei collegamenti e nel registro di windows. cerca anche su google, blocca/sospende/iberna/spegne/riavvia il pc
 - promemoria per qualunque cosa: "ricordami alle 18 di chiamare mamma", "ricordami di prendere le medicine alle 8", "ricordami fra 20 minuti di buttare la spazzatura"
-- annullare un promemoria: "annulla il promemoria di chiamare mamma", "togli tutti i promemoria" (chiede conferma nel popup e aggiorna la campanella)
+- vedere i promemoria in sospeso: "che promemoria ho?"
+- annullare un promemoria: "annulla il promemoria di chiamare mamma", "togli tutti i promemoria" (chiede conferma nel popup, con il numero aggiornato in quel momento, e aggiorna la campanella)
 - wifi (stato, accendi, spegni), bluetooth e modalità aereo
 - screenshot (finisce nel portafile) e apertura di una cartella o di un file, anche solo col nome: li cerca fra i file recenti
 

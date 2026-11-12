@@ -7,7 +7,8 @@ using NAudio.CoreAudioApi;
 
 namespace YourLittleFriend;
 
-public record Plan(string Title, string[] Steps, bool Sensitive, Func<Task<string>> Run);
+// Recheck (facoltativo): se c'è, il popup rifà il piano prima di mostrarlo, così numeri e passaggi sono quelli del momento in cui confermi
+public record Plan(string Title, string[] Steps, bool Sensitive, Func<Task<string>> Run, Func<Plan>? Recheck = null);
 
 // azioni sul pc che il modello puo' chiamare. niente comandi liberi: solo queste, con argomenti controllati.
 public static class Actions
@@ -27,6 +28,7 @@ public static class Actions
      {"type":"function","function":{"name":"pc_power","description":"blocca, sospende, iberna, spegne o riavvia il pc. sospendere e ibernare sono cose diverse: usa sleep per la sospensione, hibernate per l'ibernazione","parameters":{"type":"object","properties":{"action":{"type":"string","enum":["lock","sleep","hibernate","shutdown","restart"]}},"required":["action"]}}},
      {"type":"function","function":{"name":"remind","description":"crea un promemoria per QUALSIASI cosa: una telefonata, una medicina, una mail, la lavatrice, buttare la spazzatura, una partita, una scadenza. metti in what le parole dell'utente, ora compresa (es. \"chiamare mamma alle 18\"): l'ora la legge anche l'app dal testo, gli altri parametri sono facoltativi","parameters":{"type":"object","properties":{"what":{"type":"string","description":"cosa deve ricordare, con le parole dell'utente, ora compresa"},"time":{"type":"string","description":"facoltativo: l'ora in formato HH:mm"},"minutes":{"type":"integer","description":"facoltativo: fra quanti minuti"}},"required":["what"]}}},
      {"type":"function","function":{"name":"screenshot","description":"fa uno screenshot dello schermo e lo mette nel portafile","parameters":{"type":"object","properties":{}}}},
+     {"type":"function","function":{"name":"list_reminders","description":"elenca i promemoria in sospeso con l'ora: usalo quando l'utente chiede quali promemoria ha","parameters":{"type":"object","properties":{}}}},
      {"type":"function","function":{"name":"forget_reminder","description":"annulla un promemoria già creato: quello che parla di quello che c'è in what, oppure tutti se all è true","parameters":{"type":"object","properties":{"what":{"type":"string","description":"di cosa parlava il promemoria"},"all":{"type":"boolean","description":"true = togli tutti i promemoria"}},"required":[]}}},
      {"type":"function","function":{"name":"open_path","description":"apre una cartella o un file: va bene anche solo il nome (per esempio 'download', 'documenti', 'la bolletta'). se non è un percorso lo cerca fra i file recenti","parameters":{"type":"object","properties":{"name":{"type":"string"}},"required":["name"]}}},
      {"type":"function","function":{"name":"system_switch","description":"wifi (stato, accendi, spegni), bluetooth e modalità aereo","parameters":{"type":"object","properties":{"action":{"type":"string","enum":["wifi_status","wifi_on","wifi_off","bluetooth","airplane"]}},"required":["action"]}}}
@@ -329,34 +331,56 @@ public static class Actions
                 }
                 return null;
             }
+            case "list_reminders":
+            {
+                var list = Reminders.Matching("");
+                if (list.Count == 0)
+                    return new(Loc.L("vedere i promemoria", "check the reminders"), Array.Empty<string>(), false,
+                        Sync(() => Loc.L("non hai promemoria in sospeso", "you have no reminders waiting")));
+                var lines = list
+                    .Select(r => Loc.L($"{r.Text} — {Reminders.When(r.At)}", $"{r.Text} — {Reminders.When(r.At)}"))
+                    .ToArray();
+                return new(Loc.L($"vedere i {list.Count} promemoria in sospeso", $"check the {list.Count} pending reminders"), lines, false,
+                    Sync(() => string.Join("; ", lines)));
+            }
             case "forget_reminder":
             {
                 bool all = bool.TryParse(a?["all"]?.ToString() ?? "", out var allFlag) && allFlag;
                 var what = S("what").Trim();
-                var list = all ? Reminders.Matching("") : Reminders.Matching(what);
 
-                if (list.Count == 0)
-                    return new(Loc.L("annullare un promemoria", "cancel a reminder"),
-                        new[] { Loc.L("non c'è niente da togliere", "there is nothing to remove") }, false,
-                        Sync(() => all
-                            ? Loc.L("non hai promemoria in sospeso", "you have no reminders waiting")
-                            : Loc.L($"non trovo un promemoria che parla di «{what}»", $"I can't find a reminder about «{what}»")));
-
-                var title = all
-                    ? Loc.L($"togliere tutti i promemoria ({list.Count})", $"remove all the reminders ({list.Count})")
-                    : Loc.L($"togliere il promemoria «{list[0].Text}»", $"remove the reminder «{list[0].Text}»");
-                var steps = list.Take(4)
-                    .Select(r => Loc.L($"{r.Text} — {Reminders.When(r.At)}", $"{r.Text} — {Reminders.When(r.At)}"))
-                    .ToArray();
-
-                // sensibile: prima si conferma nel popup, come per aprire le app
-                return new(title, steps, true, Sync(() =>
+                // il piano si rifà sia quando lo chiedi sia subito prima del popup: il numero è quello giusto al momento della conferma
+                Plan Build()
                 {
-                    int n = all ? Reminders.Remove(null) : Reminders.Remove(what);
-                    return n == 1
-                        ? Loc.L("promemoria tolto", "reminder removed")
-                        : Loc.L($"{n} promemoria tolti", $"{n} reminders removed");
-                }));
+                    var list = all ? Reminders.Matching("") : Reminders.Matching(what);
+
+                    if (list.Count == 0)
+                        return new(Loc.L("annullare un promemoria", "cancel a reminder"),
+                            new[] { Loc.L("non c'è niente da togliere", "there is nothing to remove") }, false,
+                            Sync(() => all
+                                ? Loc.L("non hai promemoria in sospeso", "you have no reminders waiting")
+                                : Loc.L($"non trovo un promemoria che parla di «{what}»", $"I can't find a reminder about «{what}»")));
+
+                    var title = all
+                        ? Loc.L($"togliere tutti i promemoria ({list.Count})", $"remove all the reminders ({list.Count})")
+                        : Loc.L($"togliere il promemoria «{list[0].Text}»", $"remove the reminder «{list[0].Text}»");
+                    var steps = list.Take(4)
+                        .Select(r => Loc.L($"{r.Text} — {Reminders.When(r.At)}", $"{r.Text} — {Reminders.When(r.At)}"))
+                        .ToArray();
+
+                    // sensibile: prima si conferma nel popup, come per aprire le app
+                    return new(title, steps, true, Sync(() =>
+                    {
+                        int n = all ? Reminders.Remove(null) : Reminders.Remove(what);
+                        return n switch
+                        {
+                            0 => Loc.L("non c'era più niente da togliere", "there was nothing left to remove"),
+                            1 => Loc.L("promemoria tolto", "reminder removed"),
+                            _ => Loc.L($"{n} promemoria tolti", $"{n} reminders removed")
+                        };
+                    }), Build);
+                }
+
+                return Build();
             }
             case "web_search":
             {

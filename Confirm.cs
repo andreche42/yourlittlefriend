@@ -9,6 +9,7 @@ public static class Confirm
 {
     public static bool Ask(Plan p)
     {
+        p = p.Recheck?.Invoke() ?? p;   // rifà il piano adesso: numeri e passaggi sono quelli del momento della conferma
         var w = new Window
         {
             Title = Actions.AppName, Width = 420, SizeToContent = SizeToContent.Height,
