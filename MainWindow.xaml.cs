@@ -112,7 +112,9 @@ public partial class MainWindow : Window
         remind.Tick += (_, _) => { if (Settings.Current.RemindOn) Reminders.Tick(); };
         remind.Start();
         Reminders.Due += r => Dispatcher.BeginInvoke(new Action(() => ShowReminder(r)));
+        Reminders.Changed += () => Dispatcher.BeginInvoke(new Action(UpdateRemindIcon));
         Actions.ToHolder = paths => Holder.AddFiles(paths);   // lo screenshot lo mette nel portafile
+        UpdateRemindIcon();
         Width = WinW;    // la misura della finestra deve sempre essere quella delle costanti: tutte le posizioni sono calcolate su di lei
         Height = WinH;
         try { ApplyStyle(); }
@@ -784,6 +786,21 @@ public partial class MainWindow : Window
         if (i != 6) wikiSearched = false;
         ApplyHome();                // il bottone musica/meteo si vede solo nella home
         UpdateExpand();
+    }
+
+    // campanella accanto alle impostazioni: c'è solo se hai promemoria in sospeso, e dice quale
+    void UpdateRemindIcon()
+    {
+        var next = Reminders.Next(1).FirstOrDefault();
+        if (next == null)
+        {
+            BRemind.Visibility = Visibility.Collapsed;
+            BRemind.ToolTip = null;
+            return;
+        }
+        BRemind.Visibility = Visibility.Visible;
+        var more = Reminders.All.Count > 1 ? Loc.L($" (e altri {Reminders.All.Count - 1})", $" (and {Reminders.All.Count - 1} more)") : "";
+        BRemind.ToolTip = Loc.L($"promemoria {Reminders.When(next.At)}: {next.Text}{more}", $"reminder {Reminders.When(next.At)}: {next.Text}{more}");
     }
 
     // è scattato un promemoria: l'omino si agita, si apre sulla chat e resta scritto lì

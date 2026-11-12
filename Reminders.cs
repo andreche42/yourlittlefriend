@@ -19,6 +19,9 @@ public static class Reminders
     // scatta quando è l'ora: la finestra lo fa vedere all'omino
     public static event Action<Reminder>? Due;
 
+    // quando l'elenco cambia (ne aggiungi uno, ne scade uno): la finestra aggiorna la campanella
+    public static event Action? Changed;
+
     static List<Reminder> Load()
     {
         try
@@ -47,6 +50,7 @@ public static class Reminders
         var r = new Reminder(text.Trim(), at);
         lock (Sync) All.Add(r);
         Save();
+        Changed?.Invoke();
         return r;
     }
 
@@ -60,7 +64,7 @@ public static class Reminders
                 ? All.Count
                 : All.RemoveAll(r => r.Text.Contains(text.Trim(), StringComparison.OrdinalIgnoreCase));
         }
-        if (n > 0) Save();
+        if (n > 0) { Save(); Changed?.Invoke(); }
         return n;
     }
 
@@ -81,6 +85,7 @@ public static class Reminders
             All.RemoveAll(r => due.Contains(r));
         }
         Save();
+        Changed?.Invoke();
         foreach (var r in due) Due?.Invoke(r);
     }
 

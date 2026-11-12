@@ -56,6 +56,15 @@
 
         <DockPanel>
           <Button DockPanel.Dock="Right" Content="⚙" Click="Gear_Click" ToolTip="{local:L It=Impostazioni, En=Settings}"/>
+          <!-- campanella: si vede solo quando c'è almeno un promemoria in sospeso, il fumetto dice quale -->
+          <Border x:Name="BRemind" DockPanel.Dock="Right" Visibility="Collapsed" Background="Transparent" Padding="5,0,5,0">
+            <Viewbox Width="16" Height="16" Margin="0,3">
+              <Canvas Width="16" Height="16">
+                <Path Stroke="{DynamicResource FgBrush}" StrokeThickness="1.5" StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                      Data="M3.2,11.4 H12.8 C12.8,11.4 11.6,10 11.6,7.5 C11.6,4.8 10,3.2 8,3.2 C6,3.2 4.4,4.8 4.4,7.5 C4.4,10 3.2,11.4 3.2,11.4 Z M6.6,13.3 Q8,14.7 9.4,13.3"/>
+              </Canvas>
+            </Viewbox>
+          </Border>
           <Button x:Name="BExpand" DockPanel.Dock="Right" Click="Expand_Click" ToolTip="{local:L It='Espandi / riduci', En='Expand / shrink'}">
             <Viewbox Width="16" Height="16" Margin="0,3">
               <Canvas Width="16" Height="16">
