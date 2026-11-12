@@ -25,7 +25,7 @@ public static class Actions
      {"type":"function","function":{"name":"search_web","description":"apre il browser con una ricerca google. usalo SOLO se l'utente chiede esplicitamente di aprire il browser","parameters":{"type":"object","properties":{"query":{"type":"string"}},"required":["query"]}}},
      {"type":"function","function":{"name":"web_search","description":"cerca su internet e restituisce i primi risultati. usalo per notizie, fatti recenti o cose che non sai","parameters":{"type":"object","properties":{"query":{"type":"string"}},"required":["query"]}}},
      {"type":"function","function":{"name":"pc_power","description":"blocca, sospende, iberna, spegne o riavvia il pc. sospendere e ibernare sono cose diverse: usa sleep per la sospensione, hibernate per l'ibernazione","parameters":{"type":"object","properties":{"action":{"type":"string","enum":["lock","sleep","hibernate","shutdown","restart"]}},"required":["action"]}}},
-     {"type":"function","function":{"name":"remind","description":"crea un promemoria per QUALSIASI cosa: una telefonata, una medicina, una mail, la lavatrice, buttare la spazzatura, una partita, una scadenza. se l'utente dice un'ora passala in time come HH:mm, se dice fra quanto passa minutes","parameters":{"type":"object","properties":{"what":{"type":"string","description":"cosa deve ricordare, con le parole dell'utente"},"time":{"type":"string","description":"l'ora, in formato HH:mm (24 ore)"},"minutes":{"type":"integer","description":"fra quanti minuti, se non ha detto un'ora"}},"required":["what"]}}},
+     {"type":"function","function":{"name":"remind","description":"crea un promemoria per QUALSIASI cosa: una telefonata, una medicina, una mail, la lavatrice, buttare la spazzatura, una partita, una scadenza. metti in what le parole dell'utente, ora compresa (es. \"chiamare mamma alle 18\"): l'ora la legge anche l'app dal testo, gli altri parametri sono facoltativi","parameters":{"type":"object","properties":{"what":{"type":"string","description":"cosa deve ricordare, con le parole dell'utente, ora compresa"},"time":{"type":"string","description":"facoltativo: l'ora in formato HH:mm"},"minutes":{"type":"integer","description":"facoltativo: fra quanti minuti"}},"required":["what"]}}},
      {"type":"function","function":{"name":"screenshot","description":"fa uno screenshot dello schermo e lo mette nel portafile","parameters":{"type":"object","properties":{}}}},
      {"type":"function","function":{"name":"open_path","description":"apre una cartella o un file: va bene anche solo il nome (per esempio 'download', 'documenti', 'la bolletta'). se non è un percorso lo cerca fra i file recenti","parameters":{"type":"object","properties":{"name":{"type":"string"}},"required":["name"]}}},
      {"type":"function","function":{"name":"system_switch","description":"wifi (stato, accendi, spegni), bluetooth e modalità aereo","parameters":{"type":"object","properties":{"action":{"type":"string","enum":["wifi_status","wifi_on","wifi_off","bluetooth","airplane"]}},"required":["action"]}}}
@@ -241,6 +241,8 @@ public static class Actions
                 }
                 else if (S("minutes").Length > 0)
                     at = DateTime.Now.AddMinutes(Math.Clamp(I("minutes"), 1, 60 * 24 * 30));
+                else if (Reminders.ParseWhen(what, out var parsed))
+                    at = parsed;   // l'ora è scritta dentro il testo: non serve che il modello la calcoli
 
                 if (at == null)
                     return new(Loc.L("creare un promemoria", "set a reminder"),

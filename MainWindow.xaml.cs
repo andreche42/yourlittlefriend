@@ -808,17 +808,6 @@ public partial class MainWindow : Window
 
     void Quit_Click(object s, RoutedEventArgs e) => Application.Current.Shutdown();
 
-    // guardaroba e shop: una finestra a parte, una sola alla volta
-    ShopWindow? shop;
-
-    void Shop_Click(object s, RoutedEventArgs e)
-    {
-        if (shop is { IsLoaded: true }) { shop.Activate(); return; }
-        shop = new ShopWindow();
-        shop.Closed += (_, _) => shop = null;
-        shop.Show();
-    }
-
     void Settings_Click(object s, RoutedEventArgs e)
     {
         hold.Stop();

@@ -44,12 +44,6 @@ public class Settings
     public bool NightSleep { get; set; } = true;    // di notte l'omino dorme (palpebre, z z z, respiro lento): si può spegnere
     public int HolderKeepDays { get; set; } = 30;   // dopo quanti giorni spariscono le cose nel portafile (0 = 24 ore)
 
-    // guardaroba: i vestiti comprati nello shop e quelli che l'omino indossa adesso (un id per posto, vuoto = niente)
-    public List<string> Owned { get; set; } = new();
-    public string WornOutfit { get; set; } = "";
-    public string WornHat { get; set; } = "";
-    public string WornFace { get; set; } = "";
-
     // calcolatrice
     public bool CalcDeg { get; set; } = true;       // gradi (true) o radianti
 

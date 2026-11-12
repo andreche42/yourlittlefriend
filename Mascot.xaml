@@ -14,8 +14,6 @@
         </Canvas.RenderTransform>
 
         <Border Canvas.Left="22" Canvas.Top="28" Width="56" Height="42" CornerRadius="16" Background="{DynamicResource MascotBrush}"/>
-        <!-- vestiti (shop): il vestito sta sulla testa e sotto gli occhi, cappelli e occhiali più in basso nel file, sopra tutto -->
-        <Canvas x:Name="OutfitLayer" Width="100" Height="100" IsHitTestVisible="False"/>
         <!-- il pallino: la mano destra (l'omino ci guarda in faccia, quindi la sua destra è alla nostra sinistra) -->
         <Ellipse x:Name="Pallino" Canvas.Left="8" Canvas.Top="62" Width="10" Height="10" Fill="{DynamicResource MascotBrush}" RenderTransformOrigin="0.5,0.5">
           <Ellipse.RenderTransform>
@@ -121,10 +119,6 @@
           <Path Fill="{DynamicResource AccentBrush}" Data="M16,22 A34,17 0 0 1 84,22 Q75,17.5 67,22 Q58.5,17.5 50,22 Q41.5,17.5 33,22 Q24.5,17.5 16,22 Z"/>
           <Ellipse Canvas.Left="48.8" Canvas.Top="3" Width="2.4" Height="3.5" Fill="{DynamicResource FgBrush}"/>
         </Canvas>
-
-        <!-- occhiali e cappelli (shop) -->
-        <Canvas x:Name="FaceLayer" Width="100" Height="100" IsHitTestVisible="False"/>
-        <Canvas x:Name="HatLayer" Width="100" Height="100" IsHitTestVisible="False"/>
 
         <!-- pallino rosso: c'è un aggiornamento da fare -->
         <Ellipse x:Name="AlertDot" Canvas.Left="70" Canvas.Top="24" Width="14" Height="14" Fill="#FF3B30"
