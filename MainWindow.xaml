@@ -9,6 +9,7 @@
   <Window.Resources>
     <ContextMenu x:Key="Menu">
       <MenuItem Header="{local:L It=Impostazioni, En=Settings}" Click="Settings_Click"/>
+      <MenuItem Header="{local:L It='Guardaroba e shop', En='Wardrobe and shop'}" Click="Shop_Click"/>
       <MenuItem Header="{local:L It='Riporta in posizione', En='Reset position'}" Click="ResetPos_Click"/>
       <MenuItem Header="{local:L It=Esci, En=Quit}" Click="Quit_Click"/>
     </ContextMenu>

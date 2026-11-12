@@ -148,6 +148,9 @@ public partial class Mascot : UserControl
     public Mascot()
     {
         InitializeComponent();
+        // i vestiti si ridisegnano da soli quando nello shop ne metti uno (ci si iscrive qui e non prima: l'omino chiuso non deve restare in memoria)
+        Loaded += (_, _) => { Wardrobe.Changed -= RefreshWear; Wardrobe.Changed += RefreshWear; RefreshWear(); };
+        Unloaded += (_, _) => Wardrobe.Changed -= RefreshWear;
         RenderTransformOrigin = new Point(.5, .5);
         RenderTransform = new TransformGroup { Children = { flip, walk } };
 
@@ -223,6 +226,29 @@ public partial class Mascot : UserControl
         ShadesTr.BeginAnimation(TranslateTransform.YProperty, new DoubleAnimation(-18, 0, TimeSpan.FromMilliseconds(600)) { EasingFunction = new BounceEase { Bounces = 2, Bounciness = 3 } });
     }
 
+    // mette addosso all'omino quello che c'è nelle impostazioni (vedi Wardrobe)
+    void RefreshWear()
+    {
+        OutfitLayer.Children.Clear();
+        FaceLayer.Children.Clear();
+        HatLayer.Children.Clear();
+        foreach (var item in Wardrobe.WornItems())
+        {
+            var layer = item.Slot == Slot.Outfit ? OutfitLayer : item.Slot == Slot.Hat ? HatLayer : FaceLayer;
+            foreach (var el in item.Build()) layer.Children.Add(el);
+        }
+        ApplyWear();
+    }
+
+    // sotto l'ombrello il cappello sparisce, e con gli occhiali da sole del meteo non si vedono quelli del guardaroba
+    void ApplyWear()
+    {
+        bool rain = !quiet && weather == WeatherMood.Rain;
+        bool shades = !quiet && (weather == WeatherMood.Sun || cool);
+        HatLayer.Visibility = rain ? Visibility.Collapsed : Visibility.Visible;
+        FaceLayer.Visibility = shades ? Visibility.Collapsed : Visibility.Visible;
+    }
+
     // ferma tutto e fa partire l'animazione dello stato attuale
     void Apply()
     {
@@ -250,6 +276,7 @@ public partial class Mascot : UserControl
         PallinoSc.ScaleX = PallinoSc.ScaleY = 1;
         foreach (var d in new[] { D1, D2, D3 }) d.BeginAnimation(OpacityProperty, null);
         ApplyWeatherLook();
+        ApplyWear();
         ThumbSc.BeginAnimation(ScaleTransform.ScaleXProperty, null);
         ThumbSc.BeginAnimation(ScaleTransform.ScaleYProperty, null);
         ThumbSc.ScaleX = ThumbSc.ScaleY = cool ? 1 : 0;
