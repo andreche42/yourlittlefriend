@@ -60,9 +60,12 @@ public static class Reminders
         int n;
         lock (Sync)
         {
-            n = string.IsNullOrWhiteSpace(text)
-                ? All.Count
-                : All.RemoveAll(r => r.Text.Contains(text.Trim(), StringComparison.OrdinalIgnoreCase));
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                n = All.Count;
+                All.Clear();   // "togli tutti" deve svuotare davvero la lista
+            }
+            else n = All.RemoveAll(r => r.Text.Contains(text.Trim(), StringComparison.OrdinalIgnoreCase));
         }
         if (n > 0) { Save(); Changed?.Invoke(); }
         return n;
@@ -89,16 +92,36 @@ public static class Reminders
         foreach (var r in due) Due?.Invoke(r);
     }
 
-    // legge l'ora da quello che ha scritto l'utente: "alle 18", "alle 18:30", "domani alle 9", "fra 20 minuti", "tra 2 ore", "fra mezz'ora"
+    // legge l'ora da quello che ha scritto l'utente, in italiano e in inglese:
+    // "alle 18", "alle 18:30", "domani alle 9", "fra 20 minuti", "fra mezz'ora"
+    // "at 8", "at 8:30 pm", "tomorrow at 9", "in 20 minutes", "in half an hour"
     public static bool ParseWhen(string text, out DateTime at)
     {
         at = default;
         if (text.Trim().Length == 0) return false;
         var t = " " + text.ToLowerInvariant().Replace('’', '\'') + " ";
 
-        // un'ora precisa: "alle 18", "per le 9", "ore 18", "18:30"
+        // inglese con am/pm: "at 8", "at 8:30 pm" (prima dell'ora generica, così il pm non si perde)
+        var enClock = Regex.Match(t, @"\bat\s+(\d{1,2})(?:[:.](\d{2}))?\s*(am|pm)?\b");
+        if (enClock.Success && int.TryParse(enClock.Groups[1].Value, out var eh) && eh is >= 0 and <= 24)
+        {
+            int em = enClock.Groups[2].Success && int.TryParse(enClock.Groups[2].Value, out var emm) ? Math.Min(emm, 59) : 0;
+            var half = enClock.Groups[3].Value;
+            if (half == "pm" && eh < 12) eh += 12;
+            if (half == "am" && eh == 12) eh = 0;
+            if (eh is >= 0 and < 24)
+            {
+                var when = DateTime.Today.AddHours(eh).AddMinutes(em);
+                if (t.Contains("tomorrow")) when = when.AddDays(1);
+                if (when <= DateTime.Now) when = when.AddDays(1);   // quell'ora oggi è già passata: domani
+                at = when;
+                return true;
+            }
+        }
+
+        // un'ora precisa in italiano: "alle 18", "per le 9", "ore 18"
         var clock = Regex.Match(t, @"\b(?:alle|per le|ore)\s*(\d{1,2})(?:[:.](\d{2}))?\b");
-        if (!clock.Success) clock = Regex.Match(t, @"\b(\d{1,2})[:.](\d{2})\b");
+        if (!clock.Success) clock = Regex.Match(t, @"\b(\d{1,2})[:.](\d{2})\b");   // "18:30" da solo
         if (clock.Success && int.TryParse(clock.Groups[1].Value, out var h) && h is >= 0 and < 24)
         {
             int m = clock.Groups[2].Success && int.TryParse(clock.Groups[2].Value, out var mm) ? Math.Min(mm, 59) : 0;
@@ -109,7 +132,7 @@ public static class Reminders
             return true;
         }
 
-        // fra quanto: "fra 20 minuti", "tra 2 ore"
+        // fra quanto, italiano: "fra 20 minuti", "tra 2 ore"
         var delay = Regex.Match(t, @"\b(?:fra|tra)\s+(\d{1,3})\s*(minut\w*|min|or[ae]|h)\b");   // minut\w* copre "minuti", "min" è l'abbreviazione
         if (delay.Success && int.TryParse(delay.Groups[1].Value, out var n) && n > 0)
         {
@@ -118,9 +141,31 @@ public static class Reminders
             return true;
         }
 
+        // fra quanto, inglese: "in 20 minutes", "in 2 hours"
+        var enDelay = Regex.Match(t, @"\bin\s+(\d{1,3})\s*(minute\w*|mins?|hour\w*|hrs?|h)\b");
+        if (enDelay.Success && int.TryParse(enDelay.Groups[1].Value, out var en) && en > 0)
+        {
+            var unit = enDelay.Groups[2].Value;
+            at = DateTime.Now.Add(unit.StartsWith("h") && unit != "h" ? TimeSpan.FromHours(en) : unit == "h" ? TimeSpan.FromHours(en) : TimeSpan.FromMinutes(en));
+            return true;
+        }
+
+        // mezze misure: "fra mezz'ora", "tra mezzora", "in half an hour", "in an hour"
         if (Regex.IsMatch(t, @"\b(?:fra|tra)\s+mezz'?ora\b")) { at = DateTime.Now.AddMinutes(30); return true; }
         if (Regex.IsMatch(t, @"\b(?:fra|tra)\s+un'?ora\b")) { at = DateTime.Now.AddHours(1); return true; }
+        if (Regex.IsMatch(t, @"\bin\s+(?:half\s+an?\s+(?:hour|hr)|an?\s+hour)\b")) { at = DateTime.Now.AddMinutes(t.Contains("an hour") && !t.Contains("half") ? 60 : 30); return true; }
         return false;
+    }
+
+    // i promemoria che parlano di una certa cosa (per annullarli)
+    public static List<Reminder> Matching(string text)
+    {
+        var q = text.Trim();
+        lock (Sync)
+        {
+            var list = q.Length == 0 ? All.ToList() : All.Where(r => r.Text.Contains(q, StringComparison.OrdinalIgnoreCase)).ToList();
+            return list.OrderBy(r => r.At).ToList();
+        }
     }
 
     // "oggi alle 18:00", "domani alle 9:30", "il 24/12 alle 20:00"

@@ -42,6 +42,7 @@ Italian version: [README.md](https://github.com/andreche42/yourlittlefriend/blob
 - volume (set, raise/lower, mute), play/pause/next/previous
 - opens **any installed app**: the name it has in the start menu is enough (calculator, steam, visual studio code, whatsapp...), it looks for it in the shortcuts and in the windows registry. it also searches on google, locks/suspends/hibernates/shuts down/restarts the pc
 - reminders for anything: "remind me at 6 pm to call mom", "remind me to take my medicine at 8", "remind me in 20 minutes to take out the trash"
+- cancel a reminder: "cancel the call mom reminder", "remove all reminders" (it asks for confirmation in the popup and updates the bell)
 - wifi (status, on, off), bluetooth and airplane mode
 - a screenshot (goes in the file holder) and opening a folder or a file, even just by name: it looks among the recent ones
 

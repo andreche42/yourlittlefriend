@@ -27,6 +27,7 @@ public static class Actions
      {"type":"function","function":{"name":"pc_power","description":"blocca, sospende, iberna, spegne o riavvia il pc. sospendere e ibernare sono cose diverse: usa sleep per la sospensione, hibernate per l'ibernazione","parameters":{"type":"object","properties":{"action":{"type":"string","enum":["lock","sleep","hibernate","shutdown","restart"]}},"required":["action"]}}},
      {"type":"function","function":{"name":"remind","description":"crea un promemoria per QUALSIASI cosa: una telefonata, una medicina, una mail, la lavatrice, buttare la spazzatura, una partita, una scadenza. metti in what le parole dell'utente, ora compresa (es. \"chiamare mamma alle 18\"): l'ora la legge anche l'app dal testo, gli altri parametri sono facoltativi","parameters":{"type":"object","properties":{"what":{"type":"string","description":"cosa deve ricordare, con le parole dell'utente, ora compresa"},"time":{"type":"string","description":"facoltativo: l'ora in formato HH:mm"},"minutes":{"type":"integer","description":"facoltativo: fra quanti minuti"}},"required":["what"]}}},
      {"type":"function","function":{"name":"screenshot","description":"fa uno screenshot dello schermo e lo mette nel portafile","parameters":{"type":"object","properties":{}}}},
+     {"type":"function","function":{"name":"forget_reminder","description":"annulla un promemoria già creato: quello che parla di quello che c'è in what, oppure tutti se all è true","parameters":{"type":"object","properties":{"what":{"type":"string","description":"di cosa parlava il promemoria"},"all":{"type":"boolean","description":"true = togli tutti i promemoria"}},"required":[]}}},
      {"type":"function","function":{"name":"open_path","description":"apre una cartella o un file: va bene anche solo il nome (per esempio 'download', 'documenti', 'la bolletta'). se non è un percorso lo cerca fra i file recenti","parameters":{"type":"object","properties":{"name":{"type":"string"}},"required":["name"]}}},
      {"type":"function","function":{"name":"system_switch","description":"wifi (stato, accendi, spegni), bluetooth e modalità aereo","parameters":{"type":"object","properties":{"action":{"type":"string","enum":["wifi_status","wifi_on","wifi_off","bluetooth","airplane"]}},"required":["action"]}}}
     ]
@@ -327,6 +328,35 @@ public static class Actions
                             Sync(() => { Open("ms-settings:network-airplanemode"); return Loc.L("modalità aereo aperta", "airplane mode opened"); }));
                 }
                 return null;
+            }
+            case "forget_reminder":
+            {
+                bool all = bool.TryParse(a?["all"]?.ToString() ?? "", out var allFlag) && allFlag;
+                var what = S("what").Trim();
+                var list = all ? Reminders.Matching("") : Reminders.Matching(what);
+
+                if (list.Count == 0)
+                    return new(Loc.L("annullare un promemoria", "cancel a reminder"),
+                        new[] { Loc.L("non c'è niente da togliere", "there is nothing to remove") }, false,
+                        Sync(() => all
+                            ? Loc.L("non hai promemoria in sospeso", "you have no reminders waiting")
+                            : Loc.L($"non trovo un promemoria che parla di «{what}»", $"I can't find a reminder about «{what}»")));
+
+                var title = all
+                    ? Loc.L($"togliere tutti i promemoria ({list.Count})", $"remove all the reminders ({list.Count})")
+                    : Loc.L($"togliere il promemoria «{list[0].Text}»", $"remove the reminder «{list[0].Text}»");
+                var steps = list.Take(4)
+                    .Select(r => Loc.L($"{r.Text} — {Reminders.When(r.At)}", $"{r.Text} — {Reminders.When(r.At)}"))
+                    .ToArray();
+
+                // sensibile: prima si conferma nel popup, come per aprire le app
+                return new(title, steps, true, Sync(() =>
+                {
+                    int n = all ? Reminders.Remove(null) : Reminders.Remove(what);
+                    return n == 1
+                        ? Loc.L("promemoria tolto", "reminder removed")
+                        : Loc.L($"{n} promemoria tolti", $"{n} reminders removed");
+                }));
             }
             case "web_search":
             {
