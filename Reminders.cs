@@ -110,7 +110,7 @@ public static class Reminders
         }
 
         // fra quanto: "fra 20 minuti", "tra 2 ore"
-        var delay = Regex.Match(t, @"\b(?:fra|tra)\s+(\d{1,3})\s*(minut|or[ae]|h)\b");
+        var delay = Regex.Match(t, @"\b(?:fra|tra)\s+(\d{1,3})\s*(minut\w*|min|or[ae]|h)\b");   // minut\w* copre "minuti", "min" è l'abbreviazione
         if (delay.Success && int.TryParse(delay.Groups[1].Value, out var n) && n > 0)
         {
             var unit = delay.Groups[2].Value;
