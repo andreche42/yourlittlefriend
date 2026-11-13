@@ -94,11 +94,6 @@ hai suggerimenti o consigli? sbizzarrisciti! apri un issue su questa repo e dicc
 ### lettura immagini e OCR da llm locale
 incolla un immagine e la LLM locale leggerà l'immagine per OCR o guarderà l'immagine e i dettagli. (in sviluppo) (per ora funziona solo con ia online)
 
-### cappellini, costumini e shop
-l'omino potrà indossare cappellini e costumini (anche a tema, tipo natale o halloween). si sbloccano da uno **shop** che si apre in una finestra a parte: è un gioco, non costa niente.
-
-come funziona: aggiungi un articolo al carrello e parte una animazione veloce, con il carrello che attraversa la finestra con l'articolo dentro. quando "compri", la busta vola nella sezione **camerino** (sempre nella stessa finestra). nel camerino c'è l'omino, con una luce che scende dal basso: gli metti i vestiti, fa un "puf!" e lui reagisce.
-
 ### timer di windows
 quando c'è un timer di windows in corso l'omino lo mostra e ti avvisa quando scade, oltre al suono di windows.
 

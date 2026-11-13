@@ -94,11 +94,6 @@ have any suggestions or tips? go wild! open an issue on this repo and tell us ev
 ### reading images and OCR with a local llm
 paste an image and the local LLM will read the image for OCR or look at the image and its details. (in development) (for now it only works with online ai)
 
-### hats, costumes and shop
-the little guy will be able to wear hats and costumes (also themed ones, like christmas or halloween). you unlock them from a **shop** that opens in a separate window: it's a game, it costs nothing.
-
-how it works: add an item to the cart and a quick animation plays, with the cart rolling across the window with the item inside. when you "buy", the bag flies to the **fitting room** section (in the same window). the little guy is in the fitting room, with a light coming down from below: you put the clothes on him, there's a "poof!" and he reacts.
-
 ### windows timer
 when a windows timer is running the little guy shows it and lets you know when it goes off, on top of the windows sound.
 
