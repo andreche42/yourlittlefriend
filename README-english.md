@@ -73,7 +73,7 @@ everything is changed from the **settings** (⚙ → settings): name, city, lang
 
 ## running from source (experts only)
 download the full zip from github, extract it into a folder of your choice. open powershell in that folder. then run:
-```    dotnet run```
+```dotnet run```
 *you need the [.net 8 sdk](https://dotnet.microsoft.com/download) on windows 10/11.
 
 ## creating a release (for those who maintain the project)
