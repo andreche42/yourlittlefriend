@@ -73,7 +73,7 @@ tutto si cambia dalle **impostazioni** (⚙ → impostazioni): nome, città, lin
 
 ## avvio da sorgente (solo per esperti)
 scarica lo zip completo da github, estrailo in una cartella a piacimento. avvia powershell su quella cartella. dopodichè esegui:
-```    dotnet run```
+```dotnet run```
 *serve il [.net 8 sdk](https://dotnet.microsoft.com/download) su windows 10/11.
 
 ## creare una release (per chi mantiene il progetto)
