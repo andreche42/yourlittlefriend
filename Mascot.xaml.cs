@@ -39,7 +39,7 @@ public partial class Mascot : UserControl
     readonly DispatcherTimer coolEnd = new() { Interval = TimeSpan.FromMilliseconds(3400) };
     readonly DispatcherTimer armEnd = new() { Interval = TimeSpan.FromMilliseconds(1000) };    // fine del saluto / delle mani in alto
     readonly DispatcherTimer pokeEnd = new() { Interval = TimeSpan.FromMilliseconds(700) };    // fine della reazione al clic
-    readonly DispatcherTimer dance = new() { Interval = TimeSpan.FromMilliseconds(16) };       // ballo: un fotogramma per volta, così la velocità cambia senza strappi
+    readonly DispatcherTimer dance = new() { Interval = TimeSpan.FromMilliseconds(33) };       // ballo: un fotogramma per volta (30 fps bastano per un dondolio), così la velocità cambia senza strappi
     readonly Random rnd = new();
     readonly ScaleTransform flip = new(1, 1);
     readonly TranslateTransform walk = new();
