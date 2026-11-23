@@ -9,8 +9,7 @@ Italian version: [README.md](https://github.com/andreche42/yourlittlefriend/blob
 
 - **home**: greeting + weather; if a song starts playing it shows the cover, title and controls, and the colors follow the cover
 - **chat**: you talk to an llm on your pc (ollama) or to the service you want, using your own api key (openai, gemini, claude, nvidia, groq...): it can also control the pc
-- **+**: drag in a file, write what to do with it and it answers you
-- **attached text files**: in the **+** tab you attach a text file, write what you want to know and the ai answers by reading it. (for now only through online ai)
+- **+**: drag in a file, write what to do with it and it answers you (for now only with online AI)
 - **file holder** (the "cup holder", the tab with the little tray): drag files or text onto the notch and they stay there, sorted into slots (icon or thumbnail for files, a snippet for text). you can drag them around wherever you want, even after restarting the pc. double click opens the file or copies the text, ✕ removes an item, 🗑 clears everything. files are not copied: the file holder only remembers where they are
 - answers arrive in real time, word by word, with a "smoke" effect that fades away (imessage style)
 - the little guy is animated: he blinks, wanders around the notch, works (dots and reading eyes) while the ai answers, smiles when it's done (or when you open the notch) and dances if there's music
