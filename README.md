@@ -1,7 +1,8 @@
 # YourLittleFriend 🤖
 ![Project Logo](https://i.postimg.cc/nLwcdMWd/210751.jpg)
 
-![AGPLV3 License](https://img.shields.io/badge/License-AGPL_v3-blue.svg) ![Windows 10/11](https://camo.githubusercontent.com/d3b3df0bdfd988f32acfbcc61353fed15852a6051287f0ea9ec1a3ad6d30b6ba/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f57696e646f77732d313025324631312d3030373844343f6c6f676f3d77696e646f7773266c6f676f436f6c6f723d7768697465) ![C#](https://img.shields.io/badge/C%23-239120?style=flat&logo=unity&logoColor=purple) ![Ollama](https://img.shields.io/badge/ollama-%23000000.svg?style=for-the-badge&logo=ollama&logoColor=white)
+![AGPLV3 License](https://img.shields.io/badge/License-AGPL_v3-blue.svg) ![Windows](https://img.shields.io/badge/Windows-11-59bdff?style=flat&logo=windows&logoColor=white) ![Windows](https://img.shields.io/badge/Windows-10-0078D6?style=flat&logo=windows&logoColor=white)
+ ![C#](https://img.shields.io/badge/C%23-239120?style=flat&logo=unity&logoColor=purple) ![Ollama](https://img.shields.io/badge/ollama-%23000000.svg?style=for-the-badge&logo=ollama&logoColor=white)
 
 YourLittleFriend è un piccolo amico nel notch del pc o in una bolla (windows). si apre quando ci passi sopra col mouse.
 
